@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `r2ImageKey` text;
