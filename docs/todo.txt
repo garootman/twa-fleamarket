@@ -1,4 +1,0 @@
-deploy the spec-driven thing
-
-- useState + useEffect
-

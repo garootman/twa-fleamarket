@@ -1,219 +1,205 @@
-# Scaffolding for Telegram Bot with Mini App running in CloudFlare
+# Telegram Bot + Mini App on CloudFlare Workers
 
-### User info:
+A batteries-included template for building [Telegram Bots](https://core.telegram.org/bots) and [Telegram Mini Apps](https://core.telegram.org/bots/webapps) on [CloudFlare Workers Platform](https://workers.cloudflare.com/).
 
-User Information:
+🚅 **Fork to running Telegram bot with Mini App in 5 minutes**
 
-- ID: 62408647
-- Name: Dmitry Kozlov
-- Username: mr_garuda
-- Language: en
-- Premium: True
-- Photo URL: https://t.me/i/userpic/320/CfbmmB2GtUap-6E3ZOHiSEU_7gQcxMfYEV-3_NRU7PM.svg
+## Features
 
-## Introduction
+- 🔧 **CloudFlare Workers** - Serverless backend runtime
+- 📊 **CloudFlare D1** - SQLite database with SQL queries
+- 🗄️ **CloudFlare KV** - Key-value storage for sessions
+- 📦 **CloudFlare R2** - Object storage for images
+- ⚛️ **React + Vite** - Modern frontend with hot reload
+- 📝 **TypeScript** - Type safety throughout
+- 🤖 **Grammy** - Modern Telegram bot framework
+- 🔒 **Drizzle ORM** - Type-safe database operations
+- ✅ **GitHub Actions** - Automated deployment
+- 🛠️ **Comprehensive Makefile** - One-command development
 
-This package is batteries-included package for running [Telegram Bots](https://core.telegram.org/bots) and [Telegram Mini Apps](https://core.telegram.org/bots/webapps) on [CloudFlare Workers Platform](https://workers.cloudflare.com/).
+## Quick Start
 
-Example line
-
-🚅 Fork to running Telegram bot with MiniApp in 5 minutes.
-
-Uses:
-
-- 🔧 Cloudflare Workers for running backend
-- 📊 Cloudflare D1 for storing data and querying with SQL
-- ⚛️ React built with Vite for frontend
-- 📝 TypeScript for both backend and frontend
-- ✅ GitHub Actions and Wrangler for local running and deployment
-- 🛠️ Comprehensive Makefile for local development
-
-## Local Development
-
-### Quick Start
+### Development
 
 ```bash
 # Start complete development environment
 make dev-start
 
+# Local testing without Telegram (auth bypass)
+make dev-local
+
 # Stop everything
 make dev-stop
 
-# Show help with all available commands
+# Show all available commands
 make help
 ```
 
-The `make dev-start` command will:
-
-1. ✅ Check and install dependencies
-2. 🗄️ Initialize local database
-3. 🔨 Build TypeScript backend
-4. 🚀 Start Cloudflare Worker locally
-5. 🌐 Start React webapp development server
-6. 🌍 Start public tunnel (cloudflared or ngrok)
-7. 🔗 Setup webhook for development bot
-
 ### Prerequisites
 
-- Node.js and npm
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) (`npm install -g wrangler`)
-- [Cloudflared](https://github.com/cloudflare/cloudflared) or [ngrok](https://ngrok.com/) for tunneling
+- **Node.js** and npm
+- **[Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)** - `npm install -g wrangler`
+- **Tunnel service** - [Cloudflared](https://github.com/cloudflare/cloudflared) or [ngrok](https://ngrok.com/) for local development
 
-### Available Commands
+### Environment Setup
 
-| Command              | Description                                    |
-| -------------------- | ---------------------------------------------- |
-| `make dev-start`     | Start complete development environment         |
-| `make dev-stop`      | Stop all services                              |
-| `make status`        | Show status of running services                |
-| `make logs`          | Show recent logs from all services             |
-| `make typecheck`     | Type check both backend and frontend           |
-| `make build`         | Build TypeScript backend                       |
-| `make test`          | Run all tests (included in dev-start)          |
-| `make test-backend`  | Run backend tests only                         |
-| `make test-webapp`   | Run webapp tests only                          |
-| `make db-reset`      | Reset local database                           |
-| `make webhook-setup` | Setup webhook (requires `INIT_SECRET` env var) |
-
-### Environment Variables
-
-For local development, set these environment variables:
-
-- `INIT_SECRET` - Required for webhook setup (generate with `openssl rand -hex 24`)
-- `TELEGRAM_BOT_TOKEN` - Your Telegram bot token (for webhook setup)
-
-### Known Issues
-
-- **npm audit warnings**: The project may show moderate severity vulnerabilities related to development dependencies (esbuild, vite, vitest). These affect only the local development server, not production builds. The fixes require breaking changes to build tools, so they are not applied automatically.
-
-## Deploying
-
-The solution is fully deployable with GitHub Actions included with the repo. All you need to do is create a Cloudflare account and a Telegram Bot.
-
-Fork the repository, then go to Settings > Secrets and add the following secrets:
-
-- `CF_API_TOKEN` - Cloudflare API token with permissions to create Workers, D1 databases and Pages
-- `CF_ACCOUNT_ID` - Cloudflare account ID
-- `TELEGRAM_BOT_TOKEN` - Telegram Bot token
-
-### Getting the values for secrets
-
-![Getting account ID](./docs/img/cf-accountId.svg)
-
-Go to [CloudFlare Workers Page](https://dash.cloudflare.com/?to=/:account/workers) and copy the account id from the right sidebar. Note that if you have no workers yet, you'll need to create a worker before you can see the account id. Luckily, there's a button for a "Hello World" worker right there. Once you've gotten the account id, set it in `CF_ACCOUNT_ID` secret.
-
-While you're in that interface, you can also adjust the subdomain to your liking.
-
-![Creating a token](./docs/img/cf-token.svg)
-
-Go to [CloudFlare Dashboard](https://dash.cloudflare.com/profile/api-tokens) and create a token with the following permissions:
-
-- `Account:Account Settings:Read`
-- `Account:CloudFlare Pages:Edit`
-- `Account:D1:Edit`
-- `Account:User Details:Read`
-- `Account:Workers Scripts:Edit`
-- `User:Memberships:Read`
-- `Zone:Workers Routes:Edit`
-
-Once you've generated the token, set it in `CF_API_TOKEN` secret.
-
-For getting a telegram token, go to [@BotFather](https://t.me/BotFather) and create a new bot with the `/newbot` command. Once you've created the bot, copy the token and set it in `TELEGRAM_BOT_TOKEN` secret.
-
-### Running the GitHub Actions workflow
-
-After you've set up the tokens go to Actions, accept the security prompt and run the `Deploy` workflow. After the workflow is finished, the bot will be ready to go. The workflow will give you the URL to use for your mini-app.
-
-### Setting up the mini-app
-
-To add the mini-app you'll need to go back to [@BotFather](https://t.me/BotFather) and send the `/newapp` command. For some reason, an image is mandatory on this step, you can use a [placeholder](https://placehold.co/640x360) in the beginning.
-
-Also, it's recommended that you update the `wrangler.toml` file with your own database ID as instructed by the workflow.
-
-## Running locally
-
-To run the bot locally, you'll need to have [Node.js](https://nodejs.org/en/download/) and [Microsoft DevTunnel](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started?tabs=windows).
-
-Then you need to do three things:
-
-- Run a local Worker server
-- Run a local React server
-- Run a tunnel for the React server so that it can be used as a Telegram Mini App
-
-### React
-
-For running a react server:
+Create `.dev.vars` from `.dev.vars.example`:
 
 ```bash
-cd webapp
-npm install
-npm run dev
+INIT_SECRET=your_secret_here                    # Generate with: openssl rand -hex 24
+TELEGRAM_BOT_TOKEN=your_bot_token               # From @BotFather
+TELEGRAM_WEBHOOK_SECRET=your_webhook_secret     # Generate with: openssl rand -hex 32
 ```
 
-Remember the port it uses, I'll assume it's 5173.
+## Development Commands
 
-### Tunnel
+### Essential Commands
+| Command | Description |
+|---------|-------------|
+| `make dev-start` | Start complete development environment |
+| `make dev-local` | Local testing with auth bypass (no Telegram) |
+| `make dev-stop` | Stop all services |
+| `make status` | Show status of running services |
+| `make logs` | Show recent logs from all services |
 
-In a different terminal, set up the tunnel:
+### Build & Test
+| Command | Description |
+|---------|-------------|
+| `make build` | Build TypeScript backend |
+| `make typecheck` | Type check both backend and frontend |
+| `make test` | Run all tests |
+| `make test-backend` | Backend tests only |
+| `make test-webapp` | Frontend tests only |
+| `make lint` | Lint code |
+| `make format` | Format code |
 
+### Database
+| Command | Description |
+|---------|-------------|
+| `make db-reset` | Reset local database |
+| `make db-migrate-local` | Apply migrations locally |
+| `make db-studio` | Open Drizzle Studio |
+| `make db-generate` | Generate new migrations |
+
+### Services
+| Command | Description |
+|---------|-------------|
+| `make worker-start` | Start CloudFlare Worker only |
+| `make webapp-start` | Start React app only |
+| `make tunnel-start` | Start public tunnel only |
+| `make health` | Test health endpoint |
+
+## Architecture
+
+### Backend (`src/`)
+- **`index.ts`** - Main Hono app with middleware and routes
+- **`bot/`** - Telegram bot logic with Grammy framework
+- **`db/`** - Database schema and migrations (Drizzle ORM)
+- **`kv/`** - CloudFlare KV storage wrapper
+- **`r2/`** - CloudFlare R2 image storage
+
+### Frontend (`webapp/src/`)
+- **`main.tsx`** - React entry point
+- **`App.tsx`** - Main app with Telegram WebApp integration
+- **`components/`** - Reusable React components
+- **`api.ts`** - Backend API client
+
+## Deployment
+
+### GitHub Actions Setup
+
+1. **Fork this repository**
+2. **Add GitHub Secrets:**
+   - `CF_API_TOKEN` - CloudFlare API token
+   - `CF_ACCOUNT_ID` - CloudFlare account ID
+   - `TELEGRAM_BOT_TOKEN` - Bot token from @BotFather
+
+3. **Run Deploy workflow** in GitHub Actions
+
+### Getting CloudFlare Credentials
+
+**Account ID:**
+1. Go to [CloudFlare Workers Dashboard](https://dash.cloudflare.com/?to=/:account/workers)
+2. Copy Account ID from right sidebar
+3. If no workers exist, create a "Hello World" worker first
+
+**API Token:**
+1. Go to [CloudFlare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
+2. Create token with permissions:
+   - `Account:Account Settings:Read`
+   - `Account:CloudFlare Pages:Edit`
+   - `Account:D1:Edit`
+   - `Account:User Details:Read`
+   - `Account:Workers Scripts:Edit`
+   - `User:Memberships:Read`
+   - `Zone:Workers Routes:Edit`
+
+### Telegram Bot Setup
+
+1. **Create Bot:** Message [@BotFather](https://t.me/BotFather) with `/newbot`
+2. **Create Mini App:** Use `/newapp` command (image required, use [placeholder](https://placehold.co/640x360))
+3. **Set Mini App URL:** Use the URL provided after deployment
+
+## Local Development Modes
+
+### Full Development (`make dev-start`)
+- Complete environment with Telegram integration
+- Requires bot token and webhook setup
+- Includes tunnel for external access
+
+### Local Only (`make dev-local`)
+- **Recommended for development**
+- Auth bypass enabled - no Telegram needed
+- Perfect for UI/API development
+- Access at: `http://localhost:5173/#/me`
+
+### Manual Testing
 ```bash
-devtunnel user login
-devtunnel create # note the tunnel ID
-devtunnel port create -p 5173
+# Test health endpoint
+make health
+
+# Test local development setup
+make test-local
 ```
 
-Then you can start the tunnel as needed with `devtunnel host --allow-anonymous`.
+## Security Features
 
-For the mini-app setup you need the URL that uses 443 port, it will look something like `https://aaaaaaaa-5173.euw.devtunnels.ms`.
+- ✅ Webhook signature validation
+- ✅ Mini App data signature verification
+- ✅ Token-based API authentication
+- ✅ CORS locked to specific domains
+- ✅ Environment-based configuration
 
-This approach allows you to keep the name of the tunnel the same, so you don't need to update the bot every time you restart the tunnel.
+## Tech Stack Details
 
-### Worker
+- **Backend Framework:** [Hono](https://hono.dev/) - Fast web framework
+- **Bot Framework:** [Grammy](https://grammy.dev/) - Modern Telegram bot framework
+- **Database:** [Drizzle ORM](https://orm.drizzle.team/) + CloudFlare D1 (SQLite)
+- **Frontend:** React 18 + Vite + TailwindCSS
+- **Telegram Integration:** [@vkruglikov/react-telegram-web-app](https://github.com/vkruglikov/react-telegram-web-app)
+- **Testing:** Vitest + Testing Library
+- **Type Safety:** TypeScript throughout
 
-Make sure that the you've deployed at least once and set your own database id in the `wrangler.toml` file.
+## Project Structure
 
-Then create a `.dev.vars` file using `.dev.vars.example` as a template and fill in the values. If you set `TELEGRAM_USE_TEST_API` to true you'll be able to use the bot in the [Telegram test environment](https://core.telegram.org/bots/webapps#testing-mini-apps), otherwise you'll be connected to production. Keep in mind that tokens between the environments are different.
-
-Do an `npm install` and initialize the database with `npx wrangler d1 execute DB --file .\init.sql --local`.
-
-Now you are ready to run the worker with `npx wrangler dev`. The worker will be waiting for you at <http://localhost:8787/>.
-
-### Processing telegram messages when running locally
-
-When you are running locally, the worker is intentionally not set up to process messages automatically. Every time you feel your code is ready, you can open <http://localhost:8787/updateTelegramMessages> to process one more batch of messages.
-
-If you do want to process messages automatically in local environment, you can write a trivial script to poke this URL along the lines of:
-
-```bash
-while true; do
-    curl http://localhost:8787/updateTelegramMessages
-    sleep 3
-done
+```
+├── src/                    # Backend (CloudFlare Worker)
+│   ├── index.ts           # Main Hono application
+│   ├── bot/               # Telegram bot logic
+│   ├── db/                # Database schema & migrations
+│   ├── kv/                # KV storage wrapper
+│   └── r2/                # R2 image storage
+├── webapp/                # Frontend (React + Vite)
+│   ├── src/
+│   │   ├── main.tsx       # React entry point
+│   │   ├── App.tsx        # Main app component
+│   │   ├── components/    # UI components
+│   │   └── api.ts         # Backend client
+├── Makefile              # Development commands
+├── wrangler.toml         # CloudFlare Worker config
+└── drizzle.config.ts     # Database configuration
 ```
 
-## Code information
+## Known Issues
 
-The backend code is a CloudFlare Worker. Start with `index.js` to get a general idea of how it works.
-
-We export `telegram.js` for working with telegram, `db.js` for working with the database and `cryptoUtils.js` for cryptography.
-
-There are no dependencies except for `itty-router`, which makes the whole affair blazing fast.
-
-For database we use CloudFlare D1, which is a version of SQLite. We initialize it with `init.sql` file.
-
-The frontend code is a React app built with Vite. The entry point is `webapp/src/main.jsx`. This is mostly a standard React app, except it uses excellent [@vkruglikov/react-telegram-web-app](https://github.com/vkruglikov/react-telegram-web-app) to wrap around the telegram mini app API.
-
-The frontend code can be replaced with anything that can be served as a static website. The only requirement is that the built code after `npm run build` is in the `webapp/dist` folder.
-
-## Security features
-
-All the needed checks are done:
-
-- The bot checks the signatures of the webhook requests
-- The bot checks the signatures of the Mini-app requests and validates the user
-- The bot checks the token of initialization request sent during deployment
-- CORS between the frontend and the backend is locked down to specifically used domains
-
-## Sample bot
-
-You can try out the bot at [@group_meetup_bot](https://t.me/group_meetup_bot).
+- **npm audit warnings:** Development dependencies may show moderate vulnerabilities. These affect only local development, not production builds.
