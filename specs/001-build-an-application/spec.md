@@ -100,40 +100,40 @@ A Telegram user discovers the local marketplace through the bot or web app, brow
 
 ### Functional Requirements
 
-- **FR-001**: System MUST allow users to authenticate through Telegram
-- **FR-002**: System MUST enable users to browse listings organized by categories
-- **FR-003**: System MUST allow users to create new item listings with title, description, price, and category
+- **FR-001**: System MUST allow users to authenticate through Telegram with initData validation and JWT session management
+- **FR-002**: System MUST enable users to browse listings organized by categories with KV caching (CQRS style)
+- **FR-003**: System MUST allow users to create new item listings with preview functionality before publishing
 - **FR-004**: System MUST provide deep linking between Telegram bot and web app interfaces
-- **FR-005**: System MUST facilitate direct communication between buyers and sellers through Telegram
-- **FR-006**: System MUST allow users to manage their own listings (edit, delete, mark as sold)
+- **FR-005**: System MUST facilitate direct communication through Telegram usernames with accessibility validation
+- **FR-006**: System MUST allow users to manage their own listings (edit, un-publish to archive, mark as sold)
 - **FR-007**: System MUST categorize listings into a 2-level hierarchy managed by administrators
-- **FR-008**: System MUST display listing details with title, description, price in USD, category, and images
+- **FR-008**: System MUST display listing details with full-screen image gallery and swipe navigation
 - **FR-009**: System MUST handle 1-9 user-uploaded images per listing, processing them to shrink size, generate thumbnails, and remove metadata on the user's device
 - **FR-010**: System MUST allow users to flag listings as inappropriate
-- **FR-011**: System MUST provide administrators with a moderation panel to review flagged content
-- **FR-012**: System MUST enable administrators to issue warnings and bans to misbehaving users
+- **FR-011**: System MUST provide administrators with ability to review ALL listings (flagged and unflagged)
+- **FR-012**: System MUST enable administrators to ban/unban users and notify users of listing takedowns
 - **FR-013**: System MUST track user behavior patterns for administrative oversight
 - **FR-014**: System MUST support deep linking that directs users to specific listing pages when shared
-- **FR-015**: System MUST use only Telegram-provided user information (name, username, profile photo) and track user's listing history, sales, account age, and reviews
-- **FR-016**: System MUST implement search by title/description keywords and category browsing
-- **FR-017**: System MUST expire listings after 7 days with owner notification and bump options
+- **FR-015**: System MUST require Telegram @username and validate user accessibility for contact purposes
+- **FR-016**: System MUST implement full-text "soft" fuzzy search by title/description keywords and category browsing
+- **FR-017**: System MUST expire listings after 7 days with expiration timers and bump options on user listings page
 - **FR-018**: System MUST limit users to maximum 20 active listings
 - **FR-019**: System MUST filter results by price range and sort by listing expiration date
-- **FR-020**: System MUST provide single administrator role with full platform management capabilities
+- **FR-020**: System MUST provide single administrator role via environment variable ADMIN_ID
 - **FR-021**: System MUST log moderation actions for audit purposes
 - **FR-022**: System MUST handle appeals process through bot commands for banned users
-- **FR-023**: System MUST implement basic text content filtering for inappropriate language
-- **FR-024**: System MUST provide /help command for users to contact administrator via bot
-- **FR-025**: System MUST offer paid premium features including sticky listings and auto-bump functionality
-- **FR-026**: System MUST allow administrators to create and manage 2-level category hierarchies
-- **FR-027**: System MUST notify users 1 day before listing expiration
-- **FR-028**: System MUST allow users to view and manage their own listings with bump options
-- **FR-029**: System MUST enable administrators to batch upload initial marketplace content that follows normal listing rules
+- **FR-023**: System MUST implement profanity filtering (leo-profanity) and admin-managed blocklist
+- **FR-024**: System MUST provide bot commands: /start, /help, /question for user support
+- **FR-025**: System MUST offer paid premium features: color highlighting (7 days), sticky listings (7 days), auto-bump (21 days) via Telegram Stars
+- **FR-026**: System MUST allow administrators to manually stick listings and create/manage categories
+- **FR-027**: System MUST notify users 1 day before listing expiration with bump availability
+- **FR-028**: System MUST provide "My Listings" page with expiration timers, bump buttons, and premium feature status
+- **FR-029**: System MUST archive expired/sold items instead of deletion for future management
 - **FR-030**: System MUST allow administrators to batch-bump multiple listings simultaneously
-- **FR-031**: System MUST treat admin-uploaded content identically to user-generated content in all aspects (flagging, expiration, display)
-- **FR-032**: System MUST apply the same 7-day expiration and notification rules to admin content
-- **FR-033**: System MUST allow unlimited listings for administrator account
-- **FR-034**: System MUST require contact information specification when admin batch uploads listings for other users
+- **FR-031**: System MUST provide admin section in web app based on user_id matching ADMIN_ID
+- **FR-032**: System MUST support local development with mock users bypassing Telegram auth
+- **FR-033**: System MUST provide data migration from deployed to local environments for testing
+- **FR-034**: System MUST include load testing capabilities with tools like Artillery
 
 ### Key Entities _(include if feature involves data)_
 

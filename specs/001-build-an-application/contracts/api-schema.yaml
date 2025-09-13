@@ -1,0 +1,896 @@
+openapi: 3.0.3
+info:
+  title: Telegram Marketplace API
+  version: 1.0.0
+  description: API for Telegram marketplace application with bot and web app integration
+
+servers:
+  - url: https://twa-bug-fm.pages.dev/api
+    description: Production server
+  - url: http://localhost:8787/api
+    description: Development server
+
+components:
+  securitySchemes:
+    TelegramAuth:
+      type: http
+      scheme: bearer
+      description: JWT token obtained from Telegram initData validation
+
+  schemas:
+    User:
+      type: object
+      properties:
+        telegram_id:
+          type: integer
+          format: int64
+        username:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+        last_name:
+          type: string
+          nullable: true
+        profile_photo_url:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        is_admin:
+          type: boolean
+        warning_count:
+          type: integer
+        is_banned:
+          type: boolean
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+
+    Listing:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: integer
+          format: int64
+        category_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+        price_usd:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        images:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 9
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [draft, active, expired, sold, archived, hidden]
+        is_sticky:
+          type: boolean
+        is_highlighted:
+          type: boolean
+        auto_bump_enabled:
+          type: boolean
+        view_count:
+          type: integer
+        contact_username:
+          type: string
+        published_at:
+          type: string
+          format: date-time
+          nullable: true
+        time_left:
+          type: string
+          description: Human-readable time until expiration
+        can_bump:
+          type: boolean
+          description: Whether user can bump this listing
+        user:
+          $ref: '#/components/schemas/User'
+        category:
+          $ref: '#/components/schemas/Category'
+        premium_features:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [sticky_listing, color_highlight, auto_bump]
+              expires_at:
+                type: string
+                format: date-time
+
+    CreateListingRequest:
+      type: object
+      required:
+        - category_id
+        - title
+        - description
+        - price_usd
+        - images
+      properties:
+        category_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+        price_usd:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+          minimum: 0.01
+        images:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 9
+
+    UpdateListingRequest:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+        price_usd:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+          minimum: 0.01
+        status:
+          type: string
+          enum: [draft, active, sold, archived]
+        admin_notes:
+          type: string
+          description: Admin-only field
+
+    FlagRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          enum: [spam, inappropriate, fake, other]
+        description:
+          type: string
+          maxLength: 500
+
+    SearchQuery:
+      type: object
+      properties:
+        q:
+          type: string
+          description: Search query for title/description
+        category_id:
+          type: integer
+          description: Filter by category
+        min_price:
+          type: number
+          format: decimal
+          description: Minimum price filter
+        max_price:
+          type: number
+          format: decimal
+          description: Maximum price filter
+        sort:
+          type: string
+          enum: [newest, oldest, price_asc, price_desc, expiring]
+          default: newest
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+        offset:
+          type: integer
+          minimum: 0
+          default: 0
+
+    AuthRequest:
+      type: object
+      required:
+        - init_data
+      properties:
+        init_data:
+          type: string
+          description: Telegram WebApp initData
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+security:
+  - TelegramAuth: []
+
+paths:
+  /auth:
+    post:
+      summary: Authenticate user with Telegram initData
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid initData
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /me:
+    get:
+      summary: Get current user profile
+      tags: [User]
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories:
+    get:
+      summary: Get all categories with hierarchy
+      tags: [Categories]
+      security: []
+      responses:
+        '200':
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /listings:
+    get:
+      summary: Search and browse listings
+      tags: [Listings]
+      security: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search query
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+          description: Category filter
+        - in: query
+          name: min_price
+          schema:
+            type: number
+          description: Minimum price
+        - in: query
+          name: max_price
+          schema:
+            type: number
+          description: Maximum price
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [newest, oldest, price_asc, price_desc, expiring]
+          description: Sort order
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Listings search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Listing'
+                  total:
+                    type: integer
+                  has_more:
+                    type: boolean
+
+    post:
+      summary: Create new listing
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateListingRequest'
+      responses:
+        '201':
+          description: Listing created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User reached listing limit or banned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /listings/{id}:
+    get:
+      summary: Get listing by ID
+      tags: [Listings]
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Listing details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '404':
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update listing
+      tags: [Listings]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateListingRequest'
+      responses:
+        '200':
+          description: Listing updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '403':
+          description: Not listing owner or banned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete listing
+      tags: [Listings]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Listing deleted
+        '403':
+          description: Not listing owner or banned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /listings/{id}/bump:
+    post:
+      summary: Bump listing to extend expiration
+      tags: [Listings]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Listing bumped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '403':
+          description: Cannot bump listing (not owner, too recent, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /listings/{id}/flag:
+    post:
+      summary: Flag listing as inappropriate
+      tags: [Moderation]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlagRequest'
+      responses:
+        '201':
+          description: Flag submitted
+        '400':
+          description: Invalid flag reason or already flagged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Cannot flag own listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /me/listings:
+    get:
+      summary: Get current user's listings with management features
+      tags: [User]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, active, expired, sold, archived, all]
+            default: all
+      responses:
+        '200':
+          description: User's listings with management data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Listing'
+                  stats:
+                    type: object
+                    properties:
+                      total_active:
+                        type: integer
+                      total_draft:
+                        type: integer
+                      total_sold:
+                        type: integer
+                      total_expired:
+                        type: integer
+                      premium_features:
+                        type: array
+                        items:
+                          type: object
+
+  /upload:
+    post:
+      summary: Upload image to R2 storage
+      tags: [Images]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  thumbnail_url:
+                    type: string
+        '400':
+          description: Invalid image file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /listings/{id}/preview:
+    post:
+      summary: Preview listing before publishing
+      tags: [Listings]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Listing preview data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listing:
+                    $ref: '#/components/schemas/Listing'
+                  warnings:
+                    type: array
+                    items:
+                      type: string
+                  estimated_reach:
+                    type: integer
+
+  /listings/{id}/publish:
+    post:
+      summary: Publish draft listing
+      tags: [Listings]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Listing published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+
+  /bot/webhook:
+    post:
+      summary: Telegram bot webhook endpoint
+      tags: [Bot]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Telegram Update object
+      responses:
+        '200':
+          description: Webhook processed
+
+  /admin/listings:
+    get:
+      summary: Admin view of all listings
+      tags: [Admin]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [all, flagged, hidden, active]
+            default: all
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Admin listings view
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Listing'
+                    - type: object
+                      properties:
+                        flag_count:
+                          type: integer
+                        admin_notes:
+                          type: string
+        '403':
+          description: Not admin user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/listings/{id}/stick:
+    post:
+      summary: Admin manually stick listing
+      tags: [Admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration_days:
+                  type: integer
+                  default: 7
+      responses:
+        '200':
+          description: Listing sticked
+        '403':
+          description: Not admin user
+
+  /admin/users/{id}/ban:
+    post:
+      summary: Ban user
+      tags: [Admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                duration_days:
+                  type: integer
+                  nullable: true
+                  description: null for permanent ban
+      responses:
+        '200':
+          description: User banned
+        '403':
+          description: Not admin user
+
+  /admin/users/{id}/unban:
+    post:
+      summary: Unban user
+      tags: [Admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: User unbanned
+        '403':
+          description: Not admin user
+
+  /admin/blocked-words:
+    get:
+      summary: Get blocked words list
+      tags: [Admin]
+      responses:
+        '200':
+          description: Blocked words list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    word:
+                      type: string
+                    severity:
+                      type: string
+                      enum: [warning, block]
+    post:
+      summary: Add blocked word
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [word, severity]
+              properties:
+                word:
+                  type: string
+                severity:
+                  type: string
+                  enum: [warning, block]
+      responses:
+        '201':
+          description: Word added to blocklist
+
+  /dev/mock-users:
+    get:
+      summary: Get mock users for testing (dev only)
+      tags: [Development]
+      security: []
+      responses:
+        '200':
+          description: Mock users list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    telegram_id:
+                      type: integer
+                      format: int64
+                    username:
+                      type: string
+                    first_name:
+                      type: string
+                    role:
+                      type: string
+                      enum: [buyer, seller, admin]
+        '404':
+          description: Development mode not enabled
+
+  /dev/auth:
+    post:
+      summary: Bypass auth for testing (dev only)
+      tags: [Development]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mock_user_id]
+              properties:
+                mock_user_id:
+                  type: integer
+      responses:
+        '200':
+          description: Mock authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
