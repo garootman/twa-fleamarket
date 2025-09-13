@@ -142,6 +142,7 @@ app.use('*', async (c, next): Promise<Response | void> => {
         corsHeaders,
         isLocalhost,
         botName,
+        env,
       },
       env.TELEGRAM_USE_TEST_API
     );
