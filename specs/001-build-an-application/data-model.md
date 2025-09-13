@@ -3,9 +3,11 @@
 ## Core Entities
 
 ### User
+
 Represents a Telegram user with marketplace-specific data.
 
 **Fields**:
+
 - `telegram_id` (bigint, primary key) - Telegram user ID
 - `username` (varchar, required) - Telegram username (must exist and be accessible)
 - `first_name` (varchar) - Telegram first name
@@ -21,6 +23,7 @@ Represents a Telegram user with marketplace-specific data.
 - `username_verified_at` (datetime, nullable) - Last verification of username accessibility
 
 **Relationships**:
+
 - One-to-many with Listing (user can have multiple listings)
 - One-to-many with Flag (user can flag multiple listings)
 - One-to-many with ModerationAction (user can receive multiple actions)
@@ -28,6 +31,7 @@ Represents a Telegram user with marketplace-specific data.
 - One-to-many with PremiumFeature (user can purchase multiple features)
 
 **Validation Rules**:
+
 - `telegram_id` must be unique and positive
 - `username` is required and must be accessible via Telegram messaging
 - `first_name` is required
@@ -35,14 +39,17 @@ Represents a Telegram user with marketplace-specific data.
 - Admin status determined by matching telegram_id with ADMIN_ID environment variable
 
 **State Transitions**:
+
 - Active → Warned (admin action)
 - Warned → Banned (excessive warnings)
 - Banned → Active (successful appeal or admin unban)
 
 ### Category
+
 Represents 2-level hierarchy for organizing listings.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Category ID
 - `name` (varchar, unique) - Category name
 - `parent_id` (integer, nullable, foreign key) - Parent category ID
@@ -51,19 +58,23 @@ Represents 2-level hierarchy for organizing listings.
 - `is_active` (boolean, default true) - Category visibility
 
 **Relationships**:
+
 - Self-referential (parent-child hierarchy)
 - One-to-many with Listing (category can have multiple listings)
 
 **Validation Rules**:
+
 - `name` must be unique within same parent level
 - Maximum 2 levels deep (parent → child, no grandchildren)
 - Cannot delete category with active listings
 - Parent categories cannot be assigned to listings directly
 
 ### Listing
+
 Represents an item for sale in the marketplace.
 
 **Fields**:
+
 - `id` (uuid, primary key) - Unique listing identifier
 - `user_id` (bigint, foreign key) - Owner's Telegram ID
 - `category_id` (integer, foreign key) - Category assignment
@@ -85,12 +96,14 @@ Represents an item for sale in the marketplace.
 - `archived_at` (datetime, nullable) - When archived by user or admin
 
 **Relationships**:
+
 - Many-to-one with User (listing belongs to user)
 - Many-to-one with Category (listing belongs to category)
 - One-to-many with Flag (listing can be flagged multiple times)
 - One-to-many with ModerationAction (listing can have multiple actions)
 
 **Validation Rules**:
+
 - `title` is required, max 100 characters, profanity filtered
 - `description` is required, max 1000 characters, profanity filtered
 - `price_usd` must be positive, max 2 decimal places
@@ -100,6 +113,7 @@ Represents an item for sale in the marketplace.
 - `contact_username` must be valid and accessible Telegram username
 
 **State Transitions**:
+
 - Draft → Active (publish action with preview)
 - Active → Expired (after 7 days without bump)
 - Expired → Active (bump action)
@@ -109,9 +123,11 @@ Represents an item for sale in the marketplace.
 - Hidden → Active (admin restore)
 
 ### Flag
+
 Represents user reports of inappropriate content.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Flag ID
 - `listing_id` (uuid, foreign key) - Flagged listing
 - `reporter_id` (bigint, foreign key) - User who flagged
@@ -123,24 +139,29 @@ Represents user reports of inappropriate content.
 - `reviewed_by` (bigint, nullable, foreign key) - Admin who reviewed
 
 **Relationships**:
+
 - Many-to-one with Listing (flag belongs to listing)
 - Many-to-one with User (flag submitted by user)
 - Many-to-one with User (flag reviewed by admin)
 
 **Validation Rules**:
+
 - User cannot flag same listing twice
 - User cannot flag their own listings
 - `reason` must be valid enum value
 - `description` required if reason is "other"
 
 **State Transitions**:
+
 - Pending → Upheld (admin confirms violation)
 - Pending → Dismissed (admin dismisses flag)
 
 ### ModerationAction
+
 Represents administrative actions taken on users or content.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Action ID
 - `target_user_id` (bigint, foreign key) - User receiving action
 - `target_listing_id` (uuid, nullable, foreign key) - Listing affected
@@ -151,20 +172,24 @@ Represents administrative actions taken on users or content.
 - `expires_at` (datetime, nullable) - Action expiration (for temporary bans)
 
 **Relationships**:
+
 - Many-to-one with User (action targets user)
 - Many-to-one with Listing (action may target listing)
 - Many-to-one with User (action performed by admin)
 
 **Validation Rules**:
+
 - `reason` is required for all actions
 - `expires_at` required for temporary bans
 - Cannot ban admin users
 - Action type must be valid enum
 
 ### Appeal
+
 Represents user appeals of moderation actions.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Appeal ID
 - `user_id` (bigint, foreign key) - User submitting appeal
 - `moderation_action_id` (integer, foreign key) - Action being appealed
@@ -176,23 +201,28 @@ Represents user appeals of moderation actions.
 - `reviewed_by` (bigint, nullable, foreign key) - Admin who reviewed
 
 **Relationships**:
+
 - Many-to-one with User (appeal submitted by user)
 - Many-to-one with ModerationAction (appeal targets action)
 - Many-to-one with User (appeal reviewed by admin)
 
 **Validation Rules**:
+
 - User can only appeal each action once
 - `message` is required, max 500 characters
 - Cannot appeal actions older than 30 days
 
 **State Transitions**:
+
 - Pending → Approved (appeal granted, action reversed)
 - Pending → Denied (appeal rejected)
 
 ### PremiumFeature
+
 Represents paid premium features purchased by users.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Feature ID
 - `user_id` (bigint, foreign key) - User who purchased
 - `listing_id` (uuid, nullable, foreign key) - Associated listing
@@ -205,10 +235,12 @@ Represents paid premium features purchased by users.
 - `cancelled_at` (datetime, nullable) - When user cancelled auto-renewing feature
 
 **Relationships**:
+
 - Many-to-one with User (feature purchased by user)
 - Many-to-one with Listing (feature may apply to specific listing)
 
 **Validation Rules**:
+
 - `stars_paid` must be positive
 - `feature_type` must be valid enum (sticky_listing, color_highlight, auto_bump)
 - `expires_at` must be after `purchased_at`
@@ -217,14 +249,17 @@ Represents paid premium features purchased by users.
 - Sticky and highlight features expire after 7 days
 
 **Feature Duration Rules**:
+
 - `sticky_listing`: 7 days from purchase
 - `color_highlight`: 7 days from purchase
 - `auto_bump`: 21 days from purchase or until cancelled
 
 ### UserSession
+
 Represents authentication sessions for web app access.
 
 **Fields**:
+
 - `token` (varchar, primary key) - JWT-like session token
 - `user_id` (bigint, foreign key) - Associated user
 - `created_at` (datetime) - Session creation time
@@ -232,17 +267,21 @@ Represents authentication sessions for web app access.
 - `last_used` (datetime) - Last activity timestamp
 
 **Relationships**:
+
 - Many-to-one with User (session belongs to user)
 
 **Validation Rules**:
+
 - `token` must be unique and secure
 - `expires_at` must be after `created_at`
 - Sessions expire after 7 days of inactivity
 
 ### BlockedWord
+
 Represents admin-managed profanity and content blocklist.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Word ID
 - `word` (varchar, unique) - Blocked word or phrase
 - `severity` (enum: warning, block) - Action to take when detected
@@ -251,17 +290,21 @@ Represents admin-managed profanity and content blocklist.
 - `is_active` (boolean, default true) - Whether rule is active
 
 **Relationships**:
+
 - Many-to-one with User (word added by admin)
 
 **Validation Rules**:
+
 - `word` must be unique and lowercase
 - Only admin users can add/modify blocked words
 - `severity` determines action: warning logs, block prevents submission
 
 ### MockUser
+
 Represents mock users for local development and testing.
 
 **Fields**:
+
 - `id` (integer, primary key, auto-increment) - Mock user ID
 - `telegram_id` (bigint, unique) - Fake Telegram ID for testing
 - `username` (varchar, unique) - Mock username
@@ -270,18 +313,22 @@ Represents mock users for local development and testing.
 - `is_active` (boolean, default true) - Whether mock user is enabled
 
 **Relationships**:
+
 - Used only in local development environment
 - Links to regular User table via telegram_id in test scenarios
 
 **Validation Rules**:
+
 - Only available when `VITE_DEV_BYPASS_AUTH=true`
 - Mock telegram_ids must not conflict with real user IDs
 - Used for automated testing scenarios
 
 ### CacheEntry
+
 Represents KV cache entries for CQRS-style listing caching.
 
 **Fields**:
+
 - `key` (varchar, primary key) - Cache key (e.g., "category:123:listings")
 - `value` (json) - Cached data (listing arrays, metadata)
 - `created_at` (datetime) - Cache creation time
@@ -289,9 +336,11 @@ Represents KV cache entries for CQRS-style listing caching.
 - `invalidated_at` (datetime, nullable) - When cache was manually invalidated
 
 **Relationships**:
+
 - No direct relationships (managed by KV service)
 
 **Validation Rules**:
+
 - Keys follow pattern: "category:{id}:listings" or "search:{hash}:results"
 - Cache TTL varies by content type (listings: 5min, categories: 1hr)
 - Invalidated on listing create/update/delete operations
@@ -299,6 +348,7 @@ Represents KV cache entries for CQRS-style listing caching.
 ## Database Indexes
 
 **Performance Indexes**:
+
 - `listings(category_id, is_active, expires_at)` - Category browsing
 - `listings(user_id, is_active)` - User's listings
 - `listings(created_at DESC)` - Recent listings
@@ -308,6 +358,7 @@ Represents KV cache entries for CQRS-style listing caching.
 - `user_sessions(expires_at)` - Session cleanup
 
 **Text Search Indexes**:
+
 - Full-text search on `listings(title, description)` using SQLite FTS5
 
 ## Data Relationships Summary

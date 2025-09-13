@@ -1,8 +1,16 @@
+import { ImageService } from './images';
+
+// Re-export for easier imports
+export { ImageService } from './images';
+export type { ImageUploadResult, ImageMetadata, ImageProcessingOptions } from './images';
+
 export class R2ImageStorage {
   private r2: R2Bucket;
+  public images: ImageService; // Enhanced image processing service
 
   constructor(r2Bucket: R2Bucket) {
     this.r2 = r2Bucket;
+    this.images = new ImageService(r2Bucket);
   }
 
   async uploadUserImage(telegramId: number, imageUrl: string): Promise<string | null> {

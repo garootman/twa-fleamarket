@@ -3,7 +3,7 @@
 **Feature Branch**: `001-build-an-application`
 **Created**: 2025-09-13
 **Status**: Draft
-**Input**: User description: "Build an application in telegram bot + web app, hosted in cloudflare worker + Pages, that would  help users sell & buy things, make listings, contact each other within telegram. app + bot use deep linking. there are categories of listings"
+**Input**: User description: "Build an application in telegram bot + web app, hosted in cloudflare worker + Pages, that would help users sell & buy things, make listings, contact each other within telegram. app + bot use deep linking. there are categories of listings"
 
 ## Execution Flow (main)
 

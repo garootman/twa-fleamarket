@@ -1,10 +1,13 @@
 import type { User } from '../db/schema';
+import { CacheService } from './cache';
 
 export class KVStorage {
   private kv: KVNamespace;
+  public cache: CacheService; // CQRS-style cache service
 
   constructor(kvNamespace: KVNamespace) {
     this.kv = kvNamespace;
+    this.cache = new CacheService(kvNamespace);
   }
 
   // Token operations
@@ -84,4 +87,11 @@ export class KVStorage {
 }
 
 export * from '../db/schema';
+export { CacheService } from './cache';
+export type {
+  CacheOptions,
+  CachedResult,
+  ListingSearchResult,
+  CategoryListingsResult,
+} from './cache';
 export type { User };

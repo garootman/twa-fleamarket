@@ -25,6 +25,7 @@
     "drizzle-orm": "^0.44.5",
     "grammy": "^1.29.0",
     "hono": "^4.9.7",
+    "leo-profanity": "^1.8.0",
     "zod": "^4.1.8"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "artillery": "^2.0.0",
     "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

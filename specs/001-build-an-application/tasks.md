@@ -158,6 +158,7 @@
 ## Dependencies
 
 **Critical Path:**
+
 - Code reorganization (T001-T008) must complete before database work
 - Database tests (T009-T013) before database implementation (T014-T021)
 - Contract tests (T022-T033) before API implementation (T034-T043)
@@ -166,6 +167,7 @@
 - All features before performance testing (T069-T073)
 
 **Blocking Relationships:**
+
 - T014-T021 depend on T009-T013 (database tests must fail first)
 - T034-T043 depend on T022-T033 (contract tests must fail first)
 - T044-T052 depend on T014-T021 (need database models)
@@ -176,6 +178,7 @@
 ## Parallel Execution Examples
 
 ### Phase 3.1 - Code Reorganization (Run together):
+
 ```
 Task: "Reorganize backend bot commands to /src/bot/ folder structure"
 Task: "Restructure database files to /src/db/ with proper schema organization"
@@ -187,6 +190,7 @@ Task: "Configure TypeScript paths for new folder structure"
 ```
 
 ### Phase 3.2 - Database Tests (Run together):
+
 ```
 Task: "Database schema test for User entity in /src/db/__tests__/schema.test.ts"
 Task: "Database schema test for Category entity in /src/db/__tests__/schema.test.ts"
@@ -196,6 +200,7 @@ Task: "Database migration test in /src/db/__tests__/migration.test.ts"
 ```
 
 ### Phase 3.4 - Contract Tests (Run together):
+
 ```
 Task: "Contract test POST /api/auth in /src/__tests__/contract/auth.test.ts"
 Task: "Contract test GET /api/me in /src/__tests__/contract/user.test.ts"
@@ -205,6 +210,7 @@ Task: "Contract test GET /api/listings in /src/__tests__/contract/listings-searc
 ```
 
 ### Phase 3.9 - Integration Tests (Run together):
+
 ```
 Task: "Integration test: Complete buyer journey with mock users in /src/__tests__/integration/buyer-journey.test.ts"
 Task: "Integration test: Complete seller journey with listing creation in /src/__tests__/integration/seller-journey.test.ts"
@@ -216,6 +222,7 @@ Task: "Integration test: Premium features workflow in /src/__tests__/integration
 ## Notes
 
 **Implementation Strategy:**
+
 - **Priority 1**: Restructure existing working code to specification folders (T001-T008)
 - **Priority 2**: Add comprehensive test coverage with TDD approach (T009-T033, T053-T057)
 - **Priority 3**: Implement new features: preview, KV caching, admin panel, premium features (T034-T052, T058-T063)
@@ -223,6 +230,7 @@ Task: "Integration test: Premium features workflow in /src/__tests__/integration
 - **Priority 5**: Performance validation and load testing (T069-T080)
 
 **Key Focus Areas:**
+
 - Existing code enhancement vs. greenfield development
 - Mock user system for comprehensive local testing
 - KV caching for sub-200ms performance
@@ -233,6 +241,7 @@ Task: "Integration test: Premium features workflow in /src/__tests__/integration
 - Browser automation for complete user journey validation
 
 **Testing Philosophy:**
+
 - TDD enforced: All tests must fail before implementation
 - Mock users enable auth bypass for local testing
 - Browser automation validates complete workflows

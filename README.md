@@ -54,44 +54,49 @@ TELEGRAM_WEBHOOK_SECRET=your_webhook_secret     # Generate with: openssl rand -h
 ## Development Commands
 
 ### Essential Commands
-| Command | Description |
-|---------|-------------|
-| `make dev-start` | Start complete development environment |
+
+| Command          | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `make dev-start` | Start complete development environment       |
 | `make dev-local` | Local testing with auth bypass (no Telegram) |
-| `make dev-stop` | Stop all services |
-| `make status` | Show status of running services |
-| `make logs` | Show recent logs from all services |
+| `make dev-stop`  | Stop all services                            |
+| `make status`    | Show status of running services              |
+| `make logs`      | Show recent logs from all services           |
 
 ### Build & Test
-| Command | Description |
-|---------|-------------|
-| `make build` | Build TypeScript backend |
-| `make typecheck` | Type check both backend and frontend |
-| `make test` | Run all tests |
-| `make test-backend` | Backend tests only |
-| `make test-webapp` | Frontend tests only |
-| `make lint` | Lint code |
-| `make format` | Format code |
+
+| Command             | Description                          |
+| ------------------- | ------------------------------------ |
+| `make build`        | Build TypeScript backend             |
+| `make typecheck`    | Type check both backend and frontend |
+| `make test`         | Run all tests                        |
+| `make test-backend` | Backend tests only                   |
+| `make test-webapp`  | Frontend tests only                  |
+| `make lint`         | Lint code                            |
+| `make format`       | Format code                          |
 
 ### Database
-| Command | Description |
-|---------|-------------|
-| `make db-reset` | Reset local database |
+
+| Command                 | Description              |
+| ----------------------- | ------------------------ |
+| `make db-reset`         | Reset local database     |
 | `make db-migrate-local` | Apply migrations locally |
-| `make db-studio` | Open Drizzle Studio |
-| `make db-generate` | Generate new migrations |
+| `make db-studio`        | Open Drizzle Studio      |
+| `make db-generate`      | Generate new migrations  |
 
 ### Services
-| Command | Description |
-|---------|-------------|
+
+| Command             | Description                  |
+| ------------------- | ---------------------------- |
 | `make worker-start` | Start CloudFlare Worker only |
-| `make webapp-start` | Start React app only |
-| `make tunnel-start` | Start public tunnel only |
-| `make health` | Test health endpoint |
+| `make webapp-start` | Start React app only         |
+| `make tunnel-start` | Start public tunnel only     |
+| `make health`       | Test health endpoint         |
 
 ## Architecture
 
 ### Backend (`src/`)
+
 - **`index.ts`** - Main Hono app with middleware and routes
 - **`bot/`** - Telegram bot logic with Grammy framework
 - **`db/`** - Database schema and migrations (Drizzle ORM)
@@ -99,6 +104,7 @@ TELEGRAM_WEBHOOK_SECRET=your_webhook_secret     # Generate with: openssl rand -h
 - **`r2/`** - CloudFlare R2 image storage
 
 ### Frontend (`webapp/src/`)
+
 - **`main.tsx`** - React entry point
 - **`App.tsx`** - Main app with Telegram WebApp integration
 - **`components/`** - Reusable React components
@@ -119,11 +125,13 @@ TELEGRAM_WEBHOOK_SECRET=your_webhook_secret     # Generate with: openssl rand -h
 ### Getting CloudFlare Credentials
 
 **Account ID:**
+
 1. Go to [CloudFlare Workers Dashboard](https://dash.cloudflare.com/?to=/:account/workers)
 2. Copy Account ID from right sidebar
 3. If no workers exist, create a "Hello World" worker first
 
 **API Token:**
+
 1. Go to [CloudFlare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
 2. Create token with permissions:
    - `Account:Account Settings:Read`
@@ -143,17 +151,20 @@ TELEGRAM_WEBHOOK_SECRET=your_webhook_secret     # Generate with: openssl rand -h
 ## Local Development Modes
 
 ### Full Development (`make dev-start`)
+
 - Complete environment with Telegram integration
 - Requires bot token and webhook setup
 - Includes tunnel for external access
 
 ### Local Only (`make dev-local`)
+
 - **Recommended for development**
 - Auth bypass enabled - no Telegram needed
 - Perfect for UI/API development
 - Access at: `http://localhost:5173/#/me`
 
 ### Manual Testing
+
 ```bash
 # Test health endpoint
 make health

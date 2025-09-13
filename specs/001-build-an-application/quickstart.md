@@ -19,6 +19,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Validate existing working code and local development setup
 
 **Steps**:
+
 1. Run `make dev-local` to start local environment with auth bypass
 2. Access web app at `http://localhost:5173/#/me`
 3. Verify mock users are loaded via `/dev/mock-users` endpoint
@@ -26,6 +27,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Validate data migration from deployed to local works
 
 **Expected Result**:
+
 - Local environment starts without Telegram dependencies
 - Mock users (buyer, seller, admin) are available
 - Auth bypass allows testing without Telegram integration
@@ -38,6 +40,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Essential Telegram bot commands work correctly
 
 **Steps**:
+
 1. Send `/start` command to bot (or use mock in local)
 2. Send `/help` command to view available options
 3. Send `/question` command to test admin contact
@@ -45,6 +48,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Test deep linking from bot to web app
 
 **Expected Result**:
+
 - `/start` provides welcome message and navigation options
 - `/help` shows comprehensive command list and usage
 - `/question` allows users to contact admin
@@ -58,6 +62,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: CQRS-style caching system performance
 
 **Steps**:
+
 1. Browse categories and monitor KV cache hits/misses
 2. Create new listing and verify cache invalidation
 3. Test search performance with cached results
@@ -65,6 +70,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Load test with Artillery to validate performance goals
 
 **Expected Result**:
+
 - Category listings served from KV cache with sub-200ms response
 - Cache invalidated correctly on listing create/update/delete
 - Search results cached with proper hash-based keys
@@ -78,6 +84,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: New listing creation with preview functionality
 
 **Steps**:
+
 1. Create draft listing with all required fields
 2. Use preview functionality to review listing before publish
 3. Verify username accessibility validation
@@ -85,6 +92,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Publish listing and verify status transitions
 
 **Expected Result**:
+
 - Draft listings can be previewed with warnings
 - Username must exist and be accessible for contact
 - Profanity filter prevents inappropriate content
@@ -98,6 +106,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Sell an item through the marketplace
 
 **Steps**:
+
 1. Click "Create Listing" button in web app
 2. Fill out listing form:
    - Select 2-level category (parent → child)
@@ -110,6 +119,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Check listing detail page shows all information
 
 **Expected Result**:
+
 - Form validates all required fields
 - Images are processed (resized, thumbnails generated)
 - Listing gets UUID and expires_at timestamp (+7 days)
@@ -123,6 +133,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Buyer-seller interaction flow
 
 **Steps**:
+
 1. From another user account, browse to a listing
 2. Click "Contact Seller" button
 3. Verify redirect to Telegram conversation with seller
@@ -131,6 +142,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Verify recipient directed to correct listing page
 
 **Expected Result**:
+
 - Contact button generates proper Telegram deep link
 - Telegram opens conversation with correct seller
 - Messages flow through Telegram infrastructure
@@ -144,6 +156,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Owner manages their listings
 
 **Steps**:
+
 1. As listing owner, navigate to "My Listings" section
 2. Edit an existing listing (change price, description)
 3. Mark a listing as sold
@@ -152,6 +165,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Verify listing limit enforcement (try creating 21st listing)
 
 **Expected Result**:
+
 - User can view all their listings with status indicators
 - Edit form pre-populates with current values
 - Sold listings show status but remain visible
@@ -166,6 +180,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Content flagging and admin review
 
 **Steps**:
+
 1. As regular user, flag inappropriate listing
 2. Select flag reason (spam, inappropriate, fake, other)
 3. Add description if reason is "other"
@@ -174,6 +189,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Verify moderation action is logged
 
 **Expected Result**:
+
 - Flag submission creates pending review item
 - User cannot flag same listing twice
 - Admin sees flagged content queue
@@ -187,6 +203,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Content findability
 
 **Steps**:
+
 1. Search for items using keywords from titles
 2. Search using description text
 3. Test search with partial matches
@@ -195,6 +212,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Verify sticky listings appear at top
 
 **Expected Result**:
+
 - Full-text search returns relevant listings
 - Search works across both title and description
 - Partial and fuzzy matching works
@@ -209,6 +227,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Paid feature functionality with visual enhancements
 
 **Steps**:
+
 1. Purchase color highlighting feature (7 days)
 2. Purchase sticky listing feature (7 days)
 3. Purchase auto-bump feature (21 days or until cancelled)
@@ -217,6 +236,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Verify premium feature cancellation
 
 **Expected Result**:
+
 - Color highlighted listings display with visual distinction
 - Sticky listings appear at top of category results
 - Auto-bump renews listings automatically for 21 days
@@ -231,6 +251,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Comprehensive administrative controls
 
 **Steps**:
+
 1. Access admin section via ADMIN_ID environment variable check
 2. Review ALL listings (flagged and unflagged) in admin panel
 3. Manually un-publish any listing with admin notes
@@ -239,6 +260,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 6. Test admin manual stick functionality on any listing
 
 **Expected Result**:
+
 - Admin panel visible only to user matching ADMIN_ID
 - All listings visible regardless of flag status
 - Admin can hide/restore any listing with notes
@@ -253,6 +275,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: User discipline and appeals
 
 **Steps**:
+
 1. As admin, ban a user for policy violations
 2. As banned user, attempt to create listing (should fail)
 3. Use bot `/appeal` command to submit appeal
@@ -260,6 +283,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Verify user access is restored
 
 **Expected Result**:
+
 - Banned users cannot create new listings
 - Appeal submission creates admin review item
 - Bot accepts appeal message correctly
@@ -273,6 +297,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: E2E testing with mock users via browser automation MCP
 
 **Steps**:
+
 1. Setup browser automation with mock buyer and seller users
 2. Run complete buyer journey: browse → contact seller → communication flow
 3. Run seller journey: create listing → preview → publish → manage
@@ -280,6 +305,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Verify image gallery with swipe navigation works correctly
 
 **Expected Result**:
+
 - Mock users can complete full marketplace workflows
 - Browser automation validates all user interactions
 - Image galleries display full-screen with swipe functionality
@@ -293,6 +319,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 **Test**: Archive management instead of deletion
 
 **Steps**:
+
 1. Mark listings as sold and verify they move to archive
 2. Expire listings and verify they archive after 7 days
 3. Un-publish listings and verify they move to archived section
@@ -300,6 +327,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. Verify archived items don't appear in active searches
 
 **Expected Result**:
+
 - Sold/expired/unpublished items move to archive, not deleted
 - Archived items accessible via separate "My Archived Listings" section
 - Archives excluded from public browse and search
@@ -319,6 +347,7 @@ This guide walks through testing the core user journey of the Telegram marketpla
 5. **Bot Webhook**: Telegram bot webhook handling concurrent updates
 
 **Artillery Configuration**:
+
 ```yaml
 config:
   target: 'http://localhost:8787'
@@ -414,30 +443,35 @@ The implementation is considered complete when:
 ## Troubleshooting Common Issues
 
 ### Development Environment Issues
+
 - Enable `VITE_DEV_BYPASS_AUTH=true` for local testing
 - Verify mock users are loaded via `/dev/mock-users`
 - Check data migration from deployed to local environment
 - Ensure `make dev-local` starts without Telegram dependencies
 
 ### Performance Problems
+
 - Monitor KV cache hit/miss ratios
 - Check FTS5 full-text search index performance
 - Verify Artillery load test configuration
 - Review CloudFlare Workers runtime limits
 
 ### Bot Integration Issues
+
 - Test bot commands in local environment with mocks
 - Verify webhook endpoint handles all message types
 - Check deep link generation and navigation
 - Validate Telegram Stars payment integration
 
 ### Admin Panel Problems
+
 - Confirm ADMIN_ID environment variable is set correctly
 - Verify admin section visibility logic
 - Test admin-managed blocklist functionality
 - Check admin notification system for user bans
 
 ### Cache and Performance Issues
+
 - Monitor KV cache invalidation on listing changes
 - Check CQRS-style cache key patterns
 - Verify cache TTL settings (5min listings, 1hr categories)

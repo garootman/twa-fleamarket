@@ -1,5 +1,5 @@
-import { Bot, webhookCallback, Context } from 'grammy';
-import { MessageSender } from './messageSender';
+import { Bot, webhookCallback } from 'grammy';
+import { WebhookHandler } from './webhook';
 import { Database } from '../db/index';
 
 // interface Env {
@@ -14,12 +14,14 @@ interface AppContext {
   corsHeaders: Record<string, string>;
   isLocalhost: boolean;
   botName: string | null;
+  env: any;
 }
 
 export class GrammyBotWrapper {
   private bot: Bot;
   private webhookHandler: (request: Request) => Promise<Response>;
   private app: AppContext;
+  private botWebhookHandler: WebhookHandler;
 
   constructor(token: string, app: AppContext, useTestApi?: string) {
     // Initialize grammY bot
@@ -36,65 +38,14 @@ export class GrammyBotWrapper {
     this.bot = new Bot(token, config);
 
     this.app = app;
+    this.botWebhookHandler = new WebhookHandler(app);
     this.setupHandlers();
     this.webhookHandler = webhookCallback(this.bot, 'cloudflare-mod');
   }
 
   private setupHandlers() {
-    const messageSender = new MessageSender(this.app, this.app.telegram);
-
-    // Handle /start command
-    this.bot.command('start', async (ctx: Context) => {
-      const chatId = ctx.chat?.id;
-      const messageId = ctx.message?.message_id;
-
-      if (chatId && messageId) {
-        // Save message to database (compatible with existing structure)
-        const messageToSave = JSON.stringify(
-          {
-            update_id: ctx.update.update_id,
-            message: ctx.message,
-          },
-          null,
-          2
-        );
-
-        // Message logging has been removed - using console instead
-        console.log('Grammy bot message:', messageToSave, ctx.update.update_id);
-
-        // Send greeting using existing MessageSender
-        await messageSender.sendGreeting(chatId, messageId);
-      }
-    });
-
-    // Handle all other messages (for future expansion)
-    this.bot.on('message', async (ctx: Context) => {
-      const chatId = ctx.chat?.id;
-      const messageId = ctx.message?.message_id;
-
-      if (chatId && messageId && !ctx.message?.text?.startsWith('/')) {
-        // Save message to database
-        const messageToSave = JSON.stringify(
-          {
-            update_id: ctx.update.update_id,
-            message: ctx.message,
-          },
-          null,
-          2
-        );
-
-        // Message logging has been removed - using console instead
-        console.log('Grammy bot message:', messageToSave, ctx.update.update_id);
-
-        // For now, just acknowledge - can be expanded later
-        // await ctx.reply("Message received!");
-      }
-    });
-
-    // Error handling
-    this.bot.catch(err => {
-      console.error('grammY bot error:', err);
-    });
+    // Use the new organized webhook handler to setup all bot commands and handlers
+    this.botWebhookHandler.setupBotHandlers(this.bot);
   }
 
   // Handle webhook requests (compatible with existing Cloudflare Workers setup)
