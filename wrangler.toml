@@ -1,6 +1,7 @@
 name = "telegram-calendar"
 main = "dist/index.js"
 compatibility_date = "2023-10-07"
+compatibility_flags = ["nodejs_compat"]
 account_id = "e023ec3576222c6a7b6cdf933de3d915"
 
 [observability.logs]
