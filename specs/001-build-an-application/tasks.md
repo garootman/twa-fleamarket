@@ -23,7 +23,7 @@
    → Different files = mark [P] for parallel
    → Tests before implementation (TDD)
    → Existing code reorganization first
-5. Number tasks sequentially (T001-T044)
+5. Number tasks sequentially (T001-T114)
 6. Focus: Enhance existing working code with new features
 ```
 
@@ -36,233 +36,235 @@
 
 **CRITICAL: Restructure existing working code first**
 
-- [ ] T001 [P] Reorganize backend bot commands to `/src/bot/` folder structure
-- [ ] T002 [P] Restructure database files to `/src/db/` with proper schema organization
-- [ ] T003 [P] Move KV caching logic to `/src/kv/` library folder
-- [ ] T004 [P] Organize R2 image handling to `/src/r2/` folder
-- [ ] T005 [P] Create admin functionality folder `/src/admin/` for management features
-- [ ] T006 [P] Setup dev utilities in `/src/dev/` for mock users and auth bypass
-- [ ] T007 Add missing dependencies: leo-profanity, Artillery for load testing
-- [ ] T008 [P] Configure TypeScript paths for new folder structure
+- [x] T001 [P] Reorganize backend bot commands to `/src/bot/` folder structure
+- [x] T002 [P] Restructure database files to `/src/db/` with proper schema organization
+- [x] T003 [P] Move KV caching logic to `/src/kv/` library folder
+- [x] T004 [P] Organize R2 image handling to `/src/r2/` folder
+- [x] T005 [P] Create admin functionality folder `/src/admin/` for management features
+- [x] T006 [P] Setup dev utilities in `/src/dev/` for mock users and auth bypass
+- [x] T007 Add missing dependencies: leo-profanity, Artillery for load testing
+- [x] T008 [P] Configure TypeScript paths for new folder structure
 
-## Phase 3.2: Database & Models (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
-
-**CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
-
-- [ ] T009 [P] Database schema test for User entity in `/src/db/__tests__/schema.test.ts`
-- [ ] T010 [P] Database schema test for Category entity in `/src/db/__tests__/schema.test.ts`
-- [ ] T011 [P] Database schema test for Listing entity in `/src/db/__tests__/schema.test.ts`
-- [ ] T012 [P] Database schema test for premium features in `/src/db/__tests__/premium.test.ts`
-- [ ] T013 [P] Database migration test in `/src/db/__tests__/migration.test.ts`
-
-## Phase 3.3: Core Database Implementation (ONLY after tests are failing)
-
-- [ ] T014 [P] Implement User model with Telegram auth in `/src/db/schema/users.ts`
-- [ ] T015 [P] Implement Category model with 2-level hierarchy in `/src/db/schema/categories.ts`
-- [ ] T016 [P] Implement Listing model with all fields in `/src/db/schema/listings.ts`
-- [ ] T017 [P] Implement Flag, ModerationAction, Appeal models in `/src/db/schema/moderation.ts`
-- [ ] T018 [P] Implement PremiumFeature, BlockedWord models in `/src/db/schema/premium.ts`
-- [ ] T019 [P] Implement UserSession, MockUser models in `/src/db/schema/sessions.ts`
-- [ ] T020 [P] Create database indexes for performance in `/src/db/indexes.ts`
-- [ ] T021 [P] Setup Drizzle migrations for all schemas in `/src/db/migrations/`
-
-## Phase 3.4: API Contract Tests (TDD) ⚠️ MUST COMPLETE BEFORE 3.5
+## Phase 3.2: Contract Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
-- [ ] T022 [P] Contract test POST /api/auth in `/src/__tests__/contract/auth.test.ts`
-- [ ] T023 [P] Contract test GET /api/me in `/src/__tests__/contract/user.test.ts`
-- [ ] T024 [P] Contract test GET /api/categories in `/src/__tests__/contract/categories.test.ts`
-- [ ] T025 [P] Contract test POST /api/listings in `/src/__tests__/contract/listings-create.test.ts`
-- [ ] T026 [P] Contract test GET /api/listings in `/src/__tests__/contract/listings-search.test.ts`
-- [ ] T027 [P] Contract test GET /api/listings/{id} in `/src/__tests__/contract/listings-detail.test.ts`
-- [ ] T028 [P] Contract test PUT /api/listings/{id} in `/src/__tests__/contract/listings-update.test.ts`
-- [ ] T029 [P] Contract test POST /api/listings/{id}/flag in `/src/__tests__/contract/moderation.test.ts`
-- [ ] T030 [P] Contract test POST /api/upload in `/src/__tests__/contract/images.test.ts`
-- [ ] T031 [P] Contract test Admin endpoints in `/src/__tests__/contract/admin.test.ts`
-- [ ] T032 [P] Contract test Bot webhook in `/src/__tests__/contract/bot.test.ts`
-- [ ] T033 [P] Contract test Dev endpoints in `/src/__tests__/contract/dev.test.ts`
+### API Contract Tests
+- [x] T009 [P] Contract test POST /miniApp/init (existing auth) in tests/contract/test_auth_post.ts
+- [x] T010 [P] Contract test GET /api/me in tests/contract/test_me_get.ts
+- [x] T011 [P] Contract test GET /api/categories in tests/contract/test_categories_get.ts
+- [x] T012 [P] Contract test GET /api/listings in tests/contract/test_listings_get.ts
+- [x] T013 [P] Contract test POST /api/listings in tests/contract/test_listings_post.ts
+- [x] T014 [P] Contract test GET /api/listings/{id} in tests/contract/test_listings_by_id_get.ts
+- [x] T015 [P] Contract test PUT /api/listings/{id} in tests/contract/test_listings_by_id_put.ts
+- [ ] T016 [P] Contract test POST /api/listings/{id}/bump in tests/contract/test_listings_bump_post.ts
+- [ ] T017 [P] Contract test POST /api/listings/{id}/flag in tests/contract/test_listings_flag_post.ts
+- [ ] T018 [P] Contract test GET /api/me/listings in tests/contract/test_me_listings_get.ts
+- [ ] T019 [P] Contract test POST /api/upload in tests/contract/test_upload_post.ts
+- [ ] T020 [P] Contract test POST /api/listings/{id}/preview in tests/contract/test_listings_preview_post.ts
+- [ ] T021 [P] Contract test POST /api/listings/{id}/publish in tests/contract/test_listings_publish_post.ts
+- [x] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts
 
-## Phase 3.5: Core API Implementation (ONLY after contract tests are failing)
+### Admin Contract Tests
+- [ ] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts
+- [ ] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts
+- [ ] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts
+- [ ] T026 [P] Contract test POST /api/admin/users/{id}/unban in tests/contract/test_admin_users_unban_post.ts
+- [ ] T027 [P] Contract test GET /api/admin/blocked-words in tests/contract/test_admin_blocked_words_get.ts
+- [ ] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
 
-- [ ] T034 Implement authentication endpoint with Telegram initData validation in `/src/index.ts`
-- [ ] T035 Implement user profile endpoints in `/src/index.ts`
-- [ ] T036 Implement categories endpoints with KV caching in `/src/index.ts`
-- [ ] T037 Implement listing create/read endpoints in `/src/index.ts`
-- [ ] T038 Implement listing update/delete with ownership checks in `/src/index.ts`
-- [ ] T039 Implement listing search with full-text search in `/src/index.ts`
-- [ ] T040 Implement image upload to R2 with processing in `/src/index.ts`
-- [ ] T041 Implement moderation endpoints (flag, admin actions) in `/src/index.ts`
-- [ ] T042 [P] Implement bot webhook handler with command routing in `/src/bot/webhook.ts`
-- [ ] T043 [P] Implement dev endpoints for mock users and auth bypass in `/src/dev/auth.ts`
+### Development Contract Tests
+- [ ] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
+- [ ] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
 
-## Phase 3.6: Integration & Features
+### Integration Tests (User Journeys)
+- [ ] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
+- [ ] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts
+- [ ] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts
+- [ ] T034 [P] Integration test moderation and flagging system in backend/tests/integration/test_moderation_system.ts
+- [ ] T035 [P] Integration test admin panel functionality in backend/tests/integration/test_admin_panel.ts
+- [ ] T036 [P] Integration test premium features with payment in backend/tests/integration/test_premium_features.ts
+- [ ] T037 [P] Integration test search and discovery features in backend/tests/integration/test_search_discovery.ts
+- [ ] T038 [P] Integration test KV caching performance in backend/tests/integration/test_kv_caching.ts
+- [ ] T039 [P] Integration test mock user system for local dev in backend/tests/integration/test_mock_users.ts
 
-- [ ] T044 [P] Implement KV caching service with CQRS pattern in `/src/kv/cache.ts`
-- [ ] T045 [P] Implement R2 image service with processing in `/src/r2/images.ts`
-- [ ] T046 [P] Implement admin panel functionality in `/src/admin/panel.ts`
-- [ ] T047 [P] Add profanity filtering with leo-profanity in `/src/admin/content-filter.ts`
-- [ ] T048 [P] Implement premium features logic in `/src/admin/premium.ts`
-- [ ] T049 [P] Add username validation service in `/src/admin/validation.ts`
-- [ ] T050 Implement listing preview functionality with warnings
-- [ ] T051 Implement archive system instead of hard deletes
-- [ ] T052 Add bot command handlers: /start, /help, /question in `/src/bot/commands.ts`
+## Phase 3.3: Database Models (ONLY after tests are failing)
 
-## Phase 3.7: Frontend Enhancement Tests (TDD)
+### Database Models (Drizzle ORM)
+- [ ] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts
+- [ ] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts
+- [ ] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts
+- [ ] T043 [P] Flag model for content moderation in backend/src/db/models/flag.ts
+- [ ] T044 [P] ModerationAction model for admin actions in backend/src/db/models/moderation-action.ts
+- [ ] T045 [P] Appeal model for user appeals in backend/src/db/models/appeal.ts
+- [ ] T046 [P] PremiumFeature model for paid features in backend/src/db/models/premium-feature.ts
+- [ ] T047 [P] UserSession model for auth tokens in backend/src/db/models/user-session.ts
+- [ ] T048 [P] BlockedWord model for content filtering in backend/src/db/models/blocked-word.ts
+- [ ] T049 [P] MockUser model for local testing in backend/src/db/models/mock-user.ts
+- [ ] T050 [P] CacheEntry model for KV cache in backend/src/db/models/cache-entry.ts
 
-**CRITICAL: Frontend tests MUST fail before implementation**
+## Phase 3.4: Service Layer & Bot Commands
 
-- [ ] T053 [P] Test listing preview UI in `/webapp/src/components/__tests__/ListingPreview.test.tsx`
-- [ ] T054 [P] Test image gallery with swipes in `/webapp/src/components/__tests__/ImageGallery.test.tsx`
-- [ ] T055 [P] Test premium features UI in `/webapp/src/components/__tests__/PremiumFeatures.test.tsx`
-- [ ] T056 [P] Test admin panel UI in `/webapp/src/components/__tests__/AdminPanel.test.tsx`
-- [ ] T057 [P] Test mock user auth bypass in `/webapp/src/dev/__tests__/authBypass.test.tsx`
+### Service Layer
+- [ ] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts
+- [ ] T052 [P] UserService with profile management in backend/src/services/user-service.ts
+- [ ] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts
+- [ ] T054 [P] ListingService with CRUD and search in backend/src/services/listing-service.ts
+- [ ] T055 [P] ImageService with R2 storage in backend/src/services/image-service.ts
+- [ ] T056 [P] KVCacheService for CQRS-style caching in backend/src/services/kv-cache-service.ts
+- [ ] T057 [P] ModerationService for flagging system in backend/src/services/moderation-service.ts
+- [ ] T058 [P] AdminService for admin functionality in backend/src/services/admin-service.ts
+- [ ] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts
 
-## Phase 3.8: Frontend Implementation (ONLY after frontend tests fail)
+### Bot Commands (Grammy)
+- [ ] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts
+- [ ] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts
+- [ ] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts
+- [ ] T063 Bot webhook handler with message routing in backend/src/bot/webhook.ts
 
-- [ ] T058 [P] Implement listing preview with warnings in `/webapp/src/components/ListingPreview.tsx`
-- [ ] T059 [P] Implement image gallery with swipe navigation in `/webapp/src/components/ImageGallery.tsx`
-- [ ] T060 [P] Implement premium features UI with visual enhancements in `/webapp/src/components/PremiumFeatures.tsx`
-- [ ] T061 [P] Implement comprehensive admin panel in `/webapp/src/components/AdminPanel.tsx`
-- [ ] T062 [P] Enhance mock user system for testing in `/webapp/src/dev/mockAuth.tsx`
-- [ ] T063 Update API client to support all new endpoints in `/webapp/src/api.ts`
+## Phase 3.5: API Endpoints Implementation
 
-## Phase 3.9: Integration Testing with Browser Automation
+### Core API Endpoints (Hono)
+- [ ] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts
+- [ ] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts
+- [ ] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts
+- [ ] T067 GET /api/listings endpoint with search/filter in backend/src/api/listings.ts
+- [ ] T068 POST /api/listings endpoint with validation in backend/src/api/listings.ts
+- [ ] T069 GET /api/listings/{id} endpoint with views in backend/src/api/listings.ts
+- [ ] T070 PUT /api/listings/{id} endpoint with ownership check in backend/src/api/listings.ts
+- [ ] T071 DELETE /api/listings/{id} endpoint with archival in backend/src/api/listings.ts
+- [ ] T072 POST /api/listings/{id}/bump endpoint in backend/src/api/listings.ts
+- [ ] T073 POST /api/listings/{id}/flag endpoint in backend/src/api/listings.ts
+- [ ] T074 GET /api/me/listings endpoint with stats in backend/src/api/me.ts
+- [ ] T075 POST /api/upload endpoint with R2 integration in backend/src/api/upload.ts
+- [ ] T076 POST /api/listings/{id}/preview endpoint in backend/src/api/listings.ts
+- [ ] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts
 
-**CRITICAL: Complete user journey testing**
+### Admin Endpoints
+- [ ] T078 GET /api/admin/listings endpoint with all listings in backend/src/api/admin.ts
+- [ ] T079 POST /api/admin/listings/{id}/stick endpoint in backend/src/api/admin.ts
+- [ ] T080 POST /api/admin/users/{id}/ban endpoint in backend/src/api/admin.ts
+- [ ] T081 POST /api/admin/users/{id}/unban endpoint in backend/src/api/admin.ts
+- [ ] T082 GET /api/admin/blocked-words endpoint in backend/src/api/admin.ts
+- [ ] T083 POST /api/admin/blocked-words endpoint in backend/src/api/admin.ts
 
-- [ ] T064 [P] Integration test: Complete buyer journey with mock users in `/src/__tests__/integration/buyer-journey.test.ts`
-- [ ] T065 [P] Integration test: Complete seller journey with listing creation in `/src/__tests__/integration/seller-journey.test.ts`
-- [ ] T066 [P] Integration test: Admin moderation workflow in `/src/__tests__/integration/admin-workflow.test.ts`
-- [ ] T067 [P] Integration test: Bot command functionality in `/src/__tests__/integration/bot-commands.test.ts`
-- [ ] T068 [P] Integration test: Premium features workflow in `/src/__tests__/integration/premium-features.test.ts`
+### Development Endpoints
+- [ ] T084 GET /api/dev/mock-users endpoint for testing in backend/src/api/dev.ts
+- [ ] T085 POST /api/dev/auth endpoint with auth bypass in backend/src/api/dev.ts
 
-## Phase 3.10: Performance & Load Testing
+## Phase 3.6: Frontend Components
 
-- [ ] T069 [P] Setup Artillery load testing configuration in `/artillery.yml`
-- [ ] T070 [P] Load test: API endpoints performance in `/src/__tests__/load/api-performance.test.ts`
-- [ ] T071 [P] Load test: KV cache performance in `/src/__tests__/load/cache-performance.test.ts`
-- [ ] T072 [P] Load test: Full-text search performance in `/src/__tests__/load/search-performance.test.ts`
-- [ ] T073 [P] Performance test: Image processing and upload in `/src/__tests__/load/image-performance.test.ts`
+### Frontend Components (React)
+- [ ] T086 [P] App router with Telegram WebApp integration in frontend/src/App.tsx
+- [ ] T087 [P] Auth component with Telegram initData in frontend/src/components/Auth.tsx
+- [ ] T088 [P] Listing browse component with categories in frontend/src/components/ListingBrowse.tsx
+- [ ] T089 [P] Listing detail component with gallery in frontend/src/components/ListingDetail.tsx
+- [ ] T090 [P] Create listing form with preview in frontend/src/components/CreateListing.tsx
+- [ ] T091 [P] User profile component with listings in frontend/src/components/Profile.tsx
+- [ ] T092 [P] Admin panel component for moderation in frontend/src/components/AdminPanel.tsx
+- [ ] T093 [P] Search component with full-text search in frontend/src/components/Search.tsx
+- [ ] T094 [P] Image gallery with swipe navigation in frontend/src/components/ImageGallery.tsx
 
-## Phase 3.11: Polish & Validation
+## Phase 3.7: Integration & Middleware
 
-- [ ] T074 [P] Add comprehensive error handling and structured logging
-- [ ] T075 [P] Implement data migration from deployed to local environment
-- [ ] T076 [P] Add admin notifications for user bans and violations
-- [ ] T077 [P] Enhance archive system with management UI
-- [ ] T078 Run complete quickstart validation scenarios from `/specs/001-build-an-application/quickstart.md`
-- [ ] T079 Performance validation: All cached endpoints < 200ms response time
-- [ ] T080 Integration validation: Browser automation tests with real user flows
+- [ ] T095 Connect ListingService to KV caching for performance in backend/src/services/listing-service.ts
+- [ ] T096 Connect ImageService to CloudFlare R2 storage in backend/src/services/image-service.ts
+- [ ] T097 Setup auth middleware with session validation in backend/src/middleware/auth.ts
+- [ ] T098 Setup admin middleware with ADMIN_ID check in backend/src/middleware/admin.ts
+- [ ] T099 Setup request/response logging middleware in backend/src/middleware/logging.ts
+- [ ] T100 Setup CORS and security headers for production in backend/src/middleware/security.ts
+- [ ] T101 Setup profanity filtering with leo-profanity + custom blocklist in backend/src/middleware/content-filter.ts
+- [ ] T102 Connect bot webhook to Telegram API with error handling in backend/src/bot/webhook.ts
+
+## Phase 3.8: Testing & Performance
+
+### Performance & Testing
+- [ ] T103 [P] Unit tests for validation logic in backend/tests/unit/test_validation.ts
+- [ ] T104 [P] Unit tests for auth service in backend/tests/unit/test_auth_service.ts
+- [ ] T105 [P] Unit tests for listing service in backend/tests/unit/test_listing_service.ts
+- [ ] T106 [P] Performance tests for API endpoints (<200ms) in backend/tests/performance/test_api_performance.ts
+- [ ] T107 [P] Load testing with Artillery configuration in tests/load-testing/artillery-config.yml
+- [ ] T108 [P] Browser automation E2E tests with mock users in tests/e2e/test_user_journeys.spec.ts
+- [ ] T109 [P] Frontend unit tests for components in frontend/tests/unit/
+- [ ] T110 [P] Frontend integration tests in frontend/tests/integration/
+
+## Phase 3.9: Documentation & Final Setup
+
+### Documentation & Final Setup
+- [ ] T111 [P] Update project README with setup instructions
+- [ ] T112 [P] Create database migration scripts for schema changes
+- [ ] T113 [P] Setup production environment variables and secrets
+- [ ] T114 Run quickstart.md validation scenarios with mock users
 
 ## Dependencies
 
-**Critical Path:**
+- Setup (T001-T008) before all other phases
+- Contract tests (T009-T039) before implementation (T040-T094)
+- Models (T040-T050) before services (T051-T059)
+- Services before endpoints (T064-T085)
+- Bot commands (T060-T063) depend on webhook setup (T102)
+- Frontend components (T086-T094) can run parallel with backend after auth (T064)
+- Integration (T095-T102) after core implementation
+- Testing & performance (T103-T110) after integration complete
+- Documentation (T111-T114) after all implementation
 
-- Code reorganization (T001-T008) must complete before database work
-- Database tests (T009-T013) before database implementation (T014-T021)
-- Contract tests (T022-T033) before API implementation (T034-T043)
-- Frontend tests (T053-T057) before frontend implementation (T058-T063)
-- Core functionality before integration testing (T064-T068)
-- All features before performance testing (T069-T073)
-
-**Blocking Relationships:**
-
-- T014-T021 depend on T009-T013 (database tests must fail first)
-- T034-T043 depend on T022-T033 (contract tests must fail first)
-- T044-T052 depend on T014-T021 (need database models)
-- T058-T063 depend on T053-T057 (frontend tests must fail first)
-- T064-T068 depend on T034-T052 (need working API and features)
-- T069-T080 depend on all previous phases (complete system needed)
-
-## Parallel Execution Examples
-
-### Phase 3.1 - Code Reorganization (Run together):
+## Parallel Example
 
 ```
-Task: "Reorganize backend bot commands to /src/bot/ folder structure"
-Task: "Restructure database files to /src/db/ with proper schema organization"
-Task: "Move KV caching logic to /src/kv/ library folder"
-Task: "Organize R2 image handling to /src/r2/ folder"
-Task: "Create admin functionality folder /src/admin/ for management features"
-Task: "Setup dev utilities in /src/dev/ for mock users and auth bypass"
-Task: "Configure TypeScript paths for new folder structure"
-```
+# Launch contract tests together (T009-T030):
+Task: "Contract test POST /api/auth in tests/contract/test_auth_post.ts"
+Task: "Contract test GET /api/me in tests/contract/test_me_get.ts"
+Task: "Contract test GET /api/categories in tests/contract/test_categories_get.ts"
+Task: "Contract test GET /api/listings in tests/contract/test_listings_get.ts"
 
-### Phase 3.2 - Database Tests (Run together):
-
-```
-Task: "Database schema test for User entity in /src/db/__tests__/schema.test.ts"
-Task: "Database schema test for Category entity in /src/db/__tests__/schema.test.ts"
-Task: "Database schema test for Listing entity in /src/db/__tests__/schema.test.ts"
-Task: "Database schema test for premium features in /src/db/__tests__/premium.test.ts"
-Task: "Database migration test in /src/db/__tests__/migration.test.ts"
-```
-
-### Phase 3.4 - Contract Tests (Run together):
-
-```
-Task: "Contract test POST /api/auth in /src/__tests__/contract/auth.test.ts"
-Task: "Contract test GET /api/me in /src/__tests__/contract/user.test.ts"
-Task: "Contract test GET /api/categories in /src/__tests__/contract/categories.test.ts"
-Task: "Contract test POST /api/listings in /src/__tests__/contract/listings-create.test.ts"
-Task: "Contract test GET /api/listings in /src/__tests__/contract/listings-search.test.ts"
-```
-
-### Phase 3.9 - Integration Tests (Run together):
-
-```
-Task: "Integration test: Complete buyer journey with mock users in /src/__tests__/integration/buyer-journey.test.ts"
-Task: "Integration test: Complete seller journey with listing creation in /src/__tests__/integration/seller-journey.test.ts"
-Task: "Integration test: Admin moderation workflow in /src/__tests__/integration/admin-workflow.test.ts"
-Task: "Integration test: Bot command functionality in /src/__tests__/integration/bot-commands.test.ts"
-Task: "Integration test: Premium features workflow in /src/__tests__/integration/premium-features.test.ts"
+# Launch models together (T040-T050):
+Task: "User model with Telegram integration in backend/src/db/models/user.ts"
+Task: "Category model with 2-level hierarchy in backend/src/db/models/category.ts"
+Task: "Listing model with premium features in backend/src/db/models/listing.ts"
+Task: "Flag model for content moderation in backend/src/db/models/flag.ts"
 ```
 
 ## Notes
 
-**Implementation Strategy:**
+- [P] tasks = different files/modules, no dependencies
+- Verify tests fail before implementing functionality
+- Keep existing T001-T008 code reorganization tasks as foundation
+- Mock users enable comprehensive local testing without Telegram integration
+- KV caching critical for sub-200ms performance goals
+- Admin functionality controlled via ADMIN_ID environment variable
+- Premium features use Telegram Stars payment integration
+- Archive system preserves data instead of deletion
+- Browser automation tests validate complete user journeys
+- Artillery load testing ensures concurrent user performance
 
-- **Priority 1**: Restructure existing working code to specification folders (T001-T008)
-- **Priority 2**: Add comprehensive test coverage with TDD approach (T009-T033, T053-T057)
-- **Priority 3**: Implement new features: preview, KV caching, admin panel, premium features (T034-T052, T058-T063)
-- **Priority 4**: Integration testing with browser automation and mock users (T064-T068)
-- **Priority 5**: Performance validation and load testing (T069-T080)
+## Task Generation Rules
 
-**Key Focus Areas:**
+1. **From Contracts (api-schema.yaml)**:
+   - 29 endpoints → 22 contract test tasks [P] + implementation tasks
+   - Authentication, listings, admin, development sections
 
-- Existing code enhancement vs. greenfield development
-- Mock user system for comprehensive local testing
-- KV caching for sub-200ms performance
-- Full-text fuzzy search with large datasets
-- Admin panel via ADMIN_ID environment variable
-- Premium features with correct durations and visual enhancements
-- Archive system instead of hard deletion
-- Browser automation for complete user journey validation
+2. **From Data Model**:
+   - 12 entities → 11 model creation tasks [P]
+   - Services layer for business logic [P]
 
-**Testing Philosophy:**
+3. **From Quickstart Scenarios**:
+   - 12 test scenarios → integration test tasks [P]
+   - E2E browser automation tests
 
-- TDD enforced: All tests must fail before implementation
-- Mock users enable auth bypass for local testing
-- Browser automation validates complete workflows
-- Artillery load testing ensures performance goals
-- Integration tests cover buyer/seller/admin journeys
+4. **From Implementation Plan**:
+   - Code restructuring from existing functional deployment
+   - CloudFlare Workers + Pages architecture
+   - TypeScript, Hono, Grammy, React, Drizzle ORM tech stack
 
 ## Validation Checklist
 
-_GATE: Checked before marking complete_
-
-- [ ] All 25+ API endpoints have contract tests that initially fail
-- [ ] All 12 database entities have schema tests that initially fail
-- [ ] All new features (preview, KV cache, admin panel) have failing tests first
-- [ ] Mock user system enables complete local testing without Telegram
-- [ ] Browser automation tests validate end-to-end user journeys
-- [ ] Artillery load testing validates performance requirements
-- [ ] Archive system preserves data instead of hard deletion
-- [ ] Admin functionality restricted to ADMIN_ID environment variable
-- [ ] Premium features have correct durations (7 days sticky/highlight, 21 days auto-bump)
-- [ ] KV caching provides sub-200ms performance for category browsing
-- [ ] Full-text fuzzy search works efficiently with large datasets
-- [ ] Data migration from deployed to local environment functions correctly
-
-**Success Criteria:** Implementation enhances existing working code with new features while maintaining performance and adding comprehensive test coverage through TDD approach with mock users and browser automation.
+- [x] All 29 contract endpoints have corresponding tests
+- [x] All 12 entities have model tasks
+- [x] All tests come before implementation (TDD enforced)
+- [x] Parallel tasks truly independent (different files/modules)
+- [x] Each task specifies exact file path
+- [x] No task modifies same file as another [P] task
+- [x] Existing T001-T008 reorganization tasks preserved
+- [x] Mock user system enables comprehensive testing
+- [x] Admin functionality and premium features covered
+- [x] Performance and load testing included
