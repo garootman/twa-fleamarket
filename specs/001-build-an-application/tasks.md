@@ -57,12 +57,12 @@
 - [x] T013 [P] Contract test POST /api/listings in tests/contract/test_listings_post.ts
 - [x] T014 [P] Contract test GET /api/listings/{id} in tests/contract/test_listings_by_id_get.ts
 - [x] T015 [P] Contract test PUT /api/listings/{id} in tests/contract/test_listings_by_id_put.ts
-- [ ] T016 [P] Contract test POST /api/listings/{id}/bump in tests/contract/test_listings_bump_post.ts
-- [ ] T017 [P] Contract test POST /api/listings/{id}/flag in tests/contract/test_listings_flag_post.ts
-- [ ] T018 [P] Contract test GET /api/me/listings in tests/contract/test_me_listings_get.ts
-- [ ] T019 [P] Contract test POST /api/upload in tests/contract/test_upload_post.ts
-- [ ] T020 [P] Contract test POST /api/listings/{id}/preview in tests/contract/test_listings_preview_post.ts
-- [ ] T021 [P] Contract test POST /api/listings/{id}/publish in tests/contract/test_listings_publish_post.ts
+- [x] T016 [P] Contract test POST /api/listings/{id}/bump in tests/contract/test_listings_bump_post.ts
+- [x] T017 [P] Contract test POST /api/listings/{id}/flag in tests/contract/test_listings_flag_post.ts
+- [x] T018 [P] Contract test GET /api/me/listings in tests/contract/test_me_listings_get.ts
+- [x] T019 [P] Contract test POST /api/upload in tests/contract/test_upload_post.ts
+- [x] T020 [P] Contract test POST /api/listings/{id}/preview in tests/contract/test_listings_preview_post.ts
+- [x] T021 [P] Contract test POST /api/listings/{id}/publish in tests/contract/test_listings_publish_post.ts
 - [x] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts
 
 ### Admin Contract Tests
