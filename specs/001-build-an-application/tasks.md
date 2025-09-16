@@ -66,12 +66,12 @@
 - [x] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts
 
 ### Admin Contract Tests
-- [ ] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts
-- [ ] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts
-- [ ] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts
-- [ ] T026 [P] Contract test POST /api/admin/users/{id}/unban in tests/contract/test_admin_users_unban_post.ts
-- [ ] T027 [P] Contract test GET /api/admin/blocked-words in tests/contract/test_admin_blocked_words_get.ts
-- [ ] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
+- [x] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts
+- [x] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts
+- [x] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts
+- [x] T026 [P] Contract test POST /api/admin/users/{id}/unban in tests/contract/test_admin_users_unban_post.ts
+- [x] T027 [P] Contract test GET /api/admin/blocked-words in tests/contract/test_admin_blocked_words_get.ts
+- [x] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
 
 ### Development Contract Tests
 - [ ] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
