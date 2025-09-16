@@ -74,8 +74,8 @@
 - [x] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
 
 ### Development Contract Tests
-- [ ] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
-- [ ] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
+- [x] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
+- [x] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
 
 ### Integration Tests (User Journeys)
 - [ ] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
