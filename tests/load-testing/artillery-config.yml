@@ -1,0 +1,345 @@
+# Artillery Load Testing Configuration - T107
+#
+# Comprehensive load testing configuration for the Telegram Marketplace application.
+# Tests various user scenarios under different load conditions to ensure system
+# stability and performance under concurrent user activity.
+
+config:
+  target: "http://localhost:8787"  # CloudFlare Workers local development
+  phases:
+    # Warm-up phase - Light load to initialize system
+    - duration: 30
+      arrivalRate: 2
+      name: "Warm-up"
+
+    # Ramp-up phase - Gradual increase to normal load
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 20
+      name: "Ramp-up"
+
+    # Sustained load - Normal operation simulation
+    - duration: 120
+      arrivalRate: 20
+      name: "Sustained load"
+
+    # Peak load - High traffic simulation
+    - duration: 60
+      arrivalRate: 50
+      name: "Peak load"
+
+    # Stress test - Maximum capacity testing
+    - duration: 30
+      arrivalRate: 100
+      name: "Stress test"
+
+    # Cool-down - Gradual reduction
+    - duration: 30
+      arrivalRate: 100
+      rampTo: 5
+      name: "Cool-down"
+
+  # Performance targets
+  ensure:
+    p95: 200  # 95th percentile should be under 200ms
+    p99: 500  # 99th percentile should be under 500ms
+    maxErrorRate: 5  # Maximum 5% error rate
+
+  # Test environment configuration
+  environments:
+    development:
+      target: "http://localhost:8787"
+      variables:
+        baseUrl: "http://localhost:8787"
+        mockAuth: true
+
+    staging:
+      target: "https://staging-api.marketplace.example.com"
+      variables:
+        baseUrl: "https://staging-api.marketplace.example.com"
+        mockAuth: false
+
+    production:
+      target: "https://api.marketplace.example.com"
+      variables:
+        baseUrl: "https://api.marketplace.example.com"
+        mockAuth: false
+
+  # Plugins for enhanced testing
+  plugins:
+    metrics-by-endpoint:
+      # Group metrics by endpoint for detailed analysis
+      useOnlyRequestNames: true
+
+    publish-metrics:
+      # Export metrics to external systems
+      type: cloudwatch
+      region: us-east-1
+
+  # Default headers for all requests
+  defaults:
+    headers:
+      User-Agent: "Artillery Load Test / Telegram Marketplace"
+      Accept: "application/json"
+      Content-Type: "application/json"
+
+# Test scenarios with realistic user journeys
+scenarios:
+  # Scenario 1: Guest user browsing (40% of traffic)
+  - name: "Guest browsing"
+    weight: 40
+    flow:
+      - log: "Guest user starting browsing session"
+
+      # Browse categories
+      - get:
+          url: "/api/categories"
+          name: "Get categories"
+          expect:
+            - statusCode: 200
+            - hasProperty: "categories"
+
+      # Search for items
+      - get:
+          url: "/api/listings?q=electronics&page=1&limit=20"
+          name: "Search listings"
+          expect:
+            - statusCode: 200
+            - hasProperty: "listings"
+
+      # View specific listing
+      - get:
+          url: "/api/listings/{{ $randomString() }}"
+          name: "View listing details"
+          expect:
+            - statusCode: [200, 404]  # 404 is acceptable for random IDs
+
+      # Think time between actions
+      - think: 2
+
+  # Scenario 2: Authenticated user session (35% of traffic)
+  - name: "Authenticated user session"
+    weight: 35
+    flow:
+      - log: "Authenticated user starting session"
+
+      # Mock authentication for load testing
+      - post:
+          url: "/api/dev/auth"
+          name: "Mock authentication"
+          json:
+            telegramId: "{{ $randomInt(100000, 999999) }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+          expect:
+            - statusCode: 200
+            - hasProperty: "token"
+
+      # Get user profile
+      - get:
+          url: "/api/me"
+          name: "Get user profile"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+            - hasProperty: "user"
+
+      # Get user's listings
+      - get:
+          url: "/api/me/listings"
+          name: "Get user listings"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # Search for items
+      - get:
+          url: "/api/listings?q={{ $pick(['electronics', 'furniture', 'books', 'clothing', 'sports']) }}&page=1"
+          name: "Search with auth"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      # View listing details
+      - get:
+          url: "/api/listings/{{ $randomString() }}"
+          name: "View listing with auth"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: [200, 404]
+
+      - think: 3
+
+  # Scenario 3: Create listing workflow (15% of traffic)
+  - name: "Create listing workflow"
+    weight: 15
+    flow:
+      - log: "User creating new listing"
+
+      # Authenticate first
+      - post:
+          url: "/api/dev/auth"
+          name: "Auth for creation"
+          json:
+            telegramId: "{{ $randomInt(100000, 999999) }}"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+
+      # Get categories for listing
+      - get:
+          url: "/api/categories"
+          name: "Get categories for listing"
+          expect:
+            - statusCode: 200
+
+      # Create new listing
+      - post:
+          url: "/api/listings"
+          name: "Create listing"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          json:
+            title: "Load Test Item {{ $randomInt(1, 10000) }}"
+            description: "This is a test listing created during load testing. {{ $randomString() }}"
+            priceUsd: "{{ $randomFloat(10, 1000) }}"
+            categoryId: "{{ $randomInt(1, 10) }}"
+            images: ["https://example.com/image1.jpg"]
+            tags: ["{{ $pick(['test', 'loadtest', 'demo', 'sample']) }}"]
+            isDraft: false
+          capture:
+            - json: "$.listing.id"
+              as: "listingId"
+          expect:
+            - statusCode: 201
+            - hasProperty: "listing"
+
+      # View the created listing
+      - get:
+          url: "/api/listings/{{ listingId }}"
+          name: "View created listing"
+          headers:
+            Authorization: "Bearer {{ authToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 5
+
+  # Scenario 4: Admin operations (5% of traffic)
+  - name: "Admin operations"
+    weight: 5
+    flow:
+      - log: "Admin performing operations"
+
+      # Admin authentication
+      - post:
+          url: "/api/dev/auth"
+          name: "Admin auth"
+          json:
+            telegramId: 111111111  # Known admin ID for testing
+          capture:
+            - json: "$.token"
+              as: "adminToken"
+
+      # Get all listings for moderation
+      - get:
+          url: "/api/admin/listings?page=1&limit=50"
+          name: "Get admin listings"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: [200, 403]  # 403 if not admin in non-dev env
+
+      # Get blocked words
+      - get:
+          url: "/api/admin/blocked-words"
+          name: "Get blocked words"
+          headers:
+            Authorization: "Bearer {{ adminToken }}"
+          expect:
+            - statusCode: [200, 403]
+
+      - think: 2
+
+  # Scenario 5: Heavy search activity (5% of traffic)
+  - name: "Heavy search activity"
+    weight: 5
+    flow:
+      - log: "Heavy search user session"
+
+      # Multiple rapid searches
+      - loop:
+          count: 5
+          over:
+            - "electronics"
+            - "furniture"
+            - "books"
+            - "clothing"
+            - "sports"
+          exec:
+            - get:
+                url: "/api/listings?q={{ $loopElement }}&page={{ $randomInt(1, 5) }}&limit=20"
+                name: "Rapid search - {{ $loopElement }}"
+                expect:
+                  - statusCode: 200
+            - think: 1
+
+      # Category browsing
+      - get:
+          url: "/api/categories"
+          name: "Get categories in search session"
+          expect:
+            - statusCode: 200
+
+# Custom functions for test data generation
+functions:
+  generateMockUser:
+    code: |
+      return {
+        telegramId: Math.floor(Math.random() * 900000) + 100000,
+        firstName: ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'][Math.floor(Math.random() * 5)],
+        lastName: ['Smith', 'Johnson', 'Brown', 'Davis', 'Wilson'][Math.floor(Math.random() * 5)],
+        username: `user${Math.floor(Math.random() * 10000)}`
+      };
+
+  generateListingData:
+    code: |
+      const titles = [
+        'Vintage Camera', 'Gaming Laptop', 'Office Chair', 'Mountain Bike',
+        'Guitar Electric', 'Coffee Maker', 'Running Shoes', 'Bookshelf',
+        'Smartphone', 'Desk Lamp', 'Winter Jacket', 'Bluetooth Speaker'
+      ];
+
+      const descriptions = [
+        'Excellent condition, barely used',
+        'Perfect for students and professionals',
+        'Great deal, must sell quickly',
+        'High quality, well maintained',
+        'Ideal for beginners and experts alike'
+      ];
+
+      return {
+        title: titles[Math.floor(Math.random() * titles.length)],
+        description: descriptions[Math.floor(Math.random() * descriptions.length)],
+        priceUsd: Math.floor(Math.random() * 1000) + 10,
+        categoryId: Math.floor(Math.random() * 10) + 1
+      };
+
+# Post-test hooks for cleanup and reporting
+hooks:
+  beforeScenario:
+    - log: "Starting scenario: {{ $scenarioName }}"
+
+  afterScenario:
+    - log: "Completed scenario: {{ $scenarioName }}"
+
+  beforeTest:
+    - log: "Starting load test at {{ $timestamp }}"
+
+  afterTest:
+    - log: "Load test completed at {{ $timestamp }}"

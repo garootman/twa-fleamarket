@@ -191,11 +191,11 @@
 
 ### Performance & Testing
 
-- [ ] T103 [P] Unit tests for validation logic in backend/tests/unit/test_validation.ts
-- [ ] T104 [P] Unit tests for auth service in backend/tests/unit/test_auth_service.ts
-- [ ] T105 [P] Unit tests for listing service in backend/tests/unit/test_listing_service.ts
-- [ ] T106 [P] Performance tests for API endpoints (<200ms) in backend/tests/performance/test_api_performance.ts
-- [ ] T107 [P] Load testing with Artillery configuration in tests/load-testing/artillery-config.yml
+- [x] T103 [P] Unit tests for validation logic in backend/tests/unit/test_validation.ts
+- [x] T104 [P] Unit tests for auth service in backend/tests/unit/test_auth_service.ts
+- [x] T105 [P] Unit tests for listing service in backend/tests/unit/test_listing_service.ts
+- [x] T106 [P] Performance tests for API endpoints (<200ms) in backend/tests/performance/test_api_performance.ts
+- [x] T107 [P] Load testing with Artillery configuration in tests/load-testing/artillery-config.yml
 - [ ] T108 [P] Browser automation E2E tests with mock users in tests/e2e/test_user_journeys.spec.ts
 - [ ] T109 [P] Frontend unit tests for components in frontend/tests/unit/
 - [ ] T110 [P] Frontend integration tests in frontend/tests/integration/
@@ -204,7 +204,7 @@
 
 ### Documentation & Final Setup
 
-- [ ] T111 [P] Update project README with setup instructions
+- [x] T111 [P] Update project README with setup instructions
 - [ ] T112 [P] Create database migration scripts for schema changes
 - [ ] T113 [P] Setup production environment variables and secrets
 - [ ] T114 Run quickstart.md validation scenarios with mock users

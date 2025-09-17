@@ -1,0 +1,43 @@
+# Artillery Smoke Test Configuration
+#
+# Quick smoke test to verify basic functionality before running full load tests.
+# This test uses minimal load to check that all endpoints are working correctly.
+
+config:
+  target: "http://localhost:8787"
+  phases:
+    - duration: 30
+      arrivalRate: 1
+      name: "Smoke test"
+
+  ensure:
+    p95: 300
+    maxErrorRate: 0  # No errors allowed in smoke test
+
+scenarios:
+  - name: "Basic functionality check"
+    flow:
+      # Test categories endpoint
+      - get:
+          url: "/api/categories"
+          name: "Categories smoke test"
+          expect:
+            - statusCode: 200
+
+      # Test search endpoint
+      - get:
+          url: "/api/listings?q=test&limit=5"
+          name: "Search smoke test"
+          expect:
+            - statusCode: 200
+
+      # Test mock auth
+      - post:
+          url: "/api/dev/auth"
+          name: "Auth smoke test"
+          json:
+            telegramId: 123456789
+          expect:
+            - statusCode: 200
+
+      - think: 1
