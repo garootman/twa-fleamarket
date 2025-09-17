@@ -74,7 +74,7 @@ const mockDB: D1Database = {
       all: async () => ({
         results: [], // No existing flags
         success: true,
-        meta: {} as any
+        meta: {} as any,
       }),
     }),
     first: async () => null, // No existing flag from this user
@@ -219,7 +219,8 @@ describe('Contract Test T017: POST /api/listings/{id}/flag', () => {
 
       const detailedFlagRequest: FlagRequest = {
         reason: 'fake',
-        description: 'The photos appear to be stock images and the product description contains false claims about brand authenticity. The seller has no history of selling legitimate items.',
+        description:
+          'The photos appear to be stock images and the product description contains false claims about brand authenticity. The seller has no history of selling legitimate items.',
       };
 
       const request = new Request(`http://localhost:8787/api/listings/${listingId}/flag`, {
@@ -528,14 +529,17 @@ describe('Contract Test T017: POST /api/listings/{id}/flag', () => {
         description: 'Attempting to flag already flagged listing.',
       };
 
-      const request = new Request(`http://localhost:8787/api/listings/${alreadyFlaggedListingId}/flag`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(flagRequest),
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${alreadyFlaggedListingId}/flag`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(flagRequest),
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

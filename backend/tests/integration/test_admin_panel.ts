@@ -181,7 +181,13 @@ const mockDB = {
           mockAuditLogs.push(newLog);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newLog.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newLog.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         return { success: true, meta: {} as any };
@@ -324,7 +330,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const request = new Request('http://localhost:8787/api/admin/dashboard', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${regularUserToken}`,
+          Authorization: `Bearer ${regularUserToken}`,
         },
       });
 
@@ -380,7 +386,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const request = new Request('http://localhost:8787/api/admin/dashboard', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -413,7 +419,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const request = new Request('http://localhost:8787/api/admin/system/health', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -441,12 +447,15 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/admin/analytics?start_date=2025-09-10&end_date=2025-09-16&metric=users', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer mock_admin_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/analytics?start_date=2025-09-10&end_date=2025-09-16&metric=users',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer mock_admin_token',
+          },
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -473,12 +482,15 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/admin/users?status=warned&limit=50&offset=0', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer mock_admin_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/users?status=warned&limit=50&offset=0',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer mock_admin_token',
+          },
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -503,7 +515,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const request = new Request('http://localhost:8787/api/admin/users/444555666', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -572,12 +584,15 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/admin/content/review-queue?type=listing&status=flagged&priority=high', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer mock_admin_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/content/review-queue?type=listing&status=flagged&priority=high',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer mock_admin_token',
+          },
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -677,7 +692,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const getRequest = new Request('http://localhost:8787/api/admin/system/config', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -768,7 +783,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const getRequest = new Request('http://localhost:8787/api/admin/system/feature-flags', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -878,12 +893,15 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
         }
       );
 
-      const request = new Request('http://localhost:8787/api/admin/audit-logs?action=user_ban&start_date=2025-09-16&limit=50', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer mock_admin_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/audit-logs?action=user_ban&start_date=2025-09-16&limit=50',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer mock_admin_token',
+          },
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -908,7 +926,7 @@ describe('Integration Test T035: Admin Panel Functionality', () => {
       const request = new Request('http://localhost:8787/api/admin/activity-dashboard?period=7d', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 

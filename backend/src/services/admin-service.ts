@@ -10,7 +10,10 @@ import { AppealModel } from '../db/models/appeal';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type { UpdateUser, UserSearchFilters } from '../db/models/user';
 import type { ListingSearchFilters } from '../db/models/listing';
-import type { CreateModerationAction, ModerationSearchFilters } from '../db/models/moderation-action';
+import type {
+  CreateModerationAction,
+  ModerationSearchFilters,
+} from '../db/models/moderation-action';
 import type { FlagSearchFilters } from '../db/models/flag';
 import type { FeatureSearchFilters } from '../db/models/premium-feature';
 
@@ -224,7 +227,12 @@ export interface AdminAuditLog {
     id: string;
     timestamp: string;
     action: string;
-    category: 'user_management' | 'content_moderation' | 'system_config' | 'data_export' | 'security';
+    category:
+      | 'user_management'
+      | 'content_moderation'
+      | 'system_config'
+      | 'data_export'
+      | 'security';
     targetType?: 'user' | 'listing' | 'category' | 'system';
     targetId?: string | number;
     details: string;
@@ -364,7 +372,7 @@ export class AdminService {
       listingStats,
       flagStats,
       moderationStats,
-      premiumStats
+      premiumStats,
     ] = await Promise.all([
       this.userModel.getStats(),
       this.listingModel.getStats(),
@@ -411,10 +419,13 @@ export class AdminService {
         revenue24h,
         revenueTotal: premiumStats.totalRevenue,
         activeSubscriptions: premiumStats.activeFeatures,
-        conversionRate: this.calculateConversionRate(totalUsers.totalUsers, premiumStats.activeFeatures),
+        conversionRate: this.calculateConversionRate(
+          totalUsers.totalUsers,
+          premiumStats.activeFeatures
+        ),
         topCategories: topCategories.map(cat => ({
           ...cat,
-          revenue: Math.floor(Math.random() * 5000) // Mock revenue per category
+          revenue: Math.floor(Math.random() * 5000), // Mock revenue per category
         })),
         churnRate: 5.2, // Mock monthly churn rate percentage
       },
@@ -423,11 +434,12 @@ export class AdminService {
         activeUsers: activeUsers24h,
         bannedUsers: totalUsers.bannedUsers || 0,
         warningCount: moderationStats.warningsIssued || 0,
-        topSpenders: premiumStats.topSpenders?.slice(0, 5).map(spender => ({
-          userId: spender.userId,
-          spent: spender.totalSpent || 0,
-          username: `user_${spender.userId}` // Mock username
-        })) || [],
+        topSpenders:
+          premiumStats.topSpenders?.slice(0, 5).map(spender => ({
+            userId: spender.userId,
+            spent: spender.totalSpent || 0,
+            username: `user_${spender.userId}`, // Mock username
+          })) || [],
         userRetention: 78.5, // Mock retention rate percentage
       },
       contentStats: {
@@ -542,7 +554,9 @@ export class AdminService {
         }
       } catch (error) {
         results.failedCount++;
-        results.errors.push(`User ${userId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        results.errors.push(
+          `User ${userId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
@@ -613,7 +627,9 @@ export class AdminService {
         results.processedCount++;
       } catch (error) {
         results.failedCount++;
-        results.errors.push(`Listing ${listingId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        results.errors.push(
+          `Listing ${listingId}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
@@ -633,7 +649,8 @@ export class AdminService {
   ): Promise<SystemAnalytics> {
     await this.verifyAdminPermissions(adminId);
 
-    const periodDays = period === 'week' ? 7 : period === 'month' ? 30 : period === 'quarter' ? 90 : 365;
+    const periodDays =
+      period === 'week' ? 7 : period === 'month' ? 30 : period === 'quarter' ? 90 : 365;
     const startDate = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
 
     // Generate mock analytics data (in real implementation, this would query actual data)
@@ -643,11 +660,7 @@ export class AdminService {
     const moderationActivity = this.generateTimeSeriesData(periodDays, 'moderation');
 
     // Get actual data where available
-    const [
-      popularCategories,
-      userStats,
-      premiumStats
-    ] = await Promise.all([
+    const [popularCategories, userStats, premiumStats] = await Promise.all([
       this.getTopCategories(10),
       this.userModel.getStats(),
       this.premiumFeatureModel.getStats(),
@@ -759,7 +772,7 @@ export class AdminService {
       this.moderationActionModel.getUserActions(targetUserId, limit),
       this.flagModel.getByReporter(targetUserId, 50),
       this.sessionModel.getUserSessions(targetUserId, false),
-      this.listingModel.getUserListings(targetUserId)
+      this.listingModel.getUserListings(targetUserId),
     ]);
 
     // Build comprehensive action log
@@ -778,8 +791,8 @@ export class AdminService {
         severity: this.getModerationSeverity(action.actionType || ''),
         metadata: {
           actionType: action.actionType,
-          targetListing: action.targetListing?.id || action.targetListingId
-        }
+          targetListing: action.targetListing?.id || action.targetListingId,
+        },
       });
     }
 
@@ -792,7 +805,7 @@ export class AdminService {
         category: 'content' as const,
         details: flag.description || 'No description provided',
         severity: 'low' as const,
-        metadata: { flagReason: flag.reason, listingId: flag.listingId }
+        metadata: { flagReason: flag.reason, listingId: flag.listingId },
       });
     }
 
@@ -807,7 +820,7 @@ export class AdminService {
         severity: 'low' as const,
         ipAddress: session.ipAddress,
         userAgent: session.userAgent,
-        metadata: { sessionId: session.sessionId, duration: session.lastUsed }
+        metadata: { sessionId: session.sessionId, duration: session.lastUsed },
       });
     }
 
@@ -819,13 +832,15 @@ export class AdminService {
         action: `Listing created: ${listing.status}`,
         category: 'content' as const,
         details: `Created listing "${listing.title}" - Status: ${listing.status}`,
-        severity: listing.status === 'removed' ? 'medium' as const : 'low' as const,
-        metadata: { listingId: listing.id, status: listing.status, price: listing.priceUsd }
+        severity: listing.status === 'removed' ? ('medium' as const) : ('low' as const),
+        metadata: { listingId: listing.id, status: listing.status, price: listing.priceUsd },
       });
     }
 
     // Sort by timestamp and apply category filter if specified
-    let sortedActions = actions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    let sortedActions = actions.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
 
     if (category) {
       sortedActions = sortedActions.filter(action => action.category === category);
@@ -839,7 +854,7 @@ export class AdminService {
       moderationActions: moderationHistory.length,
       paymentActions: 0, // Would track payment history
       lastActivity: targetUser.lastActive,
-      riskScore: this.calculateUserRiskScore(targetUser, moderationHistory, userFlags.length)
+      riskScore: this.calculateUserRiskScore(targetUser, moderationHistory, userFlags.length),
     };
 
     return {
@@ -847,7 +862,7 @@ export class AdminService {
       username: targetUser.username || undefined,
       totalActions: sortedActions.length,
       actions: sortedActions.slice(0, limit),
-      summary
+      summary,
     };
   }
 
@@ -876,7 +891,7 @@ export class AdminService {
     const adminActions = await this.moderationActionModel.search({
       adminId,
       createdAfter: start,
-      createdBefore: end
+      createdBefore: end,
     });
 
     const actions = adminActions.actions.map(action => ({
@@ -891,8 +906,8 @@ export class AdminService {
       metadata: {
         actionType: action.type || action.actionType,
         targetListing: action.targetListing?.id || action.targetListingId,
-        duration: action.duration
-      }
+        duration: action.duration,
+      },
     }));
 
     const statistics = {
@@ -900,7 +915,10 @@ export class AdminService {
       userManagementActions: actions.length, // All are user management actions for now
       contentModerationActions: 0,
       systemConfigActions: 0,
-      successRate: actions.length > 0 ? (actions.filter(a => a.result === 'success').length / actions.length) * 100 : 100
+      successRate:
+        actions.length > 0
+          ? (actions.filter(a => a.result === 'success').length / actions.length) * 100
+          : 100,
     };
 
     return {
@@ -908,17 +926,14 @@ export class AdminService {
       adminUsername: admin.username || undefined,
       period: { start, end },
       actions: actions.slice(0, limit),
-      statistics
+      statistics,
     };
   }
 
   /**
    * Generate comprehensive security audit report
    */
-  async generateSecurityAuditReport(
-    adminId: number,
-    days = 7
-  ): Promise<SecurityAuditReport> {
+  async generateSecurityAuditReport(adminId: number, days = 7): Promise<SecurityAuditReport> {
     await this.verifyAdminPermissions(adminId);
 
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -928,7 +943,7 @@ export class AdminService {
     const [flagStats, moderationStats, userStats] = await Promise.all([
       this.flagModel.getStats(),
       this.moderationActionModel.getStats(),
-      this.userModel.getStats()
+      this.userModel.getStats(),
     ]);
 
     // Calculate security metrics
@@ -937,35 +952,35 @@ export class AdminService {
       criticalEvents: Math.floor(flagStats.totalFlags * 0.1), // Assume 10% are critical
       failedLogins: Math.floor(Math.random() * 100) + 50, // Mock failed login attempts
       suspiciousActivities: Math.floor(flagStats.pendingFlags * 0.3),
-      blockedRequests: Math.floor(Math.random() * 500) + 200 // Mock blocked requests
+      blockedRequests: Math.floor(Math.random() * 500) + 200, // Mock blocked requests
     };
 
     const userSecurity = {
       bannedUsers: userStats.bannedUsers || 0,
       newWarnings: moderationStats.totalActions || 0, // Use total actions as proxy
       accountTakeovers: 0, // Would track account security incidents
-      suspiciousRegistrations: Math.floor(Math.random() * 20) + 5
+      suspiciousRegistrations: Math.floor(Math.random() * 20) + 5,
     };
 
     const contentSecurity = {
       removedContent: await this.getRemovedContentCount(),
       flaggedContent: flagStats.totalFlags,
       automaticRemovals: Math.floor(flagStats.totalFlags * 0.15), // Assume 15% automatic
-      appealedRemovals: 0 // Would track appeals
+      appealedRemovals: 0, // Would track appeals
     };
 
     const systemSecurity = {
       unauthorizedAccess: Math.floor(Math.random() * 10), // Mock unauthorized access attempts
       configChanges: Math.floor(Math.random() * 5), // Mock config changes
       dataExports: Math.floor(Math.random() * 3), // Mock data exports
-      adminActions: moderationStats.totalActions
+      adminActions: moderationStats.totalActions,
     };
 
     const recommendations = this.generateSecurityRecommendations({
       overview,
       userSecurity,
       contentSecurity,
-      systemSecurity
+      systemSecurity,
     });
 
     return {
@@ -974,7 +989,7 @@ export class AdminService {
       userSecurity,
       contentSecurity,
       systemSecurity,
-      recommendations
+      recommendations,
     };
   }
 
@@ -992,7 +1007,7 @@ export class AdminService {
       cpu: { usage: 45.2, cores: 8 },
       memory: { used: 6.8, total: 16, percentage: 42.5 },
       disk: { used: 125.6, total: 500, percentage: 25.1 },
-      network: { inbound: 125.3, outbound: 89.7, latency: 12.5 }
+      network: { inbound: 125.3, outbound: 89.7, latency: 12.5 },
     };
 
     const application = {
@@ -1000,14 +1015,14 @@ export class AdminService {
       errorRate: 0.15,
       activeConnections: Math.floor(Math.random() * 500) + 200,
       queueLength: Math.floor(Math.random() * 50),
-      cacheHitRatio: 85.3
+      cacheHitRatio: 85.3,
     };
 
     const database = {
       connections: { active: 45, max: 100 },
       queryTime: { average: 12.5, slow: 3 },
       replicationLag: 0.05,
-      diskSpace: { used: 45.2, available: 154.8 }
+      diskSpace: { used: 45.2, available: 154.8 },
     };
 
     // Get actual business metrics
@@ -1020,7 +1035,10 @@ export class AdminService {
       totalSessions: Math.floor(Math.random() * 1000) + 500,
       newRegistrations: Math.floor(Math.random() * 50) + 10,
       revenue: premiumStats.totalRevenue || 0,
-      conversionRate: this.calculateConversionRate(userStats.totalUsers, premiumStats.activeFeatures)
+      conversionRate: this.calculateConversionRate(
+        userStats.totalUsers,
+        premiumStats.activeFeatures
+      ),
     };
 
     // Generate health alerts
@@ -1031,7 +1049,7 @@ export class AdminService {
         component: 'application',
         message: 'High error rate detected',
         value: application.errorRate,
-        threshold: 1.0
+        threshold: 1.0,
       });
     }
     if (system.cpu.usage > 80) {
@@ -1040,7 +1058,7 @@ export class AdminService {
         component: 'system',
         message: 'High CPU usage',
         value: system.cpu.usage,
-        threshold: 80
+        threshold: 80,
       });
     }
 
@@ -1050,7 +1068,7 @@ export class AdminService {
       application,
       database,
       business,
-      alerts
+      alerts,
     };
   }
 
@@ -1107,7 +1125,8 @@ export class AdminService {
     // Check banned user ratio
     const userStats = await this.userModel.getStats();
     const bannedRatio = (userStats.bannedUsers || 0) / userStats.totalUsers;
-    if (bannedRatio > 0.05) { // More than 5% banned
+    if (bannedRatio > 0.05) {
+      // More than 5% banned
       issues.push({
         type: 'security' as const,
         severity: 'medium' as const,
@@ -1371,7 +1390,11 @@ export class AdminService {
       profilePhotoUrl: null,
     });
 
-    await this.logAdminAction(adminId, 'user_delete', `Deleted user ${targetUserId}: ${options.reason || 'Admin action'}`);
+    await this.logAdminAction(
+      adminId,
+      'user_delete',
+      `Deleted user ${targetUserId}: ${options.reason || 'Admin action'}`
+    );
 
     return {
       success: true,
@@ -1416,7 +1439,9 @@ export class AdminService {
     return Math.floor(Math.random() * 1000) + 500;
   }
 
-  private async getTopCategories(limit: number): Promise<Array<{ id: number; name: string; count: number }>> {
+  private async getTopCategories(
+    limit: number
+  ): Promise<Array<{ id: number; name: string; count: number }>> {
     // In a real implementation, this would query category statistics
     return [
       { id: 1, name: 'Electronics', count: 456 },
@@ -1439,7 +1464,9 @@ export class AdminService {
   }
 
   private async getRemovedContentCount(): Promise<number> {
-    const result = await this.moderationActionModel.search({ actionType: 'CONTENT_REMOVAL' as any });
+    const result = await this.moderationActionModel.search({
+      actionType: 'CONTENT_REMOVAL' as any,
+    });
     return result.totalCount;
   }
 
@@ -1447,15 +1474,17 @@ export class AdminService {
     return totalUsers > 0 ? (premiumUsers / totalUsers) * 100 : 0;
   }
 
-  private async generateEnhancedSystemAlerts(): Promise<Array<{
-    type: 'error' | 'warning' | 'info' | 'critical';
-    category: 'security' | 'performance' | 'business' | 'system';
-    message: string;
-    timestamp: string;
-    actionRequired: boolean;
-    severity: number;
-    relatedEntity?: { type: string; id: string | number };
-  }>> {
+  private async generateEnhancedSystemAlerts(): Promise<
+    Array<{
+      type: 'error' | 'warning' | 'info' | 'critical';
+      category: 'security' | 'performance' | 'business' | 'system';
+      message: string;
+      timestamp: string;
+      actionRequired: boolean;
+      severity: number;
+      relatedEntity?: { type: string; id: string | number };
+    }>
+  > {
     const alerts = [];
     const timestamp = new Date().toISOString();
 
@@ -1510,7 +1539,8 @@ export class AdminService {
     // Check business metrics
     const userStats = await this.userModel.getStats();
     const bannedRatio = (userStats.bannedUsers || 0) / userStats.totalUsers;
-    if (bannedRatio > 0.1) { // More than 10% banned
+    if (bannedRatio > 0.1) {
+      // More than 10% banned
       alerts.push({
         type: 'warning' as const,
         category: 'business' as const,
@@ -1592,7 +1622,7 @@ export class AdminService {
       action,
       details,
       timestamp: new Date().toISOString(),
-      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
 
     this.auditCache.set(logEntry.id, logEntry);
@@ -1624,11 +1654,7 @@ export class AdminService {
   /**
    * Calculate user risk score based on activity and history
    */
-  private calculateUserRiskScore(
-    user: any,
-    moderationHistory: any[],
-    flagCount: number
-  ): number {
+  private calculateUserRiskScore(user: any, moderationHistory: any[], flagCount: number): number {
     let riskScore = 0;
 
     // Base risk factors
@@ -1638,13 +1664,17 @@ export class AdminService {
     riskScore += flagCount * 2;
 
     // Account age factor (newer accounts are riskier)
-    const accountAge = Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (24 * 60 * 60 * 1000));
+    const accountAge = Math.floor(
+      (Date.now() - new Date(user.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+    );
     if (accountAge < 7) riskScore += 20;
     else if (accountAge < 30) riskScore += 10;
 
     // Activity factor
     if (user.lastActive) {
-      const daysSinceActive = Math.floor((Date.now() - new Date(user.lastActive).getTime()) / (24 * 60 * 60 * 1000));
+      const daysSinceActive = Math.floor(
+        (Date.now() - new Date(user.lastActive).getTime()) / (24 * 60 * 60 * 1000)
+      );
       if (daysSinceActive > 30) riskScore += 5; // Inactive accounts might be compromised
     }
 
@@ -1657,7 +1687,9 @@ export class AdminService {
   private calculateBounceRate(sessionStats: any): number {
     // Mock bounce rate calculation
     // In real implementation, this would analyze actual session data
-    return sessionStats.shortSessions ? (sessionStats.shortSessions / sessionStats.totalSessions) * 100 : 32.1;
+    return sessionStats.shortSessions
+      ? (sessionStats.shortSessions / sessionStats.totalSessions) * 100
+      : 32.1;
   }
 
   /**
@@ -1679,7 +1711,7 @@ export class AdminService {
         category: 'Security',
         issue: 'High number of critical security events detected',
         recommendation: 'Implement additional security monitoring and automated response systems',
-        impact: 'Prevent potential security breaches and data loss'
+        impact: 'Prevent potential security breaches and data loss',
       });
     }
 
@@ -1690,7 +1722,7 @@ export class AdminService {
         category: 'User Management',
         issue: 'High proportion of banned users indicates potential security or policy issues',
         recommendation: 'Review user onboarding process and implement preventive measures',
-        impact: 'Improve platform quality and reduce moderation overhead'
+        impact: 'Improve platform quality and reduce moderation overhead',
       });
     }
 
@@ -1701,7 +1733,7 @@ export class AdminService {
         category: 'Content Moderation',
         issue: 'High automatic content removal rate',
         recommendation: 'Review and tune content filtering algorithms, consider user education',
-        impact: 'Reduce false positives while maintaining security standards'
+        impact: 'Reduce false positives while maintaining security standards',
       });
     }
 
@@ -1712,7 +1744,7 @@ export class AdminService {
         category: 'Authentication',
         issue: 'High number of failed login attempts detected',
         recommendation: 'Implement stronger rate limiting and account lockout policies',
-        impact: 'Prevent brute force attacks and credential stuffing'
+        impact: 'Prevent brute force attacks and credential stuffing',
       });
     }
 
@@ -1723,7 +1755,7 @@ export class AdminService {
         category: 'System Security',
         issue: 'Unauthorized access attempts detected',
         recommendation: 'Review access controls and implement additional monitoring',
-        impact: 'Prevent system compromise and data breaches'
+        impact: 'Prevent system compromise and data breaches',
       });
     }
 
@@ -1781,28 +1813,42 @@ export class AdminService {
     if (filters.riskScore) {
       filteredUsers = filteredUsers.filter(user => {
         const riskScore = this.calculateUserRiskScore(user, [], 0); // Simplified for demo
-        return (!filters.riskScore?.min || riskScore >= filters.riskScore.min) &&
-               (!filters.riskScore?.max || riskScore <= filters.riskScore.max);
+        return (
+          (!filters.riskScore?.min || riskScore >= filters.riskScore.min) &&
+          (!filters.riskScore?.max || riskScore <= filters.riskScore.max)
+        );
       });
     }
 
     // Calculate aggregations
-    const statusBreakdown = filteredUsers.reduce((acc, user) => {
-      const status = user.isBanned ? 'banned' : (user.warningCount || 0) > 0 ? 'warned' : 'active';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const statusBreakdown = filteredUsers.reduce(
+      (acc, user) => {
+        const status = user.isBanned
+          ? 'banned'
+          : (user.warningCount || 0) > 0
+            ? 'warned'
+            : 'active';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    const avgRiskScore = filteredUsers.length > 0
-      ? filteredUsers.reduce((sum, user) => sum + this.calculateUserRiskScore(user, [], 0), 0) / filteredUsers.length
-      : 0;
+    const avgRiskScore =
+      filteredUsers.length > 0
+        ? filteredUsers.reduce((sum, user) => sum + this.calculateUserRiskScore(user, [], 0), 0) /
+          filteredUsers.length
+        : 0;
 
-    const avgAccountAge = filteredUsers.length > 0
-      ? filteredUsers.reduce((sum, user) => {
-          const accountAge = Math.floor((Date.now() - new Date(user.createdAt || '').getTime()) / (24 * 60 * 60 * 1000));
-          return sum + accountAge;
-        }, 0) / filteredUsers.length
-      : 0;
+    const avgAccountAge =
+      filteredUsers.length > 0
+        ? filteredUsers.reduce((sum, user) => {
+            const accountAge = Math.floor(
+              (Date.now() - new Date(user.createdAt || '').getTime()) / (24 * 60 * 60 * 1000)
+            );
+            return sum + accountAge;
+          }, 0) / filteredUsers.length
+        : 0;
 
     return {
       users: filteredUsers,
@@ -1811,8 +1857,8 @@ export class AdminService {
       aggregations: {
         statusBreakdown,
         avgRiskScore: Math.round(avgRiskScore * 100) / 100,
-        avgAccountAge: Math.round(avgAccountAge)
-      }
+        avgAccountAge: Math.round(avgAccountAge),
+      },
     };
   }
 
@@ -1855,7 +1901,7 @@ export class AdminService {
     const adminActions = await this.moderationActionModel.search({
       adminId,
       createdAfter: startDate.toISOString(),
-      createdBefore: endDate.toISOString()
+      createdBefore: endDate.toISOString(),
     });
 
     const actions = adminActions.actions;
@@ -1866,27 +1912,37 @@ export class AdminService {
       averageResponseTime: actions.length > 0 ? 2.5 : 0, // Mock response time
       accuracyRate: actions.length > 0 ? 92.5 : 0, // Mock accuracy rate
       flagsReviewed: actions.filter(a => (a.type || a.actionType || '').includes('FLAG')).length,
-      usersManaged: new Set(actions.map(a => a.targetUser?.telegramId || a.targetUserId).filter(Boolean)).size,
-      configChanges: actions.filter(a => (a.type || a.actionType || '').includes('CONFIG')).length
+      usersManaged: new Set(
+        actions.map(a => a.targetUser?.telegramId || a.targetUserId).filter(Boolean)
+      ).size,
+      configChanges: actions.filter(a => (a.type || a.actionType || '').includes('CONFIG')).length,
     };
 
     // Calculate breakdowns
-    const byAction = actions.reduce((acc, action) => {
-      const actionType = action.type || action.actionType || 'UNKNOWN';
-      acc[actionType] = (acc[actionType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byAction = actions.reduce(
+      (acc, action) => {
+        const actionType = action.type || action.actionType || 'UNKNOWN';
+        acc[actionType] = (acc[actionType] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     const byCategory = {
-      'user_management': actions.filter(a => ['BAN', 'UNBAN', 'WARNING'].includes(a.type || a.actionType || '')).length,
-      'content_moderation': actions.filter(a => ['CONTENT_REMOVAL', 'FLAG_REVIEW'].includes(a.type || a.actionType || '')).length,
-      'system_config': actions.filter(a => ['CONFIG_CHANGE'].includes(a.type || a.actionType || '')).length
+      user_management: actions.filter(a =>
+        ['BAN', 'UNBAN', 'WARNING'].includes(a.type || a.actionType || '')
+      ).length,
+      content_moderation: actions.filter(a =>
+        ['CONTENT_REMOVAL', 'FLAG_REVIEW'].includes(a.type || a.actionType || '')
+      ).length,
+      system_config: actions.filter(a => ['CONFIG_CHANGE'].includes(a.type || a.actionType || ''))
+        .length,
     };
 
     const byResult = {
-      'success': actions.length, // Assuming all successful for demo
-      'failure': 0,
-      'partial': 0
+      success: actions.length, // Assuming all successful for demo
+      failure: 0,
+      partial: 0,
     };
 
     // Generate daily activity trend
@@ -1906,8 +1962,8 @@ export class AdminService {
       trends: {
         dailyActivity,
         responseTimeImprovement: 15.2, // Mock improvement percentage
-        workloadTrend: 'stable' as const
-      }
+        workloadTrend: 'stable' as const,
+      },
     };
   }
 }

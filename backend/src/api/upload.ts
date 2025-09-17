@@ -67,10 +67,13 @@ export class UploadAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       // Get form data
@@ -79,42 +82,51 @@ export class UploadAPI {
       const options = {
         generateThumbnail: formData.get('generateThumbnail') === 'true',
         optimizeSize: formData.get('optimizeSize') !== 'false', // Default true
-        maxWidth: formData.get('maxWidth') ? parseInt(formData.get('maxWidth') as string) : undefined,
-        maxHeight: formData.get('maxHeight') ? parseInt(formData.get('maxHeight') as string) : undefined,
+        maxWidth: formData.get('maxWidth')
+          ? parseInt(formData.get('maxWidth') as string)
+          : undefined,
+        maxHeight: formData.get('maxHeight')
+          ? parseInt(formData.get('maxHeight') as string)
+          : undefined,
         quality: formData.get('quality') ? parseInt(formData.get('quality') as string) : 85,
       };
 
       if (!file) {
-        return c.json({
-          success: false,
-          error: 'No file provided'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'No file provided',
+          },
+          400
+        );
       }
 
       // Validate file
       const validationError = this.validateFile(file);
       if (validationError) {
-        return c.json({
-          success: false,
-          error: validationError
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: validationError,
+          },
+          400
+        );
       }
 
       // Convert File to ArrayBuffer
       const arrayBuffer = await file.arrayBuffer();
 
       // Upload file
-      const uploadResult = await this.imageService.uploadImage(
-        arrayBuffer,
-        file.name,
-        options
-      );
+      const uploadResult = await this.imageService.uploadImage(arrayBuffer, file.name, options);
 
       if (!uploadResult.success) {
-        return c.json({
-          success: false,
-          error: uploadResult.error || 'Upload failed'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: uploadResult.error || 'Upload failed',
+          },
+          500
+        );
       }
 
       const response: UploadResponse = {
@@ -129,17 +141,19 @@ export class UploadAPI {
           width: uploadResult.metadata?.width,
           height: uploadResult.metadata?.height,
           uploadedAt: new Date().toISOString(),
-        }
+        },
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Upload image error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during upload'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during upload',
+        },
+        500
+      );
     }
   }
 
@@ -150,10 +164,13 @@ export class UploadAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       // Get form data
@@ -162,23 +179,33 @@ export class UploadAPI {
       const options = {
         generateThumbnail: formData.get('generateThumbnail') === 'true',
         optimizeSize: formData.get('optimizeSize') !== 'false',
-        maxWidth: formData.get('maxWidth') ? parseInt(formData.get('maxWidth') as string) : undefined,
-        maxHeight: formData.get('maxHeight') ? parseInt(formData.get('maxHeight') as string) : undefined,
+        maxWidth: formData.get('maxWidth')
+          ? parseInt(formData.get('maxWidth') as string)
+          : undefined,
+        maxHeight: formData.get('maxHeight')
+          ? parseInt(formData.get('maxHeight') as string)
+          : undefined,
         quality: formData.get('quality') ? parseInt(formData.get('quality') as string) : 85,
       };
 
       if (!files || files.length === 0) {
-        return c.json({
-          success: false,
-          error: 'No files provided'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'No files provided',
+          },
+          400
+        );
       }
 
       if (files.length > 10) {
-        return c.json({
-          success: false,
-          error: 'Maximum 10 files allowed per upload'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Maximum 10 files allowed per upload',
+          },
+          400
+        );
       }
 
       // Validate all files first
@@ -191,26 +218,26 @@ export class UploadAPI {
       });
 
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'File validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'File validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Convert files to upload format
       const uploadFiles = await Promise.all(
-        files.map(async (file) => ({
+        files.map(async file => ({
           file: await file.arrayBuffer(),
           filename: file.name,
         }))
       );
 
       // Upload multiple files
-      const uploadResult = await this.imageService.uploadMultipleImages(
-        uploadFiles,
-        options
-      );
+      const uploadResult = await this.imageService.uploadMultipleImages(uploadFiles, options);
 
       const successfulUploads = uploadResult.results.filter(result => result.success);
       const failedUploads = uploadResult.results.filter(result => !result.success);
@@ -232,19 +259,21 @@ export class UploadAPI {
 
       // Add error information if some uploads failed
       if (failedUploads.length > 0) {
-        response.details = failedUploads.map((result, index) =>
-          `File ${index + 1}: ${result.error || 'Upload failed'}`
+        response.details = failedUploads.map(
+          (result, index) => `File ${index + 1}: ${result.error || 'Upload failed'}`
         );
       }
 
       return c.json(response, successfulUploads.length > 0 ? 200 : 500);
-
     } catch (error) {
       console.error('Upload multiple images error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during upload'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during upload',
+        },
+        500
+      );
     }
   }
 
@@ -255,42 +284,53 @@ export class UploadAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const fileId = c.req.param('id');
 
       if (!fileId) {
-        return c.json({
-          success: false,
-          error: 'File ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'File ID is required',
+          },
+          400
+        );
       }
 
       // Delete image
       const deleteResult = await this.imageService.deleteImage(fileId, parseInt(user.telegramId));
 
       if (!deleteResult.success) {
-        return c.json({
-          success: false,
-          error: deleteResult.error || 'Failed to delete image'
-        }, deleteResult.error?.includes('not found') ? 404 : 400);
+        return c.json(
+          {
+            success: false,
+            error: deleteResult.error || 'Failed to delete image',
+          },
+          deleteResult.error?.includes('not found') ? 404 : 400
+        );
       }
 
       return c.json({
         success: true,
-        message: 'Image deleted successfully'
+        message: 'Image deleted successfully',
       });
-
     } catch (error) {
       console.error('Delete image error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -301,10 +341,13 @@ export class UploadAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const filename = c.req.query('filename');
@@ -315,18 +358,24 @@ export class UploadAPI {
       );
 
       if (!filename) {
-        return c.json({
-          success: false,
-          error: 'Filename is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Filename is required',
+          },
+          400
+        );
       }
 
       // Validate content type
       if (!this.isValidImageType(contentType)) {
-        return c.json({
-          success: false,
-          error: 'Invalid content type. Only images are allowed.'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Invalid content type. Only images are allowed.',
+          },
+          400
+        );
       }
 
       // Generate presigned upload URL
@@ -338,10 +387,13 @@ export class UploadAPI {
       );
 
       if (!presignedResult.success) {
-        return c.json({
-          success: false,
-          error: presignedResult.error || 'Failed to generate presigned URL'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: presignedResult.error || 'Failed to generate presigned URL',
+          },
+          500
+        );
       }
 
       const response: PresignedUploadResponse = {
@@ -349,24 +401,20 @@ export class UploadAPI {
         uploadUrl: presignedResult.url,
         fields: presignedResult.fields,
         maxSize,
-        allowedTypes: [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-          'image/svg+xml'
-        ],
+        allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
         expiresIn: 3600, // 1 hour
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Get presigned upload error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -377,10 +425,13 @@ export class UploadAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const page = Math.max(1, parseInt(c.req.query('page') || '1'));
@@ -394,10 +445,13 @@ export class UploadAPI {
       );
 
       if (!uploadsResult.success) {
-        return c.json({
-          success: false,
-          error: uploadsResult.error || 'Failed to fetch uploads'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: uploadsResult.error || 'Failed to fetch uploads',
+          },
+          500
+        );
       }
 
       return c.json({
@@ -416,15 +470,17 @@ export class UploadAPI {
           totalSize: uploadsResult.totalSize || 0,
           storageLimit: 1073741824, // 1GB limit
           storageUsed: uploadsResult.totalSize || 0,
-        }
+        },
       });
-
     } catch (error) {
       console.error('Get user uploads error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -470,7 +526,7 @@ export class UploadAPI {
       'image/png',
       'image/gif',
       'image/webp',
-      'image/svg+xml'
+      'image/svg+xml',
     ];
     return validTypes.includes(mimeType.toLowerCase());
   }

@@ -906,7 +906,7 @@ describe('Contract Test T028: POST /api/admin/blocked-words', () => {
       const request = new Request('http://localhost:8787/api/admin/blocked-words', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock_admin_jwt_token',
+          Authorization: 'Bearer mock_admin_jwt_token',
         },
         body: JSON.stringify(addRequest),
       });

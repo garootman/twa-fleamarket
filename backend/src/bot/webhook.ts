@@ -1,4 +1,4 @@
-import { Context, Bot } from 'grammy';
+import { Context, Bot, GrammyError, HttpError } from 'grammy';
 import { StartCommand } from './commands/start';
 import { HelpCommand } from './commands/help';
 import { QuestionCommand } from './commands/question';
@@ -7,19 +7,23 @@ import { AdminService } from '../services/admin-service';
 import { AuthService } from '../services/auth-service';
 import { ModerationService } from '../services/moderation-service';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
+import crypto from 'crypto';
 
 /**
- * WebhookHandler - Advanced Telegram Bot Message Router
+ * WebhookHandler - Advanced Telegram Bot Message Router - T102
  *
- * Comprehensive webhook handler with:
+ * Comprehensive webhook handler with enhanced Telegram API connection and error handling:
  * - Intelligent message routing and command processing
  * - User authentication and session management
  * - Admin command processing with privilege verification
  * - Moderation system integration with automated responses
- * - Error handling and logging with performance monitoring
- * - Rate limiting and spam protection
+ * - Advanced error handling and logging with performance monitoring
+ * - Rate limiting and spam protection with CloudFlare integration
  * - Context-aware responses based on user status and chat type
+ * - Robust Telegram API connectivity with retry logic and fallbacks
  * - Integration with all marketplace services
+ * - Webhook validation and security measures
+ * - Connection health monitoring and auto-recovery
  */
 
 export interface BotContext {
@@ -28,6 +32,22 @@ export interface BotContext {
   corsHeaders: Record<string, string>;
   isLocalhost: boolean;
   botName: string | null;
+}
+
+export interface TelegramAPIConnectionStatus {
+  connected: boolean;
+  lastSuccessfulCall: Date | null;
+  consecutiveErrors: number;
+  lastError: string | null;
+  rateLimitResetTime: Date | null;
+  retryAfter: number | null;
+}
+
+export interface WebhookValidationResult {
+  isValid: boolean;
+  errors: string[];
+  securityFlags: string[];
+  timestamp: number;
 }
 
 export interface UserSession {
@@ -51,6 +71,22 @@ export class WebhookHandler {
   private moderationService: ModerationService;
   private userSessions: Map<string, UserSession> = new Map();
 
+  // Telegram API connection monitoring
+  private apiConnectionStatus: TelegramAPIConnectionStatus = {
+    connected: false,
+    lastSuccessfulCall: null,
+    consecutiveErrors: 0,
+    lastError: null,
+    rateLimitResetTime: null,
+    retryAfter: null,
+  };
+
+  // Retry configuration
+  private readonly maxRetries = 3;
+  private readonly baseRetryDelay = 1000; // 1 second
+  private readonly maxRetryDelay = 30000; // 30 seconds
+  private readonly connectionTimeoutMs = 10000; // 10 seconds
+
   constructor(context: BotContext) {
     this.context = context;
     this.startCommand = new StartCommand(context);
@@ -60,6 +96,201 @@ export class WebhookHandler {
     this.adminService = new AdminService(context.db);
     this.authService = new AuthService(context.db, context.env.TELEGRAM_BOT_TOKEN);
     this.moderationService = new ModerationService(context.db);
+
+    // Initialize API connection monitoring
+    this.initializeConnectionMonitoring();
+  }
+
+  /**
+   * Initialize Telegram API connection monitoring
+   */
+  private initializeConnectionMonitoring(): void {
+    // Set up periodic health checks
+    setInterval(() => {
+      this.performConnectionHealthCheck();
+    }, 60000); // Check every minute
+
+    // Clean up old sessions periodically
+    setInterval(() => {
+      this.cleanupOldSessions();
+    }, 300000); // Clean up every 5 minutes
+  }
+
+  /**
+   * Validate incoming webhook request
+   */
+  public validateWebhookRequest(request: Request): WebhookValidationResult {
+    const result: WebhookValidationResult = {
+      isValid: true,
+      errors: [],
+      securityFlags: [],
+      timestamp: Date.now(),
+    };
+
+    try {
+      // Check Content-Type
+      const contentType = request.headers.get('Content-Type');
+      if (!contentType?.includes('application/json')) {
+        result.errors.push('Invalid Content-Type header');
+        result.isValid = false;
+      }
+
+      // Check User-Agent (Telegram should set this)
+      const userAgent = request.headers.get('User-Agent');
+      if (!userAgent?.includes('TelegramBot')) {
+        result.securityFlags.push('Non-Telegram User-Agent detected');
+      }
+
+      // Validate webhook secret token if configured
+      const secretToken = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
+      const expectedSecret = this.context.env.TELEGRAM_WEBHOOK_SECRET;
+
+      if (expectedSecret && secretToken !== expectedSecret) {
+        result.errors.push('Invalid webhook secret token');
+        result.isValid = false;
+        result.securityFlags.push('Invalid secret token');
+      }
+
+      // Check request size (Telegram updates are typically small)
+      const contentLength = request.headers.get('Content-Length');
+      if (contentLength && parseInt(contentLength) > 1024 * 1024) {
+        // 1MB limit
+        result.errors.push('Request too large');
+        result.isValid = false;
+      }
+
+      // Log security flags if any
+      if (result.securityFlags.length > 0) {
+        console.warn('Webhook security flags detected:', {
+          flags: result.securityFlags,
+          ip: request.headers.get('CF-Connecting-IP') || 'unknown',
+          userAgent,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      result.errors.push(`Validation error: ${error}`);
+      result.isValid = false;
+    }
+
+    return result;
+  }
+
+  /**
+   * Process webhook with enhanced error handling and retry logic
+   */
+  public async processWebhook(request: Request): Promise<Response> {
+    try {
+      // Validate webhook request first
+      const validation = this.validateWebhookRequest(request);
+
+      if (!validation.isValid) {
+        console.error('Webhook validation failed:', validation.errors);
+        return new Response('Bad Request', {
+          status: 400,
+          headers: this.context.corsHeaders,
+        });
+      }
+
+      // Parse request body
+      const body = await request.json();
+
+      // Log webhook received
+      console.log('Webhook received:', {
+        updateId: body.update_id,
+        type: this.getWebhookUpdateType(body),
+        timestamp: new Date().toISOString(),
+        validation: validation.securityFlags.length > 0 ? validation.securityFlags : 'clean',
+      });
+
+      // Create bot instance with enhanced error handling
+      const bot = this.createBotInstance();
+
+      // Process update with retry logic
+      await this.processUpdateWithRetry(bot, body);
+
+      // Update connection status on success
+      this.updateConnectionStatus(true);
+
+      return new Response('OK', {
+        status: 200,
+        headers: this.context.corsHeaders,
+      });
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+
+      // Update connection status on error
+      this.updateConnectionStatus(false, error instanceof Error ? error.message : String(error));
+
+      // Return appropriate error response
+      if (error instanceof GrammyError || error instanceof HttpError) {
+        return new Response('Service Unavailable', {
+          status: 503,
+          headers: this.context.corsHeaders,
+        });
+      }
+
+      return new Response('Internal Server Error', {
+        status: 500,
+        headers: this.context.corsHeaders,
+      });
+    }
+  }
+
+  /**
+   * Create bot instance with enhanced configuration
+   */
+  private createBotInstance(): Bot {
+    const bot = new Bot(this.context.env.TELEGRAM_BOT_TOKEN, {
+      client: {
+        timeoutMs: this.connectionTimeoutMs,
+        retryCount: this.maxRetries,
+        maxRequestsPerSecond: 30, // Telegram's default limit
+      },
+    });
+
+    // Setup all handlers
+    this.setupBotHandlers(bot);
+
+    return bot;
+  }
+
+  /**
+   * Process update with retry logic and exponential backoff
+   */
+  private async processUpdateWithRetry(bot: Bot, update: any, attempt = 1): Promise<void> {
+    try {
+      await bot.handleUpdate(update);
+    } catch (error) {
+      console.error(`Update processing attempt ${attempt} failed:`, error);
+
+      if (attempt >= this.maxRetries) {
+        throw error; // Max retries reached
+      }
+
+      // Check if this is a rate limit error
+      if (this.isRateLimitError(error)) {
+        const retryAfter = this.extractRetryAfter(error) * 1000; // Convert to ms
+        console.log(`Rate limit hit, waiting ${retryAfter}ms before retry`);
+
+        this.apiConnectionStatus.rateLimitResetTime = new Date(Date.now() + retryAfter);
+        this.apiConnectionStatus.retryAfter = retryAfter;
+
+        await this.delay(retryAfter);
+      } else if (this.isRetryableError(error)) {
+        // Exponential backoff for retryable errors
+        const delay = Math.min(this.baseRetryDelay * Math.pow(2, attempt - 1), this.maxRetryDelay);
+
+        console.log(`Retryable error, waiting ${delay}ms before attempt ${attempt + 1}`);
+        await this.delay(delay);
+      } else {
+        // Non-retryable error, don't retry
+        throw error;
+      }
+
+      // Retry the update
+      await this.processUpdateWithRetry(bot, update, attempt + 1);
+    }
   }
 
   /**
@@ -202,7 +433,6 @@ export class WebhookHandler {
 
       // Store user in context for later use
       (ctx as any).user = user;
-
     } catch (error) {
       console.error('Authentication middleware error:', error);
       // Continue processing even if user management fails
@@ -252,11 +482,18 @@ export class WebhookHandler {
   /**
    * Admin verification middleware
    */
-  private async adminVerificationMiddleware(ctx: Context, next: () => Promise<void>): Promise<void> {
+  private async adminVerificationMiddleware(
+    ctx: Context,
+    next: () => Promise<void>
+  ): Promise<void> {
     const text = ctx.message?.text || '';
 
     // Check if this is an admin command
-    if (text.startsWith('/admin') || text.startsWith('/unban_') || text.startsWith('/deny_appeal_')) {
+    if (
+      text.startsWith('/admin') ||
+      text.startsWith('/unban_') ||
+      text.startsWith('/deny_appeal_')
+    ) {
       if (!this.isAdmin(ctx)) {
         await ctx.reply('❌ You are not authorized to use admin commands.');
         return;
@@ -418,7 +655,9 @@ export class WebhookHandler {
     }
 
     if (!user?.banned) {
-      await ctx.reply('ℹ️ Your account is not currently suspended. Appeals are only for suspended accounts.');
+      await ctx.reply(
+        'ℹ️ Your account is not currently suspended. Appeals are only for suspended accounts.'
+      );
       return;
     }
 
@@ -528,7 +767,9 @@ I don't recognize the command: \`${text.split(' ')[0]}\`
     const photos = ctx.message?.photo;
     if (!photos || photos.length === 0) return;
 
-    await ctx.reply('📸 Photo received! To use images in listings, please upload them through the marketplace web app where you can add descriptions and organize them properly.');
+    await ctx.reply(
+      '📸 Photo received! To use images in listings, please upload them through the marketplace web app where you can add descriptions and organize them properly.'
+    );
   }
 
   /**
@@ -538,7 +779,9 @@ I don't recognize the command: \`${text.split(' ')[0]}\`
     const document = ctx.message?.document;
     if (!document) return;
 
-    await ctx.reply('📄 Document received! For digital product files, please upload them through the marketplace web app during listing creation.');
+    await ctx.reply(
+      '📄 Document received! For digital product files, please upload them through the marketplace web app during listing creation.'
+    );
   }
 
   /**
@@ -625,8 +868,9 @@ ${appealText}
         parse_mode: 'Markdown',
       });
 
-      await ctx.reply('✅ Your appeal has been submitted and will be reviewed within 48 hours. You will be notified of the decision.');
-
+      await ctx.reply(
+        '✅ Your appeal has been submitted and will be reviewed within 48 hours. You will be notified of the decision.'
+      );
     } catch (error) {
       console.error('Error submitting appeal:', error);
       await ctx.reply('❌ Error submitting appeal. Please try again later.');
@@ -721,7 +965,9 @@ ${appealText}
       });
 
       // Notify user
-      await ctx.api.sendMessage(userId, `
+      await ctx.api.sendMessage(
+        userId,
+        `
 ✅ **Appeal Approved**
 
 Your account suspension has been lifted. You can now use all marketplace features again.
@@ -732,10 +978,13 @@ Your account suspension has been lifted. You can now use all marketplace feature
 • Report any issues
 
 Welcome back! 🎉
-      `.trim(), { parse_mode: 'Markdown' });
+      `.trim(),
+        { parse_mode: 'Markdown' }
+      );
 
-      await ctx.reply(`✅ User ${user.firstName} (@${user.username}) has been unbanned successfully.`);
-
+      await ctx.reply(
+        `✅ User ${user.firstName} (@${user.username}) has been unbanned successfully.`
+      );
     } catch (error) {
       console.error('Error unbanning user:', error);
       await ctx.reply('❌ Error processing unban. Please try again.');
@@ -755,7 +1004,9 @@ Welcome back! 🎉
       }
 
       // Notify user
-      await ctx.api.sendMessage(userId, `
+      await ctx.api.sendMessage(
+        userId,
+        `
 ❌ **Appeal Denied**
 
 Your appeal has been reviewed and denied. The original suspension remains in effect.
@@ -768,10 +1019,11 @@ Your appeal has been reviewed and denied. The original suspension remains in eff
 • Contact support for clarification
 
 **Note:** Repeated frivolous appeals may result in extended restrictions.
-      `.trim(), { parse_mode: 'Markdown' });
+      `.trim(),
+        { parse_mode: 'Markdown' }
+      );
 
       await ctx.reply(`✅ Appeal denied for user ${user.firstName} (@${user.username}).`);
-
     } catch (error) {
       console.error('Error denying appeal:', error);
       await ctx.reply('❌ Error processing appeal denial. Please try again.');
@@ -828,14 +1080,21 @@ Your appeal has been reviewed and denied. The original suspension remains in eff
 
   private isKnownCommand(text: string): boolean {
     const knownCommands = [
-      '/start', '/help', '/question', '/appeal',
-      '/admin_status', '/admin_stats', '/debug'
+      '/start',
+      '/help',
+      '/question',
+      '/appeal',
+      '/admin_status',
+      '/admin_stats',
+      '/debug',
     ];
 
     const command = text.split(' ')[0];
-    return knownCommands.includes(command) ||
-           command.startsWith('/unban_') ||
-           command.startsWith('/deny_appeal_');
+    return (
+      knownCommands.includes(command) ||
+      command.startsWith('/unban_') ||
+      command.startsWith('/deny_appeal_')
+    );
   }
 
   private getUpdateType(ctx: Context): string {
@@ -907,24 +1166,243 @@ Your appeal has been reviewed and denied. The original suspension remains in eff
   }
 
   /**
+   * Connection health check and monitoring
+   */
+  private async performConnectionHealthCheck(): Promise<void> {
+    try {
+      // Simple health check by calling getMe API
+      const bot = new Bot(this.context.env.TELEGRAM_BOT_TOKEN, {
+        client: { timeoutMs: 5000 },
+      });
+
+      await bot.api.getMe();
+      this.updateConnectionStatus(true);
+
+      // Log successful health check periodically
+      if (this.apiConnectionStatus.consecutiveErrors > 0) {
+        console.log(
+          'Telegram API connection restored after',
+          this.apiConnectionStatus.consecutiveErrors,
+          'errors'
+        );
+      }
+    } catch (error) {
+      console.warn('Telegram API health check failed:', error);
+      this.updateConnectionStatus(false, error instanceof Error ? error.message : String(error));
+
+      // Alert admin if connection has been down for a while
+      if (this.apiConnectionStatus.consecutiveErrors >= 5) {
+        await this.alertAdminOfConnectionIssue();
+      }
+    }
+  }
+
+  /**
+   * Update API connection status
+   */
+  private updateConnectionStatus(success: boolean, errorMessage?: string): void {
+    const now = new Date();
+
+    if (success) {
+      this.apiConnectionStatus.connected = true;
+      this.apiConnectionStatus.lastSuccessfulCall = now;
+      this.apiConnectionStatus.consecutiveErrors = 0;
+      this.apiConnectionStatus.lastError = null;
+      this.apiConnectionStatus.rateLimitResetTime = null;
+      this.apiConnectionStatus.retryAfter = null;
+    } else {
+      this.apiConnectionStatus.connected = false;
+      this.apiConnectionStatus.consecutiveErrors++;
+      this.apiConnectionStatus.lastError = errorMessage || 'Unknown error';
+    }
+  }
+
+  /**
+   * Alert admin of connection issues
+   */
+  private async alertAdminOfConnectionIssue(): Promise<void> {
+    try {
+      if (!this.context.env.ADMIN_ID) return;
+
+      const errorMessage = `
+🚨 **Telegram API Connection Issue**
+
+**Status:** Connection problems detected
+**Consecutive Errors:** ${this.apiConnectionStatus.consecutiveErrors}
+**Last Success:** ${this.apiConnectionStatus.lastSuccessfulCall?.toISOString() || 'Never'}
+**Last Error:** ${this.apiConnectionStatus.lastError || 'Unknown'}
+
+**Time:** ${new Date().toISOString()}
+
+The bot may not be processing updates properly. Please check the logs and consider investigating connectivity issues.
+      `.trim();
+
+      // Use a simple HTTP request to send the alert since bot API might be down
+      const response = await fetch(
+        `https://api.telegram.org/bot${this.context.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: this.context.env.ADMIN_ID,
+            text: errorMessage,
+            parse_mode: 'Markdown',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Failed to send admin alert:', await response.text());
+      }
+    } catch (error) {
+      console.error('Error sending admin alert:', error);
+    }
+  }
+
+  /**
+   * Clean up old user sessions
+   */
+  private cleanupOldSessions(): void {
+    const now = new Date();
+    const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
+
+    for (const [userId, session] of this.userSessions.entries()) {
+      if (now.getTime() - session.lastActivity.getTime() > sessionTimeout) {
+        this.userSessions.delete(userId);
+      }
+    }
+
+    console.log(`Cleaned up old sessions, active sessions: ${this.userSessions.size}`);
+  }
+
+  /**
+   * Get connection status for monitoring
+   */
+  public getConnectionStatus(): TelegramAPIConnectionStatus {
+    return { ...this.apiConnectionStatus };
+  }
+
+  /**
+   * Utility methods for error classification
+   */
+  private isRateLimitError(error: any): boolean {
+    return (
+      error instanceof HttpError &&
+      (error.error_code === 429 || error.description?.includes('Too Many Requests'))
+    );
+  }
+
+  private extractRetryAfter(error: any): number {
+    if (error instanceof HttpError && error.parameters?.retry_after) {
+      return parseInt(error.parameters.retry_after);
+    }
+    return 60; // Default 60 seconds
+  }
+
+  private isRetryableError(error: any): boolean {
+    if (error instanceof HttpError) {
+      const retryableCodes = [408, 500, 502, 503, 504];
+      return retryableCodes.includes(error.error_code);
+    }
+
+    if (error instanceof Error) {
+      const retryableMessages = ['timeout', 'network', 'connection', 'ECONNRESET', 'ETIMEDOUT'];
+      return retryableMessages.some(msg => error.message.toLowerCase().includes(msg));
+    }
+
+    return false;
+  }
+
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private getWebhookUpdateType(body: any): string {
+    if (body.message) return 'message';
+    if (body.callback_query) return 'callback_query';
+    if (body.inline_query) return 'inline_query';
+    if (body.chosen_inline_result) return 'chosen_inline_result';
+    if (body.edited_message) return 'edited_message';
+    if (body.channel_post) return 'channel_post';
+    if (body.edited_channel_post) return 'edited_channel_post';
+    return 'unknown';
+  }
+
+  /**
+   * Enhanced API call wrapper with retry logic
+   */
+  public async apiCallWithRetry<T>(
+    apiCall: () => Promise<T>,
+    context?: string,
+    maxRetries = this.maxRetries
+  ): Promise<T> {
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await apiCall();
+        this.updateConnectionStatus(true);
+        return result;
+      } catch (error) {
+        lastError = error;
+        console.error(`API call failed (attempt ${attempt}/${maxRetries}) - ${context}:`, error);
+
+        if (attempt === maxRetries) {
+          this.updateConnectionStatus(
+            false,
+            error instanceof Error ? error.message : String(error)
+          );
+          break;
+        }
+
+        if (this.isRateLimitError(error)) {
+          const retryAfter = this.extractRetryAfter(error) * 1000;
+          console.log(`Rate limited, waiting ${retryAfter}ms`);
+          await this.delay(retryAfter);
+        } else if (this.isRetryableError(error)) {
+          const delay = Math.min(
+            this.baseRetryDelay * Math.pow(2, attempt - 1),
+            this.maxRetryDelay
+          );
+          console.log(`Retryable error, waiting ${delay}ms`);
+          await this.delay(delay);
+        } else {
+          // Non-retryable error
+          this.updateConnectionStatus(
+            false,
+            error instanceof Error ? error.message : String(error)
+          );
+          break;
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  /**
    * Global error handler
    */
   private async handleError(err: any): Promise<void> {
     console.error('Grammy bot error:', {
       error: err.error || err,
       stack: err.stack,
-      context: err.ctx ? {
-        updateId: err.ctx.update.update_id,
-        userId: err.ctx.from?.id,
-        chatId: err.ctx.chat?.id,
-      } : null,
+      context: err.ctx
+        ? {
+            updateId: err.ctx.update.update_id,
+            userId: err.ctx.from?.id,
+            chatId: err.ctx.chat?.id,
+          }
+        : null,
       timestamp: new Date().toISOString(),
     });
 
     // Try to send error message to user if context is available
     if (err.ctx && err.ctx.chat) {
       try {
-        await err.ctx.reply('❌ Sorry, something went wrong. Please try again or contact support with /question.');
+        await err.ctx.reply(
+          '❌ Sorry, something went wrong. Please try again or contact support with /question.'
+        );
       } catch (replyError) {
         console.error('Failed to send error message to user:', replyError);
       }
@@ -933,7 +1411,9 @@ Your appeal has been reviewed and denied. The original suspension remains in eff
     // Notify admin of critical errors
     if (this.context.env.ADMIN_ID && this.isCriticalError(err)) {
       try {
-        await err.ctx?.api.sendMessage(this.context.env.ADMIN_ID, `
+        await err.ctx?.api.sendMessage(
+          this.context.env.ADMIN_ID,
+          `
 🚨 **Critical Bot Error**
 
 **Error:** ${err.error?.message || 'Unknown error'}
@@ -942,7 +1422,9 @@ Your appeal has been reviewed and denied. The original suspension remains in eff
 **Context:** ${this.getUpdateType(err.ctx) || 'Unknown'}
 
 **Stack:** \`${(err.stack || '').substring(0, 500)}\`
-        `.trim(), { parse_mode: 'Markdown' });
+        `.trim(),
+          { parse_mode: 'Markdown' }
+        );
       } catch (notifyError) {
         console.error('Failed to notify admin of error:', notifyError);
       }

@@ -239,7 +239,9 @@ describe('Contract Test T025: POST /api/admin/users/{id}/ban', () => {
       // Should be approximately 7 days from now
       const bannedUntilDate = new Date(banData.banned_until!);
       const now = new Date();
-      const diffDays = Math.round((bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(
+        (bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(diffDays).toBeCloseTo(7, 1);
     });
 
@@ -278,7 +280,9 @@ describe('Contract Test T025: POST /api/admin/users/{id}/ban', () => {
       // Should be approximately 1 day from now
       const bannedUntilDate = new Date(banData.banned_until!);
       const now = new Date();
-      const diffDays = Math.round((bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(
+        (bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(diffDays).toBeCloseTo(1, 1);
     });
 
@@ -317,7 +321,9 @@ describe('Contract Test T025: POST /api/admin/users/{id}/ban', () => {
       // Should be approximately 365 days from now
       const bannedUntilDate = new Date(banData.banned_until!);
       const now = new Date();
-      const diffDays = Math.round((bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = Math.round(
+        (bannedUntilDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(diffDays).toBeCloseTo(365, 1);
     });
 
@@ -564,14 +570,17 @@ describe('Contract Test T025: POST /api/admin/users/{id}/ban', () => {
         reason: 'Policy violation',
       };
 
-      const request = new Request(`http://localhost:8787/api/admin/users/${nonExistentUserId}/ban`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-        body: JSON.stringify(banRequest),
-      });
+      const request = new Request(
+        `http://localhost:8787/api/admin/users/${nonExistentUserId}/ban`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+          body: JSON.stringify(banRequest),
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -938,7 +947,7 @@ describe('Contract Test T025: POST /api/admin/users/{id}/ban', () => {
       const request = new Request(`http://localhost:8787/api/admin/users/${userId}/ban`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock_admin_jwt_token',
+          Authorization: 'Bearer mock_admin_jwt_token',
         },
         body: JSON.stringify(banRequest),
       });

@@ -183,7 +183,7 @@ export class ListingsAPI {
           if (!searchResult.success) {
             return {
               success: false,
-              error: searchResult.error || 'Search failed'
+              error: searchResult.error || 'Search failed',
             };
           }
 
@@ -192,7 +192,9 @@ export class ListingsAPI {
             listings: searchResult.listings?.map(listing => ({
               id: listing.id,
               title: listing.title,
-              description: listing.description.substring(0, 200) + (listing.description.length > 200 ? '...' : ''),
+              description:
+                listing.description.substring(0, 200) +
+                (listing.description.length > 200 ? '...' : ''),
               priceUsd: listing.priceUsd,
               categoryId: listing.categoryId,
               categoryName: listing.category?.name || 'Unknown',
@@ -220,20 +222,22 @@ export class ListingsAPI {
               totalCount: searchResult.totalCount || 0,
               hasNext: page * limit < (searchResult.totalCount || 0),
               hasPrev: page > 1,
-            }
+            },
           };
         },
         { ttl: 60 } // Cache for 1 minute
       );
 
       return c.json(result);
-
     } catch (error) {
       console.error('Search listings error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -244,22 +248,28 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
-      const body = await c.req.json() as CreateListingRequest;
+      const body = (await c.req.json()) as CreateListingRequest;
 
       // Validate input
       const validationErrors = this.validateListingData(body);
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Create listing
@@ -278,27 +288,35 @@ export class ListingsAPI {
       );
 
       if (!createResult.success) {
-        return c.json({
-          success: false,
-          error: createResult.error || 'Failed to create listing'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: createResult.error || 'Failed to create listing',
+          },
+          400
+        );
       }
 
       // Invalidate search cache
       await this.invalidateSearchCache();
 
-      return c.json({
-        success: true,
-        listing: createResult.listing,
-        message: body.isDraft ? 'Draft saved successfully' : 'Listing created and published'
-      }, 201);
-
+      return c.json(
+        {
+          success: true,
+          listing: createResult.listing,
+          message: body.isDraft ? 'Draft saved successfully' : 'Listing created and published',
+        },
+        201
+      );
     } catch (error) {
       console.error('Create listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -311,20 +329,26 @@ export class ListingsAPI {
       const user = await this.getCurrentUser(c);
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Get listing details
       const listing = await this.listingService.getListingById(listingId);
 
       if (!listing) {
-        return c.json({
-          success: false,
-          error: 'Listing not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing not found',
+          },
+          404
+        );
       }
 
       // Track view (only if not the owner)
@@ -352,10 +376,12 @@ export class ListingsAPI {
             id: listing.category?.id || listing.categoryId,
             name: listing.category?.name || 'Unknown',
             slug: listing.category?.slug || '',
-            parent: listing.category?.parent ? {
-              id: listing.category.parent.id,
-              name: listing.category.parent.name,
-            } : undefined,
+            parent: listing.category?.parent
+              ? {
+                  id: listing.category.parent.id,
+                  name: listing.category.parent.name,
+                }
+              : undefined,
           },
           images: listing.images || [],
           tags: listing.tags || [],
@@ -388,13 +414,15 @@ export class ListingsAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Get listing details error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -405,30 +433,39 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
-      const body = await c.req.json() as Partial<CreateListingRequest>;
+      const body = (await c.req.json()) as Partial<CreateListingRequest>;
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Validate input
       const validationErrors = this.validateListingData(body, false);
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Update listing
@@ -439,10 +476,13 @@ export class ListingsAPI {
       );
 
       if (!updateResult.success) {
-        return c.json({
-          success: false,
-          error: updateResult.error || 'Failed to update listing'
-        }, updateResult.error?.includes('not found') ? 404 : 400);
+        return c.json(
+          {
+            success: false,
+            error: updateResult.error || 'Failed to update listing',
+          },
+          updateResult.error?.includes('not found') ? 404 : 400
+        );
       }
 
       // Invalidate caches
@@ -451,15 +491,17 @@ export class ListingsAPI {
       return c.json({
         success: true,
         listing: updateResult.listing,
-        message: 'Listing updated successfully'
+        message: 'Listing updated successfully',
       });
-
     } catch (error) {
       console.error('Update listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -470,19 +512,25 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Archive listing
@@ -492,10 +540,13 @@ export class ListingsAPI {
       );
 
       if (!deleteResult.success) {
-        return c.json({
-          success: false,
-          error: deleteResult.error || 'Failed to delete listing'
-        }, deleteResult.error?.includes('not found') ? 404 : 400);
+        return c.json(
+          {
+            success: false,
+            error: deleteResult.error || 'Failed to delete listing',
+          },
+          deleteResult.error?.includes('not found') ? 404 : 400
+        );
       }
 
       // Invalidate caches
@@ -503,15 +554,17 @@ export class ListingsAPI {
 
       return c.json({
         success: true,
-        message: 'Listing archived successfully'
+        message: 'Listing archived successfully',
       });
-
     } catch (error) {
       console.error('Delete listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -522,19 +575,25 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Bump listing
@@ -544,10 +603,13 @@ export class ListingsAPI {
       );
 
       if (!bumpResult.success) {
-        return c.json({
-          success: false,
-          error: bumpResult.error || 'Failed to bump listing'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: bumpResult.error || 'Failed to bump listing',
+          },
+          400
+        );
       }
 
       // Invalidate caches
@@ -556,15 +618,17 @@ export class ListingsAPI {
       return c.json({
         success: true,
         listing: bumpResult.listing,
-        message: 'Listing bumped successfully'
+        message: 'Listing bumped successfully',
       });
-
     } catch (error) {
       console.error('Bump listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -575,27 +639,36 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
-      const body = await c.req.json() as FlagListingRequest;
+      const body = (await c.req.json()) as FlagListingRequest;
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       if (!body.reason) {
-        return c.json({
-          success: false,
-          error: 'Flag reason is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Flag reason is required',
+          },
+          400
+        );
       }
 
       // Submit flag
@@ -607,24 +680,29 @@ export class ListingsAPI {
       );
 
       if (!flagResult.success) {
-        return c.json({
-          success: false,
-          error: flagResult.error || 'Failed to submit flag'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: flagResult.error || 'Failed to submit flag',
+          },
+          400
+        );
       }
 
       return c.json({
         success: true,
         message: 'Report submitted successfully. Our team will review it.',
-        ticketId: flagResult.flag?.id
+        ticketId: flagResult.flag?.id,
       });
-
     } catch (error) {
       console.error('Flag listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -635,37 +713,49 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Get listing for preview
       const listing = await this.listingService.getListingById(listingId);
 
       if (!listing) {
-        return c.json({
-          success: false,
-          error: 'Listing not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing not found',
+          },
+          404
+        );
       }
 
       // Check ownership
       if (listing.userId !== parseInt(user.telegramId)) {
-        return c.json({
-          success: false,
-          error: 'Access denied'
-        }, 403);
+        return c.json(
+          {
+            success: false,
+            error: 'Access denied',
+          },
+          403
+        );
       }
 
       // Generate preview URL (in real implementation, this would create a temporary preview)
@@ -683,15 +773,17 @@ export class ListingsAPI {
           status: listing.status,
         },
         message: 'Preview generated successfully',
-        expires: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour
+        expires: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hour
       });
-
     } catch (error) {
       console.error('Preview listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -702,19 +794,25 @@ export class ListingsAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const listingId = c.req.param('id');
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       // Publish listing
@@ -724,10 +822,13 @@ export class ListingsAPI {
       );
 
       if (!publishResult.success) {
-        return c.json({
-          success: false,
-          error: publishResult.error || 'Failed to publish listing'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: publishResult.error || 'Failed to publish listing',
+          },
+          400
+        );
       }
 
       // Invalidate caches
@@ -737,15 +838,17 @@ export class ListingsAPI {
       return c.json({
         success: true,
         listing: publishResult.listing,
-        message: 'Listing published successfully'
+        message: 'Listing published successfully',
       });
-
     } catch (error) {
       console.error('Publish listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 

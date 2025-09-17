@@ -7,7 +7,7 @@ import {
   ModerationActionType,
   canAppealAction,
   isBanActive,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 } from '../../src/db/schema/moderation';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -162,9 +162,12 @@ export class ModerationActionModel {
       appealCount: 0, // Would be counted from appeals table
       isActive: this.isActionActive(action),
       isAppealable: canAppealAction(action),
-      daysSinceAction: Math.floor((Date.now() - new Date(action.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      daysUntilExpiry: action.expiresAt ?
-        Math.floor((new Date(action.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)) : undefined,
+      daysSinceAction: Math.floor(
+        (Date.now() - new Date(action.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      daysUntilExpiry: action.expiresAt
+        ? Math.floor((new Date(action.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+        : undefined,
     };
 
     return actionWithDetails;
@@ -174,9 +177,9 @@ export class ModerationActionModel {
    * Ban a user
    */
   async banUser(banData: BanUserData): Promise<ModerationAction> {
-    const expiresAt = banData.duration ?
-      new Date(Date.now() + banData.duration * 24 * 60 * 60 * 1000).toISOString() :
-      null;
+    const expiresAt = banData.duration
+      ? new Date(Date.now() + banData.duration * 24 * 60 * 60 * 1000).toISOString()
+      : null;
 
     return await this.create({
       targetUserId: banData.targetUserId,
@@ -191,7 +194,11 @@ export class ModerationActionModel {
   /**
    * Unban a user
    */
-  async unbanUser(targetUserId: number, adminId: number, reason: string): Promise<ModerationAction> {
+  async unbanUser(
+    targetUserId: number,
+    adminId: number,
+    reason: string
+  ): Promise<ModerationAction> {
     const activeBan = await this.getActiveBan(targetUserId);
     if (!activeBan) {
       throw new Error('User is not currently banned');
@@ -221,7 +228,12 @@ export class ModerationActionModel {
   /**
    * Remove content
    */
-  async removeContent(targetListingId: string, adminId: number, reason: string, targetUserId: number): Promise<ModerationAction> {
+  async removeContent(
+    targetListingId: string,
+    adminId: number,
+    reason: string,
+    targetUserId: number
+  ): Promise<ModerationAction> {
     return await this.create({
       targetUserId,
       targetListingId,
@@ -273,10 +285,12 @@ export class ModerationActionModel {
     const bans = await this.db
       .select()
       .from(moderationActions)
-      .where(and(
-        eq(moderationActions.targetUserId, targetUserId),
-        eq(moderationActions.actionType, ModerationActionType.BAN)
-      ))
+      .where(
+        and(
+          eq(moderationActions.targetUserId, targetUserId),
+          eq(moderationActions.actionType, ModerationActionType.BAN)
+        )
+      )
       .orderBy(desc(moderationActions.createdAt));
 
     // Find the most recent active ban
@@ -386,9 +400,12 @@ export class ModerationActionModel {
       appealCount: 0,
       isActive: this.isActionActive(action),
       isAppealable: canAppealAction(action),
-      daysSinceAction: Math.floor((Date.now() - new Date(action.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      daysUntilExpiry: action.expiresAt ?
-        Math.floor((new Date(action.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)) : undefined,
+      daysSinceAction: Math.floor(
+        (Date.now() - new Date(action.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      daysUntilExpiry: action.expiresAt
+        ? Math.floor((new Date(action.expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+        : undefined,
     }));
 
     return {
@@ -419,12 +436,14 @@ export class ModerationActionModel {
     return await this.db
       .select()
       .from(moderationActions)
-      .where(and(
-        eq(moderationActions.actionType, ModerationActionType.BAN),
-        isNotNull(moderationActions.expiresAt),
-        lte(moderationActions.expiresAt, futureDate),
-        gte(moderationActions.expiresAt, new Date().toISOString())
-      ))
+      .where(
+        and(
+          eq(moderationActions.actionType, ModerationActionType.BAN),
+          isNotNull(moderationActions.expiresAt),
+          lte(moderationActions.expiresAt, futureDate),
+          gte(moderationActions.expiresAt, new Date().toISOString())
+        )
+      )
       .orderBy(asc(moderationActions.expiresAt))
       .limit(limit);
   }
@@ -438,11 +457,13 @@ export class ModerationActionModel {
     return await this.db
       .select()
       .from(moderationActions)
-      .where(and(
-        eq(moderationActions.actionType, ModerationActionType.BAN),
-        isNotNull(moderationActions.expiresAt),
-        lte(moderationActions.expiresAt, now)
-      ))
+      .where(
+        and(
+          eq(moderationActions.actionType, ModerationActionType.BAN),
+          isNotNull(moderationActions.expiresAt),
+          lte(moderationActions.expiresAt, now)
+        )
+      )
       .orderBy(asc(moderationActions.expiresAt));
   }
 
@@ -450,9 +471,7 @@ export class ModerationActionModel {
    * Get comprehensive moderation statistics
    */
   async getStats(): Promise<ModerationStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(moderationActions);
+    const [totalResult] = await this.db.select({ count: count() }).from(moderationActions);
 
     // Actions by type
     const actionTypeStats = await this.db
@@ -463,10 +482,13 @@ export class ModerationActionModel {
       .from(moderationActions)
       .groupBy(moderationActions.actionType);
 
-    const actionsByType = Object.values(ModerationActionType).reduce((acc, type) => {
-      acc[type] = actionTypeStats.find(stat => stat.actionType === type)?.count || 0;
-      return acc;
-    }, {} as Record<ModerationActionType, number>);
+    const actionsByType = Object.values(ModerationActionType).reduce(
+      (acc, type) => {
+        acc[type] = actionTypeStats.find(stat => stat.actionType === type)?.count || 0;
+        return acc;
+      },
+      {} as Record<ModerationActionType, number>
+    );
 
     // Actions by admin
     const adminStats = await this.db
@@ -488,7 +510,12 @@ export class ModerationActionModel {
 
     let avgActionsPerDay = 0;
     if (firstActionResult) {
-      const daysSinceFirst = Math.max(1, Math.floor((Date.now() - new Date(firstActionResult.createdAt).getTime()) / (24 * 60 * 60 * 1000)));
+      const daysSinceFirst = Math.max(
+        1,
+        Math.floor(
+          (Date.now() - new Date(firstActionResult.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+        )
+      );
       avgActionsPerDay = Math.round((totalResult.count / daysSinceFirst) * 100) / 100;
     }
 
@@ -496,13 +523,15 @@ export class ModerationActionModel {
     const [activeBansResult] = await this.db
       .select({ count: count() })
       .from(moderationActions)
-      .where(and(
-        eq(moderationActions.actionType, ModerationActionType.BAN),
-        sql`(
+      .where(
+        and(
+          eq(moderationActions.actionType, ModerationActionType.BAN),
+          sql`(
           ${moderationActions.expiresAt} IS NULL OR
           ${moderationActions.expiresAt} > datetime('now')
         )`
-      ));
+        )
+      );
 
     const recentActions = await this.getRecent(10);
 
@@ -530,23 +559,25 @@ export class ModerationActionModel {
     appealableActions: number;
     actionsByType: Record<ModerationActionType, number>;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(moderationActions);
+    const [totalResult] = await this.db.select({ count: count() }).from(moderationActions);
 
     const [activeResult] = await this.db
       .select({ count: count() })
       .from(moderationActions)
-      .where(and(
-        eq(moderationActions.actionType, ModerationActionType.BAN),
-        sql`(
+      .where(
+        and(
+          eq(moderationActions.actionType, ModerationActionType.BAN),
+          sql`(
           ${moderationActions.expiresAt} IS NULL OR
           ${moderationActions.expiresAt} > datetime('now')
         )`
-      ));
+        )
+      );
 
     // Actions created within appeal deadline
-    const appealDeadline = new Date(Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const appealDeadline = new Date(
+      Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
     const [appealableResult] = await this.db
       .select({ count: count() })
       .from(moderationActions)
@@ -561,10 +592,13 @@ export class ModerationActionModel {
       .from(moderationActions)
       .groupBy(moderationActions.actionType);
 
-    const actionsByType = Object.values(ModerationActionType).reduce((acc, type) => {
-      acc[type] = actionTypeStats.find(stat => stat.actionType === type)?.count || 0;
-      return acc;
-    }, {} as Record<ModerationActionType, number>);
+    const actionsByType = Object.values(ModerationActionType).reduce(
+      (acc, type) => {
+        acc[type] = actionTypeStats.find(stat => stat.actionType === type)?.count || 0;
+        return acc;
+      },
+      {} as Record<ModerationActionType, number>
+    );
 
     return {
       totalActions: totalResult.count,
@@ -589,7 +623,9 @@ export class ModerationActionModel {
 
     const warnings = actions.filter(a => a.actionType === ModerationActionType.WARNING).length;
     const bans = actions.filter(a => a.actionType === ModerationActionType.BAN).length;
-    const contentRemovals = actions.filter(a => a.actionType === ModerationActionType.CONTENT_REMOVAL).length;
+    const contentRemovals = actions.filter(
+      a => a.actionType === ModerationActionType.CONTENT_REMOVAL
+    ).length;
 
     const currentlyBanned = await this.isUserBanned(targetUserId);
     const lastAction = actions.length > 0 ? actions[0] : undefined;
@@ -627,9 +663,7 @@ export class ModerationActionModel {
    * Delete moderation action (admin only)
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(moderationActions)
-      .where(eq(moderationActions.id, id));
+    const result = await this.db.delete(moderationActions).where(eq(moderationActions.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -649,7 +683,10 @@ export class ModerationActionModel {
   /**
    * Get escalation path for repeat offenders
    */
-  getEscalationPath(violationCount: number): { actionType: ModerationActionType; duration?: number } {
+  getEscalationPath(violationCount: number): {
+    actionType: ModerationActionType;
+    duration?: number;
+  } {
     if (violationCount <= 1) {
       return { actionType: ModerationActionType.WARNING };
     } else if (violationCount <= 3) {
@@ -692,7 +729,10 @@ export class ModerationActionModel {
       }
     }
 
-    if (actionData.actionType === ModerationActionType.CONTENT_REMOVAL && !actionData.targetListingId) {
+    if (
+      actionData.actionType === ModerationActionType.CONTENT_REMOVAL &&
+      !actionData.targetListingId
+    ) {
       errors.push('Target listing is required for content removal actions');
     }
 
@@ -715,7 +755,7 @@ export {
   ModerationActionType,
   canAppealAction,
   isBanActive,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 };
 export type {
   ModerationActionWithDetails,
@@ -723,5 +763,5 @@ export type {
   ModerationListResponse,
   BanUserData,
   WarnUserData,
-  ModerationStats
+  ModerationStats,
 };

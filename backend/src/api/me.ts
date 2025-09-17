@@ -107,19 +107,25 @@ export class MeAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       // Get user profile
       const profile = await this.userService.getProfile(parseInt(user.telegramId));
       if (!profile) {
-        return c.json({
-          success: false,
-          error: 'User profile not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'User profile not found',
+          },
+          404
+        );
       }
 
       // Get user statistics
@@ -148,13 +154,15 @@ export class MeAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Get user profile error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -165,13 +173,16 @@ export class MeAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
-      const body = await c.req.json() as UpdateProfileRequest;
+      const body = (await c.req.json()) as UpdateProfileRequest;
 
       // Validate input
       const validationErrors: string[] = [];
@@ -186,41 +197,57 @@ export class MeAPI {
         validationErrors.push('Last name must be 64 characters or less');
       }
 
-      if (body.languageCode !== undefined && body.languageCode && !/^[a-z]{2}(-[A-Z]{2})?$/.test(body.languageCode)) {
+      if (
+        body.languageCode !== undefined &&
+        body.languageCode &&
+        !/^[a-z]{2}(-[A-Z]{2})?$/.test(body.languageCode)
+      ) {
         validationErrors.push('Invalid language code format');
       }
 
-      if (body.profilePhotoUrl !== undefined && body.profilePhotoUrl && !this.isValidUrl(body.profilePhotoUrl)) {
+      if (
+        body.profilePhotoUrl !== undefined &&
+        body.profilePhotoUrl &&
+        !this.isValidUrl(body.profilePhotoUrl)
+      ) {
         validationErrors.push('Invalid profile photo URL');
       }
 
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Update profile
       const updateResult = await this.userService.updateProfile(parseInt(user.telegramId), body);
 
       if (!updateResult.success) {
-        return c.json({
-          success: false,
-          error: updateResult.error || 'Failed to update profile'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: updateResult.error || 'Failed to update profile',
+          },
+          400
+        );
       }
 
       // Return updated profile
       return this.getUserProfile(c);
-
     } catch (error) {
       console.error('Update user profile error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -231,10 +258,13 @@ export class MeAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       const page = parseInt(c.req.query('page') || '1');
@@ -250,10 +280,13 @@ export class MeAPI {
       );
 
       if (!listingsResult.success) {
-        return c.json({
-          success: false,
-          error: listingsResult.error || 'Failed to fetch listings'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: listingsResult.error || 'Failed to fetch listings',
+          },
+          400
+        );
       }
 
       // Calculate detailed stats
@@ -283,13 +316,15 @@ export class MeAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Get user listings error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -300,19 +335,25 @@ export class MeAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
-      const body = await c.req.json() as { confirmation: string; reason?: string };
+      const body = (await c.req.json()) as { confirmation: string; reason?: string };
 
       if (body.confirmation !== 'DELETE_MY_ACCOUNT') {
-        return c.json({
-          success: false,
-          error: 'Account deletion requires confirmation string: DELETE_MY_ACCOUNT'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Account deletion requires confirmation string: DELETE_MY_ACCOUNT',
+          },
+          400
+        );
       }
 
       // Delete user account
@@ -322,10 +363,13 @@ export class MeAPI {
       );
 
       if (!deleteResult.success) {
-        return c.json({
-          success: false,
-          error: deleteResult.error || 'Failed to delete account'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: deleteResult.error || 'Failed to delete account',
+          },
+          400
+        );
       }
 
       // Invalidate all user sessions
@@ -333,15 +377,17 @@ export class MeAPI {
 
       return c.json({
         success: true,
-        message: 'Account deleted successfully'
+        message: 'Account deleted successfully',
       });
-
     } catch (error) {
       console.error('Delete user account error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -379,8 +425,9 @@ export class MeAPI {
 
       // Get user profile for membership calculation
       const profile = await this.userService.getProfile(telegramId);
-      const membershipDays = profile ?
-        Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      const membershipDays = profile
+        ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
 
       return {
         totalListings: listingStats.totalListings || 0,

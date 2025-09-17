@@ -183,7 +183,7 @@ const mockKV = {
 
     if (entry) {
       // Check if expired
-      const expiresAt = new Date(entry.created_at).getTime() + (entry.ttl * 1000);
+      const expiresAt = new Date(entry.created_at).getTime() + entry.ttl * 1000;
       if (Date.now() > expiresAt) {
         mockCacheEntries.delete(key);
         mockCacheMetrics.cache_misses++;
@@ -227,12 +227,14 @@ const mockKV = {
 
     return {
       value,
-      metadata: entry ? {
-        created_at: entry.created_at,
-        accessed_at: entry.accessed_at,
-        access_count: entry.access_count,
-        ttl: entry.ttl,
-      } : null,
+      metadata: entry
+        ? {
+            created_at: entry.created_at,
+            accessed_at: entry.accessed_at,
+            access_count: entry.access_count,
+            ttl: entry.ttl,
+          }
+        : null,
     };
   },
 };
@@ -446,9 +448,12 @@ describe('Integration Test T038: KV Caching Performance', () => {
       }
 
       const searchQuery = 'iphone 14 pro max';
-      const request = new Request(`http://localhost:8787/api/listings?search=${encodeURIComponent(searchQuery)}&limit=20`, {
-        method: 'GET',
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings?search=${encodeURIComponent(searchQuery)}&limit=20`,
+        {
+          method: 'GET',
+        }
+      );
 
       // First search (uncached)
       const response1 = await worker.fetch(request, mockEnv, {
@@ -518,11 +523,14 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const cacheKey = `listing:${listingId}`;
 
       // Pre-populate cache
-      await mockKV.put(cacheKey, JSON.stringify({
-        id: listingId,
-        title: 'Original Title',
-        price: 50000,
-      }));
+      await mockKV.put(
+        cacheKey,
+        JSON.stringify({
+          id: listingId,
+          title: 'Original Title',
+          price: 50000,
+        })
+      );
 
       // Update listing
       const updateRequest = {
@@ -570,7 +578,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request(`http://localhost:8787/api/listings/${listingId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': 'Bearer mock_token',
+          Authorization: 'Bearer mock_token',
         },
       });
 
@@ -681,7 +689,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request('http://localhost:8787/api/admin/cache/preload-trending', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -758,7 +766,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request('http://localhost:8787/api/admin/cache/stats', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -786,7 +794,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request('http://localhost:8787/api/admin/cache/performance', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -798,7 +806,9 @@ describe('Integration Test T038: KV Caching Performance', () => {
       expect(response.status).toBe(200);
 
       const performanceData = await response.json();
-      expect(performanceData.avg_response_time_cached).toBeLessThan(performanceData.avg_response_time_uncached);
+      expect(performanceData.avg_response_time_cached).toBeLessThan(
+        performanceData.avg_response_time_uncached
+      );
       expect(performanceData.performance_improvement_pct).toBeGreaterThan(0);
       expect(performanceData.db_queries_saved).toBeGreaterThanOrEqual(0);
       expect(performanceData.bandwidth_saved_bytes).toBeGreaterThanOrEqual(0);
@@ -813,7 +823,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request('http://localhost:8787/api/admin/cache/optimization', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -847,7 +857,7 @@ describe('Integration Test T038: KV Caching Performance', () => {
       const request = new Request('http://localhost:8787/api/admin/cache/monitor', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 

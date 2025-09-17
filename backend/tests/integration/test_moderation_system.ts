@@ -220,7 +220,13 @@ const mockDB = {
           mockFlags.push(newFlag);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newFlag.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newFlag.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         if (query.includes('INSERT INTO moderation_actions')) {
@@ -237,7 +243,13 @@ const mockDB = {
           mockModerationActions.push(newAction);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newAction.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newAction.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         if (query.includes('UPDATE users') && query.includes('warning_count')) {
@@ -262,14 +274,14 @@ const mockDB = {
           return {
             results: mockFlags.filter(f => f.status === 'pending'),
             success: true,
-            meta: {} as any
+            meta: {} as any,
           };
         }
         if (query.includes('SELECT') && query.includes('blocked_words')) {
           return {
             results: mockBlockedWords.filter(w => w.is_active),
             success: true,
-            meta: {} as any
+            meta: {} as any,
           };
         }
         return { results: [], success: true, meta: {} as any };
@@ -658,7 +670,7 @@ describe('Integration Test T034: Moderation and Flagging System', () => {
       const request = new Request('http://localhost:8787/api/admin/flags?status=pending', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 
@@ -931,7 +943,8 @@ describe('Integration Test T034: Moderation and Flagging System', () => {
       // User submits appeal
       const appealRequest = {
         moderation_action_id: 1,
-        reason: 'I believe this was a misunderstanding. The content was not spam but rather an urgent legitimate sale.',
+        reason:
+          'I believe this was a misunderstanding. The content was not spam but rather an urgent legitimate sale.',
         additional_context: 'I can provide proof of purchase and authenticity.',
       };
 
@@ -983,7 +996,8 @@ describe('Integration Test T034: Moderation and Flagging System', () => {
       // Admin approves appeal
       const reviewRequest = {
         decision: 'approved',
-        admin_notes: 'Upon review, the content appears to be legitimate. Reversing moderation action.',
+        admin_notes:
+          'Upon review, the content appears to be legitimate. Reversing moderation action.',
         reverse_action: true,
       };
 
@@ -1134,7 +1148,7 @@ describe('Integration Test T034: Moderation and Flagging System', () => {
       const request = new Request('http://localhost:8787/api/admin/moderation/stats?period=7d', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_admin_token',
+          Authorization: 'Bearer mock_admin_token',
         },
       });
 

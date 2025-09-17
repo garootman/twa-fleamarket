@@ -11,7 +11,7 @@ import {
   getLeafCategories,
   isParentCategory,
   isChildCategory,
-  CATEGORY_CONSTRAINTS
+  CATEGORY_CONSTRAINTS,
 } from '../../src/db/schema/categories';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -92,10 +92,7 @@ export class CategoryModel {
    * Find category by name (within same parent level)
    */
   async findByName(name: string, parentId?: number | null): Promise<Category | null> {
-    let query = this.db
-      .select()
-      .from(categories)
-      .where(eq(categories.name, name));
+    let query = this.db.select().from(categories).where(eq(categories.name, name));
 
     if (parentId !== undefined) {
       if (parentId === null) {
@@ -153,10 +150,7 @@ export class CategoryModel {
    * Get parent categories only
    */
   async getParentCategories(activeOnly = true): Promise<Category[]> {
-    let query = this.db
-      .select()
-      .from(categories)
-      .where(isNull(categories.parentId));
+    let query = this.db.select().from(categories).where(isNull(categories.parentId));
 
     if (activeOnly) {
       query = query.where(and(isNull(categories.parentId), eq(categories.isActive, true)));
@@ -169,10 +163,7 @@ export class CategoryModel {
    * Get child categories for a parent
    */
   async getChildCategories(parentId: number, activeOnly = true): Promise<Category[]> {
-    let query = this.db
-      .select()
-      .from(categories)
-      .where(eq(categories.parentId, parentId));
+    let query = this.db.select().from(categories).where(eq(categories.parentId, parentId));
 
     if (activeOnly) {
       query = query.where(and(eq(categories.parentId, parentId), eq(categories.isActive, true)));
@@ -250,9 +241,7 @@ export class CategoryModel {
 
     // Check if category has listings (would be implemented with joins)
     // For now, just delete
-    const result = await this.db
-      .delete(categories)
-      .where(eq(categories.id, id));
+    const result = await this.db.delete(categories).where(eq(categories.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -421,9 +410,7 @@ export class CategoryModel {
     childCategories: number;
     categoriesWithListings: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(categories);
+    const [totalResult] = await this.db.select({ count: count() }).from(categories);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -506,7 +493,10 @@ export class CategoryModel {
   /**
    * Validate category hierarchy constraints
    */
-  validateHierarchy(categoryData: CreateCategory | UpdateCategory, existingCategories: Category[]): string[] {
+  validateHierarchy(
+    categoryData: CreateCategory | UpdateCategory,
+    existingCategories: Category[]
+  ): string[] {
     return validateCategoryHierarchy(categoryData, existingCategories);
   }
 
@@ -539,6 +529,6 @@ export {
   getLeafCategories,
   isParentCategory,
   isChildCategory,
-  CATEGORY_CONSTRAINTS
+  CATEGORY_CONSTRAINTS,
 };
 export type { CategorySearchFilters, CategoryListResponse };

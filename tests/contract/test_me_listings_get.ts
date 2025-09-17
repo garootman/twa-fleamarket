@@ -200,7 +200,7 @@ const mockDB: D1Database = {
       all: async () => ({
         results: mockListings,
         success: true,
-        meta: {} as any
+        meta: {} as any,
       }),
     }),
     first: async () => mockUser,
@@ -327,7 +327,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
 
       // Validate each listing in the array
       if (data.listings.length > 0) {
-        data.listings.forEach((listing) => {
+        data.listings.forEach(listing => {
           // Validate Listing schema compliance
           expect(listing).toHaveProperty('id');
           expect(typeof listing.id).toBe('string');
@@ -364,7 +364,9 @@ describe('Contract Test T018: GET /api/me/listings', () => {
           expect(() => new Date(listing.expires_at)).not.toThrow();
 
           expect(listing).toHaveProperty('status');
-          expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(listing.status);
+          expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+            listing.status
+          );
 
           expect(listing).toHaveProperty('is_sticky');
           expect(typeof listing.is_sticky).toBe('boolean');
@@ -383,7 +385,9 @@ describe('Contract Test T018: GET /api/me/listings', () => {
           expect(typeof listing.contact_username).toBe('string');
 
           expect(listing).toHaveProperty('published_at');
-          expect(listing.published_at === null || typeof listing.published_at === 'string').toBe(true);
+          expect(listing.published_at === null || typeof listing.published_at === 'string').toBe(
+            true
+          );
 
           expect(listing).toHaveProperty('time_left');
           expect(typeof listing.time_left).toBe('string');
@@ -434,7 +438,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
       expect(data).toHaveProperty('stats');
 
       // All returned listings should have active status
-      data.listings.forEach((listing) => {
+      data.listings.forEach(listing => {
         expect(listing.status).toBe('active');
       });
     });
@@ -468,7 +472,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
       expect(data).toHaveProperty('stats');
 
       // All returned listings should have draft status
-      data.listings.forEach((listing) => {
+      data.listings.forEach(listing => {
         expect(listing.status).toBe('draft');
       });
     });
@@ -502,7 +506,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
       expect(data).toHaveProperty('stats');
 
       // All returned listings should have sold status
-      data.listings.forEach((listing) => {
+      data.listings.forEach(listing => {
         expect(listing.status).toBe('sold');
       });
     });
@@ -536,7 +540,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
       expect(data).toHaveProperty('stats');
 
       // All returned listings should have expired status
-      data.listings.forEach((listing) => {
+      data.listings.forEach(listing => {
         expect(listing.status).toBe('expired');
       });
     });
@@ -570,7 +574,7 @@ describe('Contract Test T018: GET /api/me/listings', () => {
       expect(data).toHaveProperty('stats');
 
       // All returned listings should have archived status
-      data.listings.forEach((listing) => {
+      data.listings.forEach(listing => {
         expect(listing.status).toBe('archived');
       });
     });

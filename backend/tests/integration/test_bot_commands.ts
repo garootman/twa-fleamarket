@@ -70,14 +70,18 @@ interface BotResponse {
   text: string;
   parse_mode?: 'HTML' | 'Markdown' | 'MarkdownV2';
   reply_markup?: {
-    inline_keyboard?: Array<Array<{
-      text: string;
-      url?: string;
-      callback_data?: string;
-    }>>;
-    keyboard?: Array<Array<{
-      text: string;
-    }>>;
+    inline_keyboard?: Array<
+      Array<{
+        text: string;
+        url?: string;
+        callback_data?: string;
+      }>
+    >;
+    keyboard?: Array<
+      Array<{
+        text: string;
+      }>
+    >;
     resize_keyboard?: boolean;
     one_time_keyboard?: boolean;
   };

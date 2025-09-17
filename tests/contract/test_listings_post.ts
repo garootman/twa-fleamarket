@@ -209,12 +209,10 @@ describe('Contract Test T013: POST /api/listings', () => {
       const createRequest: CreateListingRequest = {
         category_id: 1,
         title: 'Test Product for Sale',
-        description: 'This is a test product with detailed description that explains all the features and condition.',
+        description:
+          'This is a test product with detailed description that explains all the features and condition.',
         price_usd: 99.99,
-        images: [
-          'https://example.com/image1.jpg',
-          'https://example.com/image2.jpg'
-        ],
+        images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
       };
 
       const request = new Request('http://localhost:8787/api/listings', {
@@ -280,7 +278,9 @@ describe('Contract Test T013: POST /api/listings', () => {
       expect(() => new Date(listingData.expires_at)).not.toThrow();
 
       expect(listingData).toHaveProperty('status');
-      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(listingData.status);
+      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+        listingData.status
+      );
 
       expect(listingData).toHaveProperty('is_sticky');
       expect(typeof listingData.is_sticky).toBe('boolean');
@@ -299,7 +299,9 @@ describe('Contract Test T013: POST /api/listings', () => {
       expect(typeof listingData.contact_username).toBe('string');
 
       expect(listingData).toHaveProperty('published_at');
-      expect(listingData.published_at === null || typeof listingData.published_at === 'string').toBe(true);
+      expect(
+        listingData.published_at === null || typeof listingData.published_at === 'string'
+      ).toBe(true);
 
       expect(listingData).toHaveProperty('time_left');
       expect(typeof listingData.time_left).toBe('string');
@@ -366,7 +368,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Listing with Max Images',
         description: 'This listing has the maximum allowed number of images.',
-        price_usd: 150.00,
+        price_usd: 150.0,
         images: [
           'https://example.com/image1.jpg',
           'https://example.com/image2.jpg',
@@ -451,7 +453,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Unauthorized Test',
         description: 'This should fail without auth.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -488,7 +490,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Invalid Token Test',
         description: 'This should fail with invalid token.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -560,7 +562,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'A'.repeat(101), // Exceeds 100 character limit
         description: 'Valid description.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -596,7 +598,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Valid Title',
         description: 'A'.repeat(1001), // Exceeds 1000 character limit
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -668,7 +670,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Too Many Images',
         description: 'This has too many images.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: Array(10).fill('https://example.com/image.jpg'), // Exceeds 9 image limit
       };
 
@@ -704,7 +706,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'No Images Test',
         description: 'This has no images.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: [], // Empty array
       };
 
@@ -740,7 +742,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 999999, // Non-existent category
         title: 'Invalid Category Test',
         description: 'This has invalid category.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -778,7 +780,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Banned User Test',
         description: 'This should fail for banned user.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -815,7 +817,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'Limit Reached Test',
         description: 'This should fail when limit is reached.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 
@@ -883,7 +885,7 @@ describe('Contract Test T013: POST /api/listings', () => {
         category_id: 1,
         title: 'CORS Test',
         description: 'Testing CORS headers.',
-        price_usd: 50.00,
+        price_usd: 50.0,
         images: ['https://example.com/test.jpg'],
       };
 

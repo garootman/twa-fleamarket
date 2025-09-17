@@ -357,11 +357,7 @@ export class UserService {
   /**
    * Search users (admin function)
    */
-  async searchUsers(
-    filters: any = {},
-    page = 1,
-    limit = 50
-  ): Promise<any> {
+  async searchUsers(filters: any = {}, page = 1, limit = 50): Promise<any> {
     return await this.userModel.search(filters, page, limit);
   }
 
@@ -437,9 +433,9 @@ export class UserService {
   private calculateProfileCompleteness(user: any): number {
     let completeness = 0;
     const fields = [
-      user.username,        // 20%
-      user.firstName,       // 20%
-      user.lastName,        // 15%
+      user.username, // 20%
+      user.firstName, // 20%
+      user.lastName, // 15%
       user.profilePhotoUrl, // 15%
       user.usernameVerifiedAt, // 30%
     ];
@@ -458,7 +454,11 @@ export class UserService {
   /**
    * Calculate reputation score
    */
-  private calculateReputationScore(user: any, activity: UserActivity, moderation: UserModerationInfo): number {
+  private calculateReputationScore(
+    user: any,
+    activity: UserActivity,
+    moderation: UserModerationInfo
+  ): number {
     let score = 50; // Base score
 
     // Positive factors

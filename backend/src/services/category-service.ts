@@ -1,7 +1,12 @@
 import { CategoryModel } from '../db/models/category';
 import { ListingModel } from '../db/models/listing';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
-import type { CreateCategory, UpdateCategory, CategoryWithStats, CategoryTree } from '../db/models/category';
+import type {
+  CreateCategory,
+  UpdateCategory,
+  CategoryWithStats,
+  CategoryTree,
+} from '../db/models/category';
 
 /**
  * CategoryService - T053
@@ -64,7 +69,7 @@ export class CategoryService {
     let enhancedCategories: CategoryWithListingStats[] = [];
     if (includeStats) {
       enhancedCategories = await Promise.all(
-        allCategories.map(async (category) => {
+        allCategories.map(async category => {
           const stats = await this.getCategoryListingStats(category.id);
           return {
             ...category,
@@ -241,7 +246,7 @@ export class CategoryService {
     let enhancedCategories: CategoryWithListingStats[] = [];
     if (options.includeStats) {
       enhancedCategories = await Promise.all(
-        result.categories.map(async (category) => {
+        result.categories.map(async category => {
           const stats = await this.getCategoryListingStats(category.id);
           return {
             ...category,
@@ -263,7 +268,11 @@ export class CategoryService {
 
     // Sort results
     if (options.sortBy) {
-      enhancedCategories = this.sortCategories(enhancedCategories, options.sortBy, options.sortOrder);
+      enhancedCategories = this.sortCategories(
+        enhancedCategories,
+        options.sortBy,
+        options.sortOrder
+      );
     }
 
     // Generate search suggestions
@@ -302,7 +311,8 @@ export class CategoryService {
 
     // Calculate price statistics
     const prices = activeListings.map(l => l.priceUsd).filter(p => p > 0);
-    const averagePrice = prices.length > 0 ? prices.reduce((sum, p) => sum + p, 0) / prices.length : 0;
+    const averagePrice =
+      prices.length > 0 ? prices.reduce((sum, p) => sum + p, 0) / prices.length : 0;
     const priceRange = {
       min: prices.length > 0 ? Math.min(...prices) : 0,
       max: prices.length > 0 ? Math.max(...prices) : 0,
@@ -310,16 +320,21 @@ export class CategoryService {
 
     // Calculate popularity score (views + recent activity)
     const totalViews = activeListings.reduce((sum, l) => sum + l.viewCount, 0);
-    const popularityScore = Math.min(100, totalViews / Math.max(1, activeListings.length) + recentListingsResult.listings.length * 10);
+    const popularityScore = Math.min(
+      100,
+      totalViews / Math.max(1, activeListings.length) + recentListingsResult.listings.length * 10
+    );
 
     // Determine trend (simplified)
-    const trendDirection: 'up' | 'down' | 'stable' = recentListingsResult.listings.length > activeListings.length * 0.1 ? 'up' :
-                                                    recentListingsResult.listings.length === 0 && activeListings.length > 5 ? 'down' : 'stable';
+    const trendDirection: 'up' | 'down' | 'stable' =
+      recentListingsResult.listings.length > activeListings.length * 0.1
+        ? 'up'
+        : recentListingsResult.listings.length === 0 && activeListings.length > 5
+          ? 'down'
+          : 'stable';
 
     // Get top listings by views
-    const topListings = activeListings
-      .sort((a, b) => b.viewCount - a.viewCount)
-      .slice(0, 5);
+    const topListings = activeListings.sort((a, b) => b.viewCount - a.viewCount).slice(0, 5);
 
     return {
       totalListings: listings.listings.length,
@@ -357,7 +372,7 @@ export class CategoryService {
 
     // Enhance with stats and sort by popularity
     const categoriesWithStats = await Promise.all(
-      categories.map(async (category) => {
+      categories.map(async category => {
         const stats = await this.getCategoryListingStats(category.id);
         return {
           ...category,
@@ -383,9 +398,7 @@ export class CategoryService {
   async getTrendingCategories(limit = 5): Promise<CategoryWithListingStats[]> {
     const popular = await this.getPopularCategories(50);
 
-    return popular
-      .filter(cat => cat.trendDirection === 'up')
-      .slice(0, limit);
+    return popular.filter(cat => cat.trendDirection === 'up').slice(0, limit);
   }
 
   /**
@@ -412,10 +425,7 @@ export class CategoryService {
   /**
    * Soft delete category
    */
-  async deleteCategory(
-    id: number,
-    force = false
-  ): Promise<{ success: boolean; error?: string }> {
+  async deleteCategory(id: number, force = false): Promise<{ success: boolean; error?: string }> {
     try {
       if (force) {
         await this.categoryModel.hardDelete(id);
@@ -435,7 +445,9 @@ export class CategoryService {
   /**
    * Reactivate category
    */
-  async reactivateCategory(id: number): Promise<{ success: boolean; category?: any; error?: string }> {
+  async reactivateCategory(
+    id: number
+  ): Promise<{ success: boolean; category?: any; error?: string }> {
     try {
       const category = await this.categoryModel.reactivate(id);
       return {

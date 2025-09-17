@@ -9,7 +9,7 @@ import type {
   PurchaseFeatureData,
   FeatureSearchFilters,
   PremiumStats,
-  RenewalResult
+  RenewalResult,
 } from '../db/models/premium-feature';
 
 /**
@@ -199,7 +199,12 @@ export class PremiumService {
 
       // Check if user can purchase this feature
       const existingFeatures = await this.premiumFeatureModel.getUserFeatures(userId);
-      const canPurchase = this.premiumFeatureModel.canPurchase(userId, featureType, listingId || null, existingFeatures);
+      const canPurchase = this.premiumFeatureModel.canPurchase(
+        userId,
+        featureType,
+        listingId || null,
+        existingFeatures
+      );
 
       if (!canPurchase.canPurchase) {
         return { success: false, error: canPurchase.reason };
@@ -289,7 +294,7 @@ export class PremiumService {
           'BOOST' as PremiumFeatureType,
           'FEATURED' as PremiumFeatureType,
           'AUTO_BUMP' as PremiumFeatureType,
-          'PRIORITY_SUPPORT' as PremiumFeatureType
+          'PRIORITY_SUPPORT' as PremiumFeatureType,
         ],
         priceStars: 200,
         duration: 30,
@@ -349,7 +354,9 @@ export class PremiumService {
     // Find next billing date
     const nextBilling = enhancedActiveFeatures
       .filter(f => f.isExpiringSoon)
-      .sort((a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime())[0]?.expiresAt;
+      .sort(
+        (a, b) => new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime()
+      )[0]?.expiresAt;
 
     return {
       tier,
@@ -385,7 +392,9 @@ export class PremiumService {
       for (let i = 0; i < feature.autoRenewedCount; i++) {
         transactions.push({
           id: `renewal_${feature.id}_${i + 1}`,
-          date: new Date(new Date(feature.purchasedAt).getTime() + (i + 1) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          date: new Date(
+            new Date(feature.purchasedAt).getTime() + (i + 1) * 30 * 24 * 60 * 60 * 1000
+          ).toISOString(),
           type: 'renewal' as const,
           featureType: feature.featureType,
           amount: feature.starsPaid,
@@ -474,9 +483,11 @@ export class PremiumService {
     const renewalResults = await this.premiumFeatureModel.autoRenewFeatures();
     const renewalsProcessed = renewalResults.filter(r => r.success).length;
 
-    renewalResults.filter(r => !r.success).forEach(result => {
-      if (result.error) errors.push(`Renewal failed: ${result.error}`);
-    });
+    renewalResults
+      .filter(r => !r.success)
+      .forEach(result => {
+        if (result.error) errors.push(`Renewal failed: ${result.error}`);
+      });
 
     // Process expirations
     const expirationsProcessed = await this.premiumFeatureModel.deactivateExpired();
@@ -499,7 +510,8 @@ export class PremiumService {
     const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
     const thisMonthRevenue = await this.getRevenueForMonth(thisMonth);
     const lastMonthRevenue = await this.getRevenueForMonth(lastMonth);
-    const growth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+    const growth =
+      lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
 
     // Calculate user metrics
     const totalUsers = (await this.userModel.getStats()).totalUsers;
@@ -511,20 +523,22 @@ export class PremiumService {
     const averageLifetimeValue = stats.totalRevenue / Math.max(1, premiumUsers);
 
     // Feature usage analytics
-    const featureUsage: FeatureUsageAnalytics[] = Object.entries(stats.featuresByType).map(([type, count]) => ({
-      featureType: type as PremiumFeatureType,
-      purchaseCount: count,
-      activeCount: Math.floor(count * 0.7), // 70% active rate
-      averageDuration: 30, // days
-      renewalRate: 65, // percentage
-      roi: 300, // percentage
-      userSatisfaction: 4.2, // out of 5
-      popularityTrend: 'stable' as const,
-    }));
+    const featureUsage: FeatureUsageAnalytics[] = Object.entries(stats.featuresByType).map(
+      ([type, count]) => ({
+        featureType: type as PremiumFeatureType,
+        purchaseCount: count,
+        activeCount: Math.floor(count * 0.7), // 70% active rate
+        averageDuration: 30, // days
+        renewalRate: 65, // percentage
+        roi: 300, // percentage
+        userSatisfaction: 4.2, // out of 5
+        popularityTrend: 'stable' as const,
+      })
+    );
 
     // Find most popular and highest revenue features
     const sortedByCount = featureUsage.sort((a, b) => b.purchaseCount - a.purchaseCount);
-    const sortedByRevenue = Object.entries(stats.revenueByType).sort(([,a], [,b]) => b - a);
+    const sortedByRevenue = Object.entries(stats.revenueByType).sort(([, a], [, b]) => b - a);
 
     return {
       revenue: {
@@ -553,18 +567,19 @@ export class PremiumService {
         },
       },
       features: {
-        mostPopular: sortedByCount[0]?.featureType || 'BOOST' as PremiumFeatureType,
-        highestRevenue: sortedByRevenue[0]?.[0] as PremiumFeatureType || 'BOOST' as PremiumFeatureType,
+        mostPopular: sortedByCount[0]?.featureType || ('BOOST' as PremiumFeatureType),
+        highestRevenue:
+          (sortedByRevenue[0]?.[0] as PremiumFeatureType) || ('BOOST' as PremiumFeatureType),
         bestRetention: 'AUTO_BUMP' as PremiumFeatureType,
         usage: featureUsage,
       },
       trends: {
         monthlyGrowth: growth,
         seasonality: {
-          'Q1': stats.totalRevenue * 0.2,
-          'Q2': stats.totalRevenue * 0.25,
-          'Q3': stats.totalRevenue * 0.3,
-          'Q4': stats.totalRevenue * 0.25,
+          Q1: stats.totalRevenue * 0.2,
+          Q2: stats.totalRevenue * 0.25,
+          Q3: stats.totalRevenue * 0.3,
+          Q4: stats.totalRevenue * 0.25,
         },
         forecast: this.generateRevenueForecast(stats.totalRevenue, growth),
       },
@@ -594,7 +609,8 @@ export class PremiumService {
 
       // Calculate refund amount (pro-rated)
       const totalDuration = Math.floor(
-        (new Date(feature.expiresAt).getTime() - new Date(feature.purchasedAt).getTime()) / (24 * 60 * 60 * 1000)
+        (new Date(feature.expiresAt).getTime() - new Date(feature.purchasedAt).getTime()) /
+          (24 * 60 * 60 * 1000)
       );
       const daysUsed = daysSincePurchase;
       const refundRatio = Math.max(0, (totalDuration - daysUsed) / totalDuration);
@@ -628,14 +644,16 @@ export class PremiumService {
       category?: string;
       budget?: number;
     }
-  ): Promise<Array<{
-    featureType: PremiumFeatureType;
-    priority: 'high' | 'medium' | 'low';
-    reason: string;
-    expectedBenefit: string;
-    price: number;
-    estimatedROI: number;
-  }>> {
+  ): Promise<
+    Array<{
+      featureType: PremiumFeatureType;
+      priority: 'high' | 'medium' | 'low';
+      reason: string;
+      expectedBenefit: string;
+      price: number;
+      estimatedROI: number;
+    }>
+  > {
     const user = await this.userModel.findByTelegramId(userId);
     if (!user) {
       throw new Error('User not found');
@@ -676,7 +694,8 @@ export class PremiumService {
       recommendations.push({
         featureType: 'AUTO_BUMP' as PremiumFeatureType,
         priority: 'medium' as const,
-        reason: 'As an active seller, automatic bumping saves time and ensures consistent visibility',
+        reason:
+          'As an active seller, automatic bumping saves time and ensures consistent visibility',
         expectedBenefit: 'Automated listing promotion every 24 hours',
         price: this.premiumFeatureModel.getPrice('AUTO_BUMP' as PremiumFeatureType),
         estimatedROI: 200,
@@ -703,7 +722,9 @@ export class PremiumService {
     }
 
     if (paymentData.starsPaid !== expectedAmount) {
-      errors.push(`Payment amount mismatch: expected ${expectedAmount}, received ${paymentData.starsPaid}`);
+      errors.push(
+        `Payment amount mismatch: expected ${expectedAmount}, received ${paymentData.starsPaid}`
+      );
     }
 
     if (!paymentData.telegramPaymentId || paymentData.telegramPaymentId.length < 10) {
@@ -786,7 +807,9 @@ export class PremiumService {
 
     // Check if user has similar active features
     const userFeatures = await this.premiumFeatureModel.getUserFeatures(feature.userId, true);
-    const similarFeatures = userFeatures.filter(f => f.featureType === feature.featureType && f.id !== feature.id);
+    const similarFeatures = userFeatures.filter(
+      f => f.featureType === feature.featureType && f.id !== feature.id
+    );
 
     if (similarFeatures.length > 0) {
       warnings.push('You already have an active feature of this type');
@@ -843,12 +866,14 @@ export class PremiumService {
   private async generateFeatureRecommendations(
     userId: number,
     activeFeatures: PremiumFeature[]
-  ): Promise<Array<{
-    featureType: PremiumFeatureType;
-    reason: string;
-    potentialBenefit: string;
-    discountAvailable?: number;
-  }>> {
+  ): Promise<
+    Array<{
+      featureType: PremiumFeatureType;
+      reason: string;
+      potentialBenefit: string;
+      discountAvailable?: number;
+    }>
+  > {
     const recommendations = [];
 
     // Get user's listings to inform recommendations

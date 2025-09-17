@@ -512,7 +512,9 @@ describe('Contract Test T026: POST /api/admin/users/{id}/unban', () => {
       if (response.status === 403) {
         const errorData: ErrorResponse = await response.json();
         expect(errorData.error).toBe('Forbidden');
-        expect(errorData.message).toMatch(/cannot.*unban.*yourself|admin.*cannot.*modify.*own.*status/i);
+        expect(errorData.message).toMatch(
+          /cannot.*unban.*yourself|admin.*cannot.*modify.*own.*status/i
+        );
       } else {
         const unbanData: UnbanResponse = await response.json();
         expect(unbanData.success).toBe(true);
@@ -555,14 +557,17 @@ describe('Contract Test T026: POST /api/admin/users/{id}/unban', () => {
       const nonExistentUserId = 999999999;
       const unbanRequest: UnbanRequest = {};
 
-      const request = new Request(`http://localhost:8787/api/admin/users/${nonExistentUserId}/unban`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-        body: JSON.stringify(unbanRequest),
-      });
+      const request = new Request(
+        `http://localhost:8787/api/admin/users/${nonExistentUserId}/unban`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+          body: JSON.stringify(unbanRequest),
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -732,7 +737,7 @@ describe('Contract Test T026: POST /api/admin/users/{id}/unban', () => {
       const request = new Request(`http://localhost:8787/api/admin/users/${userId}/unban`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock_admin_jwt_token',
+          Authorization: 'Bearer mock_admin_jwt_token',
         },
       });
 

@@ -192,7 +192,9 @@ describe('Contract Test T010: GET /api/me', () => {
 
       expect(userData).toHaveProperty('profile_photo_url');
       // profile_photo_url can be null or string
-      expect(userData.profile_photo_url === null || typeof userData.profile_photo_url === 'string').toBe(true);
+      expect(
+        userData.profile_photo_url === null || typeof userData.profile_photo_url === 'string'
+      ).toBe(true);
 
       expect(userData).toHaveProperty('created_at');
       expect(typeof userData.created_at).toBe('string');

@@ -2,6 +2,7 @@ import { ListingModel } from '../db/models/listing';
 import { CategoryModel } from '../db/models/category';
 import { UserModel } from '../db/models/user';
 import { BlockedWordModel } from '../db/models/blocked-word';
+import { KVCacheService } from './kv-cache-service';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import type {
   CreateListing,
@@ -9,7 +10,7 @@ import type {
   ListingWithStats,
   ListingSearchFilters,
   ListingCreateData,
-  BumpResult
+  BumpResult,
 } from '../db/models/listing';
 
 /**
@@ -68,12 +69,14 @@ export class ListingService {
   private categoryModel: CategoryModel;
   private userModel: UserModel;
   private blockedWordModel: BlockedWordModel;
+  private cache: KVCacheService;
 
-  constructor(db: DrizzleD1Database) {
+  constructor(db: DrizzleD1Database, cache: KVCacheService) {
     this.listingModel = new ListingModel(db);
     this.categoryModel = new CategoryModel(db);
     this.userModel = new UserModel(db);
     this.blockedWordModel = new BlockedWordModel(db);
+    this.cache = cache;
   }
 
   /**
@@ -103,9 +106,15 @@ export class ListingService {
         };
       }
 
-      // Verify user can create listings
+      // Verify user can create listings (use cache for user data)
+      const userKey = this.cache.generateKey('user', userId);
+      const user = await this.cache.get(
+        userKey,
+        () => this.userModel.findByTelegramId(userId),
+        { ttl: 3600 } // Cache user for 1 hour
+      );
+
       const userListingsCount = await this.listingModel.getUserActiveListingsCount(userId);
-      const user = await this.userModel.findByTelegramId(userId);
       const isAdmin = user ? this.userModel.isAdmin(user) : false;
 
       if (!this.listingModel.canUserCreateListing(userListingsCount, isAdmin)) {
@@ -115,8 +124,14 @@ export class ListingService {
         };
       }
 
-      // Verify category exists and is a leaf category
-      const category = await this.categoryModel.findById(listingData.categoryId);
+      // Verify category exists and is a leaf category (use cache)
+      const categoryKey = this.cache.generateKey('category', listingData.categoryId);
+      const category = await this.cache.get(
+        categoryKey,
+        () => this.categoryModel.findById(listingData.categoryId),
+        { ttl: 3600 } // Cache category for 1 hour
+      );
+
       if (!category) {
         return {
           success: false,
@@ -126,6 +141,9 @@ export class ListingService {
 
       // Create listing
       const listing = await this.listingModel.create(listingData, userId);
+
+      // Invalidate related caches
+      await this.invalidateListingCaches(userId, listingData.categoryId);
 
       return {
         success: true,
@@ -141,65 +159,6 @@ export class ListingService {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Listing creation failed',
-      };
-    }
-  }
-
-  /**
-   * Update existing listing
-   */
-  async updateListing(
-    listingId: string,
-    updateData: UpdateListing,
-    userId: number
-  ): Promise<ListingCreationResult> {
-    try {
-      // Validate ownership
-      const existingListing = await this.listingModel.findById(listingId);
-      if (!existingListing) {
-        return {
-          success: false,
-          error: 'Listing not found',
-        };
-      }
-
-      if (!this.listingModel.validateOwnership(existingListing, userId)) {
-        return {
-          success: false,
-          error: 'Not authorized to update this listing',
-        };
-      }
-
-      // Validate update data
-      const validation = await this.validateListing(updateData, false);
-      if (!validation.valid) {
-        return {
-          success: false,
-          error: `Validation failed: ${validation.errors.join(', ')}`,
-          warnings: validation.warnings,
-        };
-      }
-
-      // Check content for blocked words
-      if (validation.contentFlags.severity === 'block') {
-        return {
-          success: false,
-          error: 'Content contains prohibited terms',
-          warnings: [`Blocked terms: ${validation.contentFlags.flaggedTerms.join(', ')}`],
-        };
-      }
-
-      const listing = await this.listingModel.update(listingId, updateData, userId);
-
-      return {
-        success: true,
-        listing,
-        warnings: validation.warnings,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Listing update failed',
       };
     }
   }
@@ -221,24 +180,53 @@ export class ListingService {
       query: searchQuery.trim() || undefined,
     };
 
+    // Create cache key for search results
+    const searchKey = this.cache.generateKey(
+      'search',
+      JSON.stringify(enhancedFilters),
+      page,
+      limit
+    );
+
+    // Try to get cached search results
+    const cachedResult = await this.cache.get<ListingSearchResult>(searchKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     // Perform search
     const result = await this.listingModel.search(enhancedFilters, page, limit);
 
-    // Generate search suggestions
-    const suggestions = await this.generateSearchSuggestions(searchQuery);
+    // Generate search suggestions (cache separately)
+    const suggestionsKey = this.cache.generateKey('suggestions', searchQuery);
+    const suggestions = await this.cache.get(
+      suggestionsKey,
+      () => this.generateSearchSuggestions(searchQuery),
+      { ttl: 1800 } // Cache suggestions for 30 minutes
+    );
 
-    // Generate facets for filtering
-    const facets = await this.generateSearchFacets(enhancedFilters);
+    // Generate facets for filtering (cache with shorter TTL)
+    const facetsKey = this.cache.generateKey('facets', JSON.stringify(enhancedFilters));
+    const facets = await this.cache.get(
+      facetsKey,
+      () => this.generateSearchFacets(enhancedFilters),
+      { ttl: 600 } // Cache facets for 10 minutes
+    );
 
     const searchTime = Date.now() - startTime;
 
-    return {
+    const searchResult = {
       ...result,
       searchTime,
       filters: enhancedFilters,
-      suggestions,
-      facets,
+      suggestions: suggestions || [],
+      facets: facets || { categories: [], priceRanges: [], locations: [] },
     };
+
+    // Cache search results for 5 minutes
+    await this.cache.set(searchKey, searchResult, { ttl: 300 });
+
+    return searchResult;
   }
 
   /**
@@ -254,7 +242,14 @@ export class ListingService {
     canBump: boolean;
     similarListings: any[];
   }> {
-    const listing = await this.listingModel.getWithStats(listingId);
+    // Cache listing details (excluding view-sensitive data)
+    const listingKey = this.cache.generateKey('listing', listingId);
+    const listing = await this.cache.get(
+      listingKey,
+      () => this.listingModel.getWithStats(listingId),
+      { ttl: 300 } // Cache for 5 minutes
+    );
+
     if (!listing) {
       return {
         listing: null,
@@ -268,35 +263,37 @@ export class ListingService {
     // Increment view count (if not owner viewing)
     if (!viewerId || listing.userId !== viewerId) {
       await this.listingModel.incrementViews(listingId);
+      // Invalidate listing cache to reflect new view count
+      await this.cache.delete(listingKey);
     }
 
     // Check permissions
     const canEdit = viewerId ? this.listingModel.validateOwnership(listing, viewerId) : false;
     const canBump = canEdit && this.listingModel.canBump(listing);
 
-    // Get analytics
-    const analytics = await this.getListingAnalytics(listingId);
+    // Get analytics (cache with short TTL)
+    const analyticsKey = this.cache.generateKey('analytics', listingId);
+    const analytics = await this.cache.get(
+      analyticsKey,
+      () => this.getListingAnalytics(listingId),
+      { ttl: 600 } // Cache analytics for 10 minutes
+    );
 
-    // Get similar listings
-    const similarListings = await this.listingModel.getSimilar(listingId, 5);
+    // Get similar listings (cache with longer TTL)
+    const similarKey = this.cache.generateKey('similar', listingId);
+    const similarListings = await this.cache.get(
+      similarKey,
+      () => this.listingModel.getSimilar(listingId, 5),
+      { ttl: 1800 } // Cache similar listings for 30 minutes
+    );
 
     return {
       listing,
-      analytics,
+      analytics: analytics || null,
       canEdit,
       canBump,
-      similarListings,
+      similarListings: similarListings || [],
     };
-  }
-
-  /**
-   * Bump listing to top of search results
-   */
-  async bumpListing(
-    listingId: string,
-    userId: number
-  ): Promise<BumpResult> {
-    return await this.listingModel.bump(listingId, userId);
   }
 
   /**
@@ -408,7 +405,7 @@ export class ListingService {
   async getFeaturedListings(limit = 10): Promise<ListingWithStats[]> {
     const featured = await this.listingModel.getFeatured(limit);
     return await Promise.all(
-      featured.map(async (listing) => {
+      featured.map(async listing => {
         const stats = await this.listingModel.getWithStats(listing.id);
         return stats!;
       })
@@ -421,7 +418,7 @@ export class ListingService {
   async getTrendingListings(limit = 10): Promise<ListingWithStats[]> {
     const trending = await this.listingModel.getRecentlyBumped(limit);
     return await Promise.all(
-      trending.map(async (listing) => {
+      trending.map(async listing => {
         const stats = await this.listingModel.getWithStats(listing.id);
         return stats!;
       })
@@ -471,7 +468,9 @@ export class ListingService {
         // Check if it's a leaf category (can have listings)
         const children = await this.categoryModel.getChildCategories(category.id);
         if (children.length > 0) {
-          errors.push('Cannot create listing in parent category. Please select a specific subcategory.');
+          errors.push(
+            'Cannot create listing in parent category. Please select a specific subcategory.'
+          );
         }
       }
     }
@@ -597,9 +596,7 @@ export class ListingService {
     });
 
     // Placeholder for locations (would be extracted from listing data)
-    const locations = [
-      { location: 'Local', count: facetResult.listings.length },
-    ];
+    const locations = [{ location: 'Local', count: facetResult.listings.length }];
 
     return {
       categories: categories.slice(0, 10),
@@ -671,5 +668,156 @@ export class ListingService {
    */
   async exists(listingId: string): Promise<boolean> {
     return await this.listingModel.exists(listingId);
+  }
+
+  /**
+   * Invalidate caches related to listings
+   */
+  private async invalidateListingCaches(userId?: number, categoryId?: number): Promise<void> {
+    const patterns = [
+      'search:*', // Invalidate all search results
+      'featured:*', // Invalidate featured listings
+      'trending:*', // Invalidate trending listings
+      'facets:*', // Invalidate search facets
+    ];
+
+    if (userId) {
+      patterns.push(`user:${userId}:*`); // Invalidate user-specific caches
+    }
+
+    if (categoryId) {
+      patterns.push(`category:${categoryId}:*`); // Invalidate category-specific caches
+    }
+
+    // Invalidate patterns
+    for (const pattern of patterns) {
+      try {
+        await this.cache.invalidatePattern(pattern);
+      } catch (error) {
+        console.warn(`Failed to invalidate cache pattern ${pattern}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Get featured listings with caching
+   */
+  async getFeaturedListings(limit = 10): Promise<ListingWithStats[]> {
+    const featuredKey = this.cache.generateKey('featured', 'listings', limit);
+
+    return await this.cache.cached(
+      featuredKey,
+      async () => {
+        const featured = await this.listingModel.getFeatured(limit);
+        return await Promise.all(
+          featured.map(async listing => {
+            const stats = await this.listingModel.getWithStats(listing.id);
+            return stats!;
+          })
+        );
+      },
+      { ttl: 900 } // Cache for 15 minutes
+    );
+  }
+
+  /**
+   * Get trending listings with caching
+   */
+  async getTrendingListings(limit = 10): Promise<ListingWithStats[]> {
+    const trendingKey = this.cache.generateKey('trending', 'listings', limit);
+
+    return await this.cache.cached(
+      trendingKey,
+      async () => {
+        const trending = await this.listingModel.getRecentlyBumped(limit);
+        return await Promise.all(
+          trending.map(async listing => {
+            const stats = await this.listingModel.getWithStats(listing.id);
+            return stats!;
+          })
+        );
+      },
+      { ttl: 600 } // Cache for 10 minutes
+    );
+  }
+
+  /**
+   * Update existing listing with cache invalidation
+   */
+  async updateListing(
+    listingId: string,
+    updateData: UpdateListing,
+    userId: number
+  ): Promise<ListingCreationResult> {
+    try {
+      // Validate ownership
+      const existingListing = await this.listingModel.findById(listingId);
+      if (!existingListing) {
+        return {
+          success: false,
+          error: 'Listing not found',
+        };
+      }
+
+      if (!this.listingModel.validateOwnership(existingListing, userId)) {
+        return {
+          success: false,
+          error: 'Not authorized to update this listing',
+        };
+      }
+
+      // Validate update data
+      const validation = await this.validateListing(updateData, false);
+      if (!validation.valid) {
+        return {
+          success: false,
+          error: `Validation failed: ${validation.errors.join(', ')}`,
+          warnings: validation.warnings,
+        };
+      }
+
+      // Check content for blocked words
+      if (validation.contentFlags.severity === 'block') {
+        return {
+          success: false,
+          error: 'Content contains prohibited terms',
+          warnings: [`Blocked terms: ${validation.contentFlags.flaggedTerms.join(', ')}`],
+        };
+      }
+
+      const listing = await this.listingModel.update(listingId, updateData, userId);
+
+      // Invalidate all caches related to this listing
+      await this.cache.delete(this.cache.generateKey('listing', listingId));
+      await this.cache.delete(this.cache.generateKey('analytics', listingId));
+      await this.cache.delete(this.cache.generateKey('similar', listingId));
+      await this.invalidateListingCaches(userId, existingListing.categoryId);
+
+      return {
+        success: true,
+        listing,
+        warnings: validation.warnings,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Listing update failed',
+      };
+    }
+  }
+
+  /**
+   * Bump listing with cache invalidation
+   */
+  async bumpListing(listingId: string, userId: number): Promise<BumpResult> {
+    const result = await this.listingModel.bump(listingId, userId);
+
+    if (result.success) {
+      // Invalidate caches when listing is bumped
+      await this.cache.delete(this.cache.generateKey('listing', listingId));
+      await this.invalidateListingCaches(userId);
+    }
+
+    return result;
   }
 }

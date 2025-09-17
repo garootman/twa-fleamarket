@@ -51,20 +51,25 @@ export class AuthAPI {
    */
   async authenticateUser(c: Context): Promise<Response> {
     try {
-      const body = await c.req.json() as AuthRequest;
+      const body = (await c.req.json()) as AuthRequest;
 
       if (!body.initData) {
-        return c.json({
-          success: false,
-          error: 'Missing initData parameter'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Missing initData parameter',
+          },
+          400
+        );
       }
 
       // Get request metadata
       const userAgent = c.req.header('User-Agent') || body.userAgent;
-      const ipAddress = c.req.header('CF-Connecting-IP') ||
-                       c.req.header('X-Forwarded-For') ||
-                       body.ipAddress || 'unknown';
+      const ipAddress =
+        c.req.header('CF-Connecting-IP') ||
+        c.req.header('X-Forwarded-For') ||
+        body.ipAddress ||
+        'unknown';
 
       // Authenticate with Telegram
       const authResult = await this.authService.authenticateTelegram(
@@ -74,45 +79,57 @@ export class AuthAPI {
       );
 
       if (!authResult.success) {
-        return c.json({
-          success: false,
-          error: authResult.error || 'Authentication failed'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: authResult.error || 'Authentication failed',
+          },
+          401
+        );
       }
 
       if (!authResult.user) {
-        return c.json({
-          success: false,
-          error: 'No user data received from authentication'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: 'No user data received from authentication',
+          },
+          500
+        );
       }
 
       // Get full user profile
       const userProfile = await this.userService.getProfile(parseInt(authResult.user.telegramId));
 
       if (!userProfile) {
-        return c.json({
-          success: false,
-          error: 'Failed to retrieve user profile'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: 'Failed to retrieve user profile',
+          },
+          500
+        );
       }
 
       // Check if user is banned
       if (userProfile.isBanned) {
-        return c.json({
-          success: false,
-          error: 'Account is suspended',
-          user: {
-            id: userProfile.id,
-            telegramId: authResult.user.telegramId,
-            firstName: userProfile.firstName,
-            lastName: userProfile.lastName,
-            username: userProfile.username,
-            photoUrl: userProfile.profilePhotoUrl,
-            isPremium: userProfile.isPremium,
-            isAdmin: userProfile.isAdmin,
-          }
-        }, 403);
+        return c.json(
+          {
+            success: false,
+            error: 'Account is suspended',
+            user: {
+              id: userProfile.id,
+              telegramId: authResult.user.telegramId,
+              firstName: userProfile.firstName,
+              lastName: userProfile.lastName,
+              username: userProfile.username,
+              photoUrl: userProfile.profilePhotoUrl,
+              isPremium: userProfile.isPremium,
+              isAdmin: userProfile.isAdmin,
+            },
+          },
+          403
+        );
       }
 
       const response: AuthResponse = {
@@ -133,17 +150,22 @@ export class AuthAPI {
 
       // Set cookie for browser sessions
       if (authResult.token) {
-        c.header('Set-Cookie', `auth-token=${authResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${authResult.expiresIn || 86400}`);
+        c.header(
+          'Set-Cookie',
+          `auth-token=${authResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${authResult.expiresIn || 86400}`
+        );
       }
 
       return c.json(response);
-
     } catch (error) {
       console.error('Auth endpoint error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during authentication'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during authentication',
+        },
+        500
+      );
     }
   }
 
@@ -158,36 +180,50 @@ export class AuthAPI {
       const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
       if (!token) {
-        return c.json({
-          success: false,
-          error: 'No token provided'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'No token provided',
+          },
+          401
+        );
       }
 
       const validationResult = await this.authService.validateSession(token);
 
       if (!validationResult.success) {
-        return c.json({
-          success: false,
-          error: validationResult.error || 'Invalid token'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: validationResult.error || 'Invalid token',
+          },
+          401
+        );
       }
 
       if (!validationResult.user) {
-        return c.json({
-          success: false,
-          error: 'User not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'User not found',
+          },
+          404
+        );
       }
 
       // Get updated user profile
-      const userProfile = await this.userService.getProfile(parseInt(validationResult.user.telegramId));
+      const userProfile = await this.userService.getProfile(
+        parseInt(validationResult.user.telegramId)
+      );
 
       if (!userProfile) {
-        return c.json({
-          success: false,
-          error: 'User profile not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'User profile not found',
+          },
+          404
+        );
       }
 
       return c.json({
@@ -204,13 +240,15 @@ export class AuthAPI {
         },
         remainingTime: validationResult.remainingTime,
       });
-
     } catch (error) {
       console.error('Session validation error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during validation'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during validation',
+        },
+        500
+      );
     }
   }
 
@@ -225,24 +263,33 @@ export class AuthAPI {
       const token = authHeader?.replace('Bearer ', '') || cookieToken;
 
       if (!token) {
-        return c.json({
-          success: false,
-          error: 'No token provided'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'No token provided',
+          },
+          401
+        );
       }
 
       const refreshResult = await this.authService.refreshSession(token);
 
       if (!refreshResult.success) {
-        return c.json({
-          success: false,
-          error: refreshResult.error || 'Token refresh failed'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: refreshResult.error || 'Token refresh failed',
+          },
+          401
+        );
       }
 
       // Set new cookie
       if (refreshResult.token) {
-        c.header('Set-Cookie', `auth-token=${refreshResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${refreshResult.expiresIn || 86400}`);
+        c.header(
+          'Set-Cookie',
+          `auth-token=${refreshResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${refreshResult.expiresIn || 86400}`
+        );
       }
 
       return c.json({
@@ -250,13 +297,15 @@ export class AuthAPI {
         token: refreshResult.token,
         expiresIn: refreshResult.expiresIn,
       });
-
     } catch (error) {
       console.error('Token refresh error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during token refresh'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during token refresh',
+        },
+        500
+      );
     }
   }
 
@@ -280,15 +329,17 @@ export class AuthAPI {
 
       return c.json({
         success: true,
-        message: 'Logged out successfully'
+        message: 'Logged out successfully',
       });
-
     } catch (error) {
       console.error('Logout error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during logout'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during logout',
+        },
+        500
+      );
     }
   }
 }

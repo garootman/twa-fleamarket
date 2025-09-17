@@ -367,13 +367,16 @@ describe('Contract Test T021: POST /api/listings/{id}/publish', () => {
       const validToken = 'valid_jwt_token_premium_user';
       const premiumListingId = 'test-premium-draft-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${premiumListingId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${premiumListingId}/publish`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -403,13 +406,16 @@ describe('Contract Test T021: POST /api/listings/{id}/publish', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const republishListingId = 'test-republish-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${republishListingId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${republishListingId}/publish`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -649,13 +655,16 @@ describe('Contract Test T021: POST /api/listings/{id}/publish', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const archivedListingId = 'test-archived-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${archivedListingId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${archivedListingId}/publish`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -678,13 +687,16 @@ describe('Contract Test T021: POST /api/listings/{id}/publish', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const invalidContentListingId = 'test-invalid-content-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${invalidContentListingId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${invalidContentListingId}/publish`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

@@ -8,7 +8,7 @@ import {
   calculateSessionExpiration,
   isSessionValid,
   isSessionExpiredButActive,
-  SESSION_CONSTRAINTS
+  SESSION_CONSTRAINTS,
 } from '../../src/db/schema/sessions';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -93,17 +93,28 @@ export class UserSessionModel {
    */
   async create(sessionData: CreateSessionData): Promise<UserSession> {
     const token = generateSessionToken();
-    const expirationHours = sessionData.expirationHours || SESSION_CONSTRAINTS.DEFAULT_EXPIRATION_HOURS;
+    const expirationHours =
+      sessionData.expirationHours || SESSION_CONSTRAINTS.DEFAULT_EXPIRATION_HOURS;
     const expiresAt = calculateSessionExpiration(expirationHours);
 
     // Validate user agent length
-    if (sessionData.userAgent && sessionData.userAgent.length > SESSION_CONSTRAINTS.MAX_USER_AGENT_LENGTH) {
-      throw new Error(`User agent cannot exceed ${SESSION_CONSTRAINTS.MAX_USER_AGENT_LENGTH} characters`);
+    if (
+      sessionData.userAgent &&
+      sessionData.userAgent.length > SESSION_CONSTRAINTS.MAX_USER_AGENT_LENGTH
+    ) {
+      throw new Error(
+        `User agent cannot exceed ${SESSION_CONSTRAINTS.MAX_USER_AGENT_LENGTH} characters`
+      );
     }
 
     // Validate IP address length
-    if (sessionData.ipAddress && sessionData.ipAddress.length > SESSION_CONSTRAINTS.MAX_IP_ADDRESS_LENGTH) {
-      throw new Error(`IP address cannot exceed ${SESSION_CONSTRAINTS.MAX_IP_ADDRESS_LENGTH} characters`);
+    if (
+      sessionData.ipAddress &&
+      sessionData.ipAddress.length > SESSION_CONSTRAINTS.MAX_IP_ADDRESS_LENGTH
+    ) {
+      throw new Error(
+        `IP address cannot exceed ${SESSION_CONSTRAINTS.MAX_IP_ADDRESS_LENGTH} characters`
+      );
     }
 
     const [session] = await this.db
@@ -152,7 +163,9 @@ export class UserSessionModel {
   /**
    * Validate session and update last used
    */
-  async validateAndRefresh(token: string): Promise<{ valid: boolean; session?: UserSession; reason?: string }> {
+  async validateAndRefresh(
+    token: string
+  ): Promise<{ valid: boolean; session?: UserSession; reason?: string }> {
     const session = await this.findByToken(token);
 
     if (!session) {
@@ -198,7 +211,9 @@ export class UserSessionModel {
     const sessionWithDetails: SessionWithDetails = {
       ...session,
       daysSinceCreated: Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000)),
-      daysSinceLastUsed: Math.floor((now.getTime() - lastUsedDate.getTime()) / (24 * 60 * 60 * 1000)),
+      daysSinceLastUsed: Math.floor(
+        (now.getTime() - lastUsedDate.getTime()) / (24 * 60 * 60 * 1000)
+      ),
       hoursUntilExpiry: Math.floor((expiresDate.getTime() - now.getTime()) / (60 * 60 * 1000)),
       isCurrentlyValid: isSessionValid(session),
       isExpiredButActive: isSessionExpiredButActive(session),
@@ -212,18 +227,17 @@ export class UserSessionModel {
    * Get user's sessions
    */
   async getUserSessions(userId: number, activeOnly = false): Promise<UserSession[]> {
-    let query = this.db
-      .select()
-      .from(userSessions)
-      .where(eq(userSessions.userId, userId));
+    let query = this.db.select().from(userSessions).where(eq(userSessions.userId, userId));
 
     if (activeOnly) {
-      query = query.where(and(
-        eq(userSessions.userId, userId),
-        eq(userSessions.isActive, true),
-        gte(userSessions.expiresAt, new Date().toISOString()),
-        isNull(userSessions.revokedAt)
-      ));
+      query = query.where(
+        and(
+          eq(userSessions.userId, userId),
+          eq(userSessions.isActive, true),
+          gte(userSessions.expiresAt, new Date().toISOString()),
+          isNull(userSessions.revokedAt)
+        )
+      );
     }
 
     return await query.orderBy(desc(userSessions.lastUsed));
@@ -277,17 +291,16 @@ export class UserSessionModel {
         isActive: false,
         revokedAt: new Date().toISOString(),
       })
-      .where(and(
-        eq(userSessions.userId, userId),
-        eq(userSessions.isActive, true)
-      ));
+      .where(and(eq(userSessions.userId, userId), eq(userSessions.isActive, true)));
 
     if (exceptToken) {
-      updateQuery = updateQuery.where(and(
-        eq(userSessions.userId, userId),
-        eq(userSessions.isActive, true),
-        sql`${userSessions.token} != ${exceptToken}`
-      ));
+      updateQuery = updateQuery.where(
+        and(
+          eq(userSessions.userId, userId),
+          eq(userSessions.isActive, true),
+          sql`${userSessions.token} != ${exceptToken}`
+        )
+      );
     }
 
     const result = await updateQuery;
@@ -349,17 +362,21 @@ export class UserSessionModel {
     // Valid filter (active, not revoked, not expired)
     if (filters.isValid !== undefined) {
       if (filters.isValid) {
-        conditions.push(and(
-          eq(userSessions.isActive, true),
-          gte(userSessions.expiresAt, now),
-          isNull(userSessions.revokedAt)
-        ));
+        conditions.push(
+          and(
+            eq(userSessions.isActive, true),
+            gte(userSessions.expiresAt, now),
+            isNull(userSessions.revokedAt)
+          )
+        );
       } else {
-        conditions.push(or(
-          eq(userSessions.isActive, false),
-          lte(userSessions.expiresAt, now),
-          isNotNull(userSessions.revokedAt)
-        ));
+        conditions.push(
+          or(
+            eq(userSessions.isActive, false),
+            lte(userSessions.expiresAt, now),
+            isNotNull(userSessions.revokedAt)
+          )
+        );
       }
     }
 
@@ -391,19 +408,25 @@ export class UserSessionModel {
     // Device type filter
     if (filters.deviceType) {
       if (filters.deviceType === 'mobile') {
-        conditions.push(sql`${userSessions.userAgent} LIKE '%Mobile%' OR ${userSessions.userAgent} LIKE '%Android%' OR ${userSessions.userAgent} LIKE '%iPhone%' OR ${userSessions.userAgent} LIKE '%iPad%'`);
+        conditions.push(
+          sql`${userSessions.userAgent} LIKE '%Mobile%' OR ${userSessions.userAgent} LIKE '%Android%' OR ${userSessions.userAgent} LIKE '%iPhone%' OR ${userSessions.userAgent} LIKE '%iPad%'`
+        );
       } else {
-        conditions.push(sql`${userSessions.userAgent} NOT LIKE '%Mobile%' AND ${userSessions.userAgent} NOT LIKE '%Android%' AND ${userSessions.userAgent} NOT LIKE '%iPhone%' AND ${userSessions.userAgent} NOT LIKE '%iPad%'`);
+        conditions.push(
+          sql`${userSessions.userAgent} NOT LIKE '%Mobile%' AND ${userSessions.userAgent} NOT LIKE '%Android%' AND ${userSessions.userAgent} NOT LIKE '%iPhone%' AND ${userSessions.userAgent} NOT LIKE '%iPad%'`
+        );
       }
     }
 
     // Expired but active filter
     if (filters.expiredButActive) {
-      conditions.push(and(
-        eq(userSessions.isActive, true),
-        lte(userSessions.expiresAt, now),
-        isNull(userSessions.revokedAt)
-      ));
+      conditions.push(
+        and(
+          eq(userSessions.isActive, true),
+          lte(userSessions.expiresAt, now),
+          isNull(userSessions.revokedAt)
+        )
+      );
     }
 
     // Apply conditions
@@ -454,10 +477,7 @@ export class UserSessionModel {
     const result = await this.db
       .update(userSessions)
       .set({ isActive: false })
-      .where(and(
-        eq(userSessions.isActive, true),
-        lte(userSessions.expiresAt, now)
-      ));
+      .where(and(eq(userSessions.isActive, true), lte(userSessions.expiresAt, now)));
 
     return result.rowsAffected;
   }
@@ -485,12 +505,14 @@ export class UserSessionModel {
     return await this.db
       .select()
       .from(userSessions)
-      .where(and(
-        eq(userSessions.isActive, true),
-        lte(userSessions.expiresAt, futureDate),
-        gte(userSessions.expiresAt, now),
-        isNull(userSessions.revokedAt)
-      ))
+      .where(
+        and(
+          eq(userSessions.isActive, true),
+          lte(userSessions.expiresAt, futureDate),
+          gte(userSessions.expiresAt, now),
+          isNull(userSessions.revokedAt)
+        )
+      )
       .orderBy(asc(userSessions.expiresAt))
       .limit(limit);
   }
@@ -499,20 +521,20 @@ export class UserSessionModel {
    * Get comprehensive session statistics
    */
   async getStats(): Promise<SessionStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(userSessions);
+    const [totalResult] = await this.db.select({ count: count() }).from(userSessions);
 
     const now = new Date().toISOString();
 
     const [activeResult] = await this.db
       .select({ count: count() })
       .from(userSessions)
-      .where(and(
-        eq(userSessions.isActive, true),
-        gte(userSessions.expiresAt, now),
-        isNull(userSessions.revokedAt)
-      ));
+      .where(
+        and(
+          eq(userSessions.isActive, true),
+          gte(userSessions.expiresAt, now),
+          isNull(userSessions.revokedAt)
+        )
+      );
 
     const [expiredResult] = await this.db
       .select({ count: count() })
@@ -533,7 +555,7 @@ export class UserSessionModel {
       .select({
         avgHours: sql<number>`AVG(
           (julianday(COALESCE(${userSessions.revokedAt}, ${userSessions.expiresAt})) - julianday(${userSessions.createdAt})) * 24
-        )`
+        )`,
       })
       .from(userSessions);
 
@@ -544,7 +566,9 @@ export class UserSessionModel {
         count: count(),
       })
       .from(userSessions)
-      .where(gte(userSessions.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()))
+      .where(
+        gte(userSessions.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      )
       .groupBy(sql`DATE(${userSessions.createdAt})`)
       .orderBy(sql`DATE(${userSessions.createdAt})`);
 
@@ -615,11 +639,13 @@ export class UserSessionModel {
     const [activeResult] = await this.db
       .select({ count: count() })
       .from(userSessions)
-      .where(and(
-        eq(userSessions.isActive, true),
-        gte(userSessions.expiresAt, now),
-        isNull(userSessions.revokedAt)
-      ));
+      .where(
+        and(
+          eq(userSessions.isActive, true),
+          gte(userSessions.expiresAt, now),
+          isNull(userSessions.revokedAt)
+        )
+      );
 
     const [expiredResult] = await this.db
       .select({ count: count() })
@@ -659,9 +685,7 @@ export class UserSessionModel {
    * Delete session
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(userSessions)
-      .where(eq(userSessions.id, id));
+    const result = await this.db.delete(userSessions).where(eq(userSessions.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -720,12 +744,12 @@ export {
   calculateSessionExpiration,
   isSessionValid,
   isSessionExpiredButActive,
-  SESSION_CONSTRAINTS
+  SESSION_CONSTRAINTS,
 };
 export type {
   SessionWithDetails,
   SessionSearchFilters,
   SessionListResponse,
   CreateSessionData,
-  SessionStats
+  SessionStats,
 };

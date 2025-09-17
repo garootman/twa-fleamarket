@@ -5,7 +5,7 @@ import {
   type NewAppeal,
   type CreateAppeal,
   AppealStatus,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 } from '../../src/db/schema/moderation';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -95,14 +95,19 @@ export class AppealModel {
    */
   async create(appealData: CreateAppeal): Promise<Appeal> {
     // Check if user already appealed this action
-    const existingAppeal = await this.findByActionAndUser(appealData.moderationActionId, appealData.userId);
+    const existingAppeal = await this.findByActionAndUser(
+      appealData.moderationActionId,
+      appealData.userId
+    );
     if (existingAppeal) {
       throw new Error('You have already appealed this moderation action');
     }
 
     // Validate message length
     if (appealData.message.length > MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH) {
-      throw new Error(`Appeal message cannot exceed ${MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH} characters`);
+      throw new Error(
+        `Appeal message cannot exceed ${MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH} characters`
+      );
     }
 
     // Check if appeal is within deadline (this would require checking the moderation action)
@@ -126,11 +131,7 @@ export class AppealModel {
    * Find appeal by ID
    */
   async findById(id: number): Promise<Appeal | null> {
-    const [appeal] = await this.db
-      .select()
-      .from(appeals)
-      .where(eq(appeals.id, id))
-      .limit(1);
+    const [appeal] = await this.db.select().from(appeals).where(eq(appeals.id, id)).limit(1);
 
     return appeal || null;
   }
@@ -142,10 +143,7 @@ export class AppealModel {
     const [appeal] = await this.db
       .select()
       .from(appeals)
-      .where(and(
-        eq(appeals.moderationActionId, moderationActionId),
-        eq(appeals.userId, userId)
-      ))
+      .where(and(eq(appeals.moderationActionId, moderationActionId), eq(appeals.userId, userId)))
       .limit(1);
 
     return appeal || null;
@@ -160,15 +158,22 @@ export class AppealModel {
 
     // Calculate deadline info
     const createdDate = new Date(appeal.createdAt);
-    const deadlineDate = new Date(createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+    const deadlineDate = new Date(
+      createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    );
     const now = new Date();
 
     const appealWithDetails: AppealWithDetails = {
       ...appeal,
       daysSinceCreated: Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000)),
-      daysSinceReviewed: appeal.reviewedAt ?
-        Math.floor((now.getTime() - new Date(appeal.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)) : undefined,
-      daysUntilDeadline: Math.floor((deadlineDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+      daysSinceReviewed: appeal.reviewedAt
+        ? Math.floor(
+            (now.getTime() - new Date(appeal.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)
+          )
+        : undefined,
+      daysUntilDeadline: Math.floor(
+        (deadlineDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+      ),
       isWithinDeadline: now <= deadlineDate,
     };
 
@@ -190,14 +195,21 @@ export class AppealModel {
 
     // Check if appeal is still within deadline
     const createdDate = new Date(existingAppeal.createdAt);
-    const deadlineDate = new Date(createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+    const deadlineDate = new Date(
+      createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    );
     if (new Date() > deadlineDate) {
       throw new Error('Appeal deadline has expired');
     }
 
     // Validate admin response length
-    if (reviewData.adminResponse && reviewData.adminResponse.length > MODERATION_CONSTRAINTS.MAX_ADMIN_RESPONSE_LENGTH) {
-      throw new Error(`Admin response cannot exceed ${MODERATION_CONSTRAINTS.MAX_ADMIN_RESPONSE_LENGTH} characters`);
+    if (
+      reviewData.adminResponse &&
+      reviewData.adminResponse.length > MODERATION_CONSTRAINTS.MAX_ADMIN_RESPONSE_LENGTH
+    ) {
+      throw new Error(
+        `Admin response cannot exceed ${MODERATION_CONSTRAINTS.MAX_ADMIN_RESPONSE_LENGTH} characters`
+      );
     }
 
     const [appeal] = await this.db
@@ -300,11 +312,12 @@ export class AppealModel {
 
     // Urgent filter (near deadline)
     if (filters.urgentOnly) {
-      const urgentDate = new Date(Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000).toISOString();
-      conditions.push(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, urgentDate)
-      ));
+      const urgentDate = new Date(
+        Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000
+      ).toISOString();
+      conditions.push(
+        and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, urgentDate))
+      );
     }
 
     // Apply conditions
@@ -333,15 +346,24 @@ export class AppealModel {
     // Enhance with details
     const appealsWithDetails: AppealWithDetails[] = appealList.map(appeal => {
       const createdDate = new Date(appeal.createdAt);
-      const deadlineDate = new Date(createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+      const deadlineDate = new Date(
+        createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+      );
       const now = new Date();
 
       return {
         ...appeal,
-        daysSinceCreated: Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000)),
-        daysSinceReviewed: appeal.reviewedAt ?
-          Math.floor((now.getTime() - new Date(appeal.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)) : undefined,
-        daysUntilDeadline: Math.floor((deadlineDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)),
+        daysSinceCreated: Math.floor(
+          (now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000)
+        ),
+        daysSinceReviewed: appeal.reviewedAt
+          ? Math.floor(
+              (now.getTime() - new Date(appeal.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)
+            )
+          : undefined,
+        daysUntilDeadline: Math.floor(
+          (deadlineDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+        ),
         isWithinDeadline: now <= deadlineDate,
       };
     });
@@ -370,15 +392,15 @@ export class AppealModel {
    * Get urgent appeals (near deadline)
    */
   async getUrgent(daysBeforeDeadline = 2, limit = 20): Promise<Appeal[]> {
-    const urgentDate = new Date(Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - daysBeforeDeadline) * 24 * 60 * 60 * 1000).toISOString();
+    const urgentDate = new Date(
+      Date.now() -
+        (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - daysBeforeDeadline) * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     return await this.db
       .select()
       .from(appeals)
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, urgentDate)
-      ))
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, urgentDate)))
       .orderBy(asc(appeals.createdAt))
       .limit(limit);
   }
@@ -387,15 +409,14 @@ export class AppealModel {
    * Get expired appeals (past deadline)
    */
   async getExpired(): Promise<Appeal[]> {
-    const expiredDate = new Date(Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const expiredDate = new Date(
+      Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     return await this.db
       .select()
       .from(appeals)
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, expiredDate)
-      ))
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, expiredDate)))
       .orderBy(asc(appeals.createdAt));
   }
 
@@ -403,7 +424,9 @@ export class AppealModel {
    * Auto-deny expired appeals
    */
   async autoDenyExpired(): Promise<number> {
-    const expiredDate = new Date(Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const expiredDate = new Date(
+      Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
 
     const result = await this.db
       .update(appeals)
@@ -413,10 +436,7 @@ export class AppealModel {
         reviewedAt: new Date().toISOString(),
         reviewedBy: null, // System action
       })
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, expiredDate)
-      ));
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, expiredDate)));
 
     return result.rowsAffected;
   }
@@ -455,9 +475,7 @@ export class AppealModel {
    * Get comprehensive appeal statistics
    */
   async getStats(): Promise<AppealStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(appeals);
+    const [totalResult] = await this.db.select({ count: count() }).from(appeals);
 
     const [pendingResult] = await this.db
       .select({ count: count() })
@@ -483,7 +501,7 @@ export class AppealModel {
       .select({
         avgHours: sql<number>`AVG(
           (julianday(${appeals.reviewedAt}) - julianday(${appeals.createdAt})) * 24
-        )`
+        )`,
       })
       .from(appeals)
       .where(isNotNull(appeals.reviewedAt));
@@ -500,24 +518,22 @@ export class AppealModel {
       .limit(10);
 
     // Get urgent appeals count
-    const urgentDate = new Date(Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000).toISOString();
+    const urgentDate = new Date(
+      Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000
+    ).toISOString();
     const [urgentResult] = await this.db
       .select({ count: count() })
       .from(appeals)
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, urgentDate)
-      ));
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, urgentDate)));
 
     // Get expired appeals count
-    const expiredDate = new Date(Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const expiredDate = new Date(
+      Date.now() - MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    ).toISOString();
     const [expiredResult] = await this.db
       .select({ count: count() })
       .from(appeals)
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, expiredDate)
-      ));
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, expiredDate)));
 
     const recentAppeals = await this.db
       .select()
@@ -572,20 +588,19 @@ export class AppealModel {
       .select({
         avgHours: sql<number>`AVG(
           (julianday(${appeals.reviewedAt}) - julianday(${appeals.createdAt})) * 24
-        )`
+        )`,
       })
       .from(appeals)
       .where(isNotNull(appeals.reviewedAt));
 
     // Get urgent appeals count
-    const urgentDate = new Date(Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000).toISOString();
+    const urgentDate = new Date(
+      Date.now() - (MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS - 2) * 24 * 60 * 60 * 1000
+    ).toISOString();
     const [urgentResult] = await this.db
       .select({ count: count() })
       .from(appeals)
-      .where(and(
-        eq(appeals.status, AppealStatus.PENDING),
-        lte(appeals.createdAt, urgentDate)
-      ));
+      .where(and(eq(appeals.status, AppealStatus.PENDING), lte(appeals.createdAt, urgentDate)));
 
     return {
       pendingCount: pendingResult.count,
@@ -601,7 +616,9 @@ export class AppealModel {
    */
   isWithinDeadline(appeal: Appeal): boolean {
     const createdDate = new Date(appeal.createdAt);
-    const deadlineDate = new Date(createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+    const deadlineDate = new Date(
+      createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    );
     return new Date() <= deadlineDate;
   }
 
@@ -610,7 +627,9 @@ export class AppealModel {
    */
   getDaysUntilDeadline(appeal: Appeal): number {
     const createdDate = new Date(appeal.createdAt);
-    const deadlineDate = new Date(createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000);
+    const deadlineDate = new Date(
+      createdDate.getTime() + MODERATION_CONSTRAINTS.APPEAL_DEADLINE_DAYS * 24 * 60 * 60 * 1000
+    );
     return Math.floor((deadlineDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
   }
 
@@ -618,9 +637,7 @@ export class AppealModel {
    * Delete appeal (admin action)
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(appeals)
-      .where(eq(appeals.id, id));
+    const result = await this.db.delete(appeals).where(eq(appeals.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -648,7 +665,9 @@ export class AppealModel {
     }
 
     if (appealData.message.length > MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH) {
-      errors.push(`Appeal message cannot exceed ${MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH} characters`);
+      errors.push(
+        `Appeal message cannot exceed ${MODERATION_CONSTRAINTS.MAX_APPEAL_MESSAGE_LENGTH} characters`
+      );
     }
 
     return errors;
@@ -663,17 +682,11 @@ export class AppealModel {
 }
 
 // Export types and enums for use in other modules
-export {
-  Appeal,
-  NewAppeal,
-  CreateAppeal,
-  AppealStatus,
-  MODERATION_CONSTRAINTS
-};
+export { Appeal, NewAppeal, CreateAppeal, AppealStatus, MODERATION_CONSTRAINTS };
 export type {
   AppealWithDetails,
   AppealSearchFilters,
   AppealListResponse,
   ReviewAppealData,
-  AppealStats
+  AppealStats,
 };

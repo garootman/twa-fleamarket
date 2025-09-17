@@ -1,6 +1,6 @@
 import type { Database } from '../db';
 import type { KVStorage } from '../kv';
-import type { User } from '../db/schema/users';
+import type { User } from '../db/schema';
 import type { MockUser, CreateMockUser } from '../db/schema/sessions';
 import { getDefaultMockUsers, mockUserToTelegramUser } from '../db/schema/sessions';
 import { generateSessionToken, calculateSessionExpiration } from '../db/schema/sessions';
@@ -173,23 +173,14 @@ export class DevAuthService {
       // Create a placeholder user object for development
       const devUser: User = {
         id: mockUserId,
-        telegramId: mockUser.telegramId,
-        username: mockUser.username,
-        firstName: mockUser.firstName,
-        lastName: mockUser.lastName || null,
-        profilePhotoUrl: null,
-        createdAt: new Date().toISOString(),
-        lastActive: new Date().toISOString(),
-        isBanned: false,
-        banReason: null,
-        bannedAt: null,
-        warningCount: 0,
-        usernameVerifiedAt: new Date().toISOString(),
-        // Legacy fields for compatibility
         createdDate: new Date().toISOString(),
         updatedDate: new Date().toISOString(),
-        lastAuthTimestamp: (Date.now() / 1000).toString(),
+        lastAuthTimestamp: new Date().toISOString(),
+        telegramId: mockUser.telegramId,
+        username: mockUser.username,
         isBot: null,
+        firstName: mockUser.firstName,
+        lastName: mockUser.lastName || null,
         languageCode: null,
         isPremium: null,
         addedToAttachmentMenu: null,
@@ -200,6 +191,12 @@ export class DevAuthService {
         supportsInlineQueries: null,
         canJoinGroups: null,
         canReadAllGroupMessages: null,
+        // Admin and moderation fields
+        isAdmin: false,
+        isBanned: false,
+        banReason: null,
+        bannedAt: null,
+        warningCount: 0,
       };
 
       // Store session

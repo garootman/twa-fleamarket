@@ -107,10 +107,7 @@ const mockDB: D1Database = {
         title: 'Updated Product Title',
         description: 'Updated product description with new details.',
         price_usd: 149.99,
-        images: [
-          'https://example.com/image1.jpg',
-          'https://example.com/image2.jpg'
-        ],
+        images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
         created_at: '2025-09-15T10:00:00Z',
         expires_at: '2025-10-15T10:00:00Z',
         status: 'active',

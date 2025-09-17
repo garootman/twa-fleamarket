@@ -7,7 +7,7 @@ import {
   FlagReason,
   FlagStatus,
   canUserFlag,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 } from '../../src/db/schema/moderation';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -89,7 +89,10 @@ export class FlagModel {
    */
   async create(flagData: CreateFlag): Promise<Flag> {
     // Check if user already flagged this listing
-    const existingFlag = await this.findByListingAndReporter(flagData.listingId, flagData.reporterId);
+    const existingFlag = await this.findByListingAndReporter(
+      flagData.listingId,
+      flagData.reporterId
+    );
     if (existingFlag) {
       throw new Error('You have already flagged this listing');
     }
@@ -104,7 +107,9 @@ export class FlagModel {
         throw new Error('Description is required when reason is "other"');
       }
       if (flagData.description.length > MODERATION_CONSTRAINTS.MAX_FLAG_DESCRIPTION_LENGTH) {
-        throw new Error(`Description cannot exceed ${MODERATION_CONSTRAINTS.MAX_FLAG_DESCRIPTION_LENGTH} characters`);
+        throw new Error(
+          `Description cannot exceed ${MODERATION_CONSTRAINTS.MAX_FLAG_DESCRIPTION_LENGTH} characters`
+        );
       }
     }
 
@@ -127,11 +132,7 @@ export class FlagModel {
    * Find flag by ID
    */
   async findById(id: number): Promise<Flag | null> {
-    const [flag] = await this.db
-      .select()
-      .from(flags)
-      .where(eq(flags.id, id))
-      .limit(1);
+    const [flag] = await this.db.select().from(flags).where(eq(flags.id, id)).limit(1);
 
     return flag || null;
   }
@@ -143,10 +144,7 @@ export class FlagModel {
     const [flag] = await this.db
       .select()
       .from(flags)
-      .where(and(
-        eq(flags.listingId, listingId),
-        eq(flags.reporterId, reporterId)
-      ))
+      .where(and(eq(flags.listingId, listingId), eq(flags.reporterId, reporterId)))
       .limit(1);
 
     return flag || null;
@@ -162,9 +160,12 @@ export class FlagModel {
     // In real implementation, this would use joins
     const flagWithDetails: FlagWithDetails = {
       ...flag,
-      daysSinceCreated: Math.floor((Date.now() - new Date(flag.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      daysSinceReviewed: flag.reviewedAt ?
-        Math.floor((Date.now() - new Date(flag.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)) : undefined,
+      daysSinceCreated: Math.floor(
+        (Date.now() - new Date(flag.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      daysSinceReviewed: flag.reviewedAt
+        ? Math.floor((Date.now() - new Date(flag.reviewedAt).getTime()) / (24 * 60 * 60 * 1000))
+        : undefined,
     };
 
     return flagWithDetails;
@@ -200,16 +201,12 @@ export class FlagModel {
    * Get flags for a specific listing
    */
   async getByListing(listingId: string, includeResolved = true): Promise<Flag[]> {
-    let query = this.db
-      .select()
-      .from(flags)
-      .where(eq(flags.listingId, listingId));
+    let query = this.db.select().from(flags).where(eq(flags.listingId, listingId));
 
     if (!includeResolved) {
-      query = query.where(and(
-        eq(flags.listingId, listingId),
-        eq(flags.status, FlagStatus.PENDING)
-      ));
+      query = query.where(
+        and(eq(flags.listingId, listingId), eq(flags.status, FlagStatus.PENDING))
+      );
     }
 
     return await query.orderBy(desc(flags.createdAt));
@@ -230,11 +227,7 @@ export class FlagModel {
   /**
    * Search and filter flags
    */
-  async search(
-    filters: FlagSearchFilters = {},
-    page = 1,
-    limit = 50
-  ): Promise<FlagListResponse> {
+  async search(filters: FlagSearchFilters = {}, page = 1, limit = 50): Promise<FlagListResponse> {
     let query = this.db.select().from(flags);
     let countQuery = this.db.select({ count: count() }).from(flags);
 
@@ -307,9 +300,12 @@ export class FlagModel {
     // Enhance with details
     const flagsWithDetails: FlagWithDetails[] = flagList.map(flag => ({
       ...flag,
-      daysSinceCreated: Math.floor((Date.now() - new Date(flag.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      daysSinceReviewed: flag.reviewedAt ?
-        Math.floor((Date.now() - new Date(flag.reviewedAt).getTime()) / (24 * 60 * 60 * 1000)) : undefined,
+      daysSinceCreated: Math.floor(
+        (Date.now() - new Date(flag.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      daysSinceReviewed: flag.reviewedAt
+        ? Math.floor((Date.now() - new Date(flag.reviewedAt).getTime()) / (24 * 60 * 60 * 1000))
+        : undefined,
     }));
 
     return {
@@ -341,10 +337,7 @@ export class FlagModel {
     return await this.db
       .select()
       .from(flags)
-      .where(and(
-        eq(flags.status, FlagStatus.PENDING),
-        lte(flags.createdAt, cutoffDate)
-      ))
+      .where(and(eq(flags.status, FlagStatus.PENDING), lte(flags.createdAt, cutoffDate)))
       .orderBy(asc(flags.createdAt))
       .limit(limit);
   }
@@ -359,10 +352,9 @@ export class FlagModel {
       .where(eq(flags.listingId, listingId));
 
     if (pendingOnly) {
-      query = query.where(and(
-        eq(flags.listingId, listingId),
-        eq(flags.status, FlagStatus.PENDING)
-      ));
+      query = query.where(
+        and(eq(flags.listingId, listingId), eq(flags.status, FlagStatus.PENDING))
+      );
     }
 
     const [result] = await query;
@@ -387,26 +379,17 @@ export class FlagModel {
     const [upheldResult] = await this.db
       .select({ count: count() })
       .from(flags)
-      .where(and(
-        eq(flags.reporterId, reporterId),
-        eq(flags.status, FlagStatus.UPHELD)
-      ));
+      .where(and(eq(flags.reporterId, reporterId), eq(flags.status, FlagStatus.UPHELD)));
 
     const [dismissedResult] = await this.db
       .select({ count: count() })
       .from(flags)
-      .where(and(
-        eq(flags.reporterId, reporterId),
-        eq(flags.status, FlagStatus.DISMISSED)
-      ));
+      .where(and(eq(flags.reporterId, reporterId), eq(flags.status, FlagStatus.DISMISSED)));
 
     const [pendingResult] = await this.db
       .select({ count: count() })
       .from(flags)
-      .where(and(
-        eq(flags.reporterId, reporterId),
-        eq(flags.status, FlagStatus.PENDING)
-      ));
+      .where(and(eq(flags.reporterId, reporterId), eq(flags.status, FlagStatus.PENDING)));
 
     const totalReviewed = upheldResult.count + dismissedResult.count;
     const accuracyRate = totalReviewed > 0 ? (upheldResult.count / totalReviewed) * 100 : 0;
@@ -424,9 +407,7 @@ export class FlagModel {
    * Get comprehensive flag statistics
    */
   async getStats(): Promise<FlagStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(flags);
+    const [totalResult] = await this.db.select({ count: count() }).from(flags);
 
     const [pendingResult] = await this.db
       .select({ count: count() })
@@ -452,17 +433,20 @@ export class FlagModel {
       .from(flags)
       .groupBy(flags.reason);
 
-    const flagsByReason = Object.values(FlagReason).reduce((acc, reason) => {
-      acc[reason] = reasonStats.find(stat => stat.reason === reason)?.count || 0;
-      return acc;
-    }, {} as Record<FlagReason, number>);
+    const flagsByReason = Object.values(FlagReason).reduce(
+      (acc, reason) => {
+        acc[reason] = reasonStats.find(stat => stat.reason === reason)?.count || 0;
+        return acc;
+      },
+      {} as Record<FlagReason, number>
+    );
 
     // Calculate average review time
     const [avgTimeResult] = await this.db
       .select({
         avgHours: sql<number>`AVG(
           (julianday(${flags.reviewedAt}) - julianday(${flags.createdAt})) * 24
-        )`
+        )`,
       })
       .from(flags)
       .where(isNotNull(flags.reviewedAt));
@@ -535,7 +519,7 @@ export class FlagModel {
       .select({
         avgHours: sql<number>`AVG(
           (julianday(${flags.reviewedAt}) - julianday(${flags.createdAt})) * 24
-        )`
+        )`,
       })
       .from(flags)
       .where(isNotNull(flags.reviewedAt));
@@ -552,9 +536,7 @@ export class FlagModel {
    * Delete flag (admin action)
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(flags)
-      .where(eq(flags.id, id));
+    const result = await this.db.delete(flags).where(eq(flags.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -570,10 +552,7 @@ export class FlagModel {
    * Check if flag exists
    */
   async exists(id: number): Promise<boolean> {
-    const [result] = await this.db
-      .select({ count: count() })
-      .from(flags)
-      .where(eq(flags.id, id));
+    const [result] = await this.db.select({ count: count() }).from(flags).where(eq(flags.id, id));
 
     return result.count > 0;
   }
@@ -587,10 +566,7 @@ export class FlagModel {
     return await this.db
       .select()
       .from(flags)
-      .where(and(
-        eq(flags.status, FlagStatus.PENDING),
-        lte(flags.createdAt, cutoffDate)
-      ))
+      .where(and(eq(flags.status, FlagStatus.PENDING), lte(flags.createdAt, cutoffDate)))
       .orderBy(asc(flags.createdAt))
       .limit(limit);
   }
@@ -608,10 +584,12 @@ export class FlagModel {
         reviewedAt: new Date().toISOString(),
         reviewedBy: null, // System action
       })
-      .where(and(
-        eq(flags.status, FlagStatus.PENDING),
-        sql`${flags.listingId} IN (${listingIds.map(id => `'${id}'`).join(',')})`
-      ));
+      .where(
+        and(
+          eq(flags.status, FlagStatus.PENDING),
+          sql`${flags.listingId} IN (${listingIds.map(id => `'${id}'`).join(',')})`
+        )
+      );
 
     return result.rowsAffected;
   }
@@ -629,10 +607,7 @@ export class FlagModel {
         reviewedBy: reviewData.reviewedBy,
         reviewedAt: new Date().toISOString(),
       })
-      .where(and(
-        sql`${flags.id} IN (${flagIds.join(',')})`,
-        eq(flags.status, FlagStatus.PENDING)
-      ));
+      .where(and(sql`${flags.id} IN (${flagIds.join(',')})`, eq(flags.status, FlagStatus.PENDING)));
 
     return result.rowsAffected;
   }
@@ -646,19 +621,5 @@ export class FlagModel {
 }
 
 // Export types and enums for use in other modules
-export {
-  Flag,
-  NewFlag,
-  CreateFlag,
-  FlagReason,
-  FlagStatus,
-  canUserFlag,
-  MODERATION_CONSTRAINTS
-};
-export type {
-  FlagWithDetails,
-  FlagSearchFilters,
-  FlagListResponse,
-  ReviewFlagData,
-  FlagStats
-};
+export { Flag, NewFlag, CreateFlag, FlagReason, FlagStatus, canUserFlag, MODERATION_CONSTRAINTS };
+export type { FlagWithDetails, FlagSearchFilters, FlagListResponse, ReviewFlagData, FlagStats };

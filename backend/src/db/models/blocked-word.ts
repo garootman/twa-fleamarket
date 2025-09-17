@@ -6,7 +6,7 @@ import {
   type CreateBlockedWord,
   BlockedWordSeverity,
   filterProfanity,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 } from '../../src/db/schema/moderation';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -97,7 +97,9 @@ export class BlockedWordModel {
     }
 
     if (normalizedWord.length > MODERATION_CONSTRAINTS.MAX_BLOCKED_WORD_LENGTH) {
-      throw new Error(`Word cannot exceed ${MODERATION_CONSTRAINTS.MAX_BLOCKED_WORD_LENGTH} characters`);
+      throw new Error(
+        `Word cannot exceed ${MODERATION_CONSTRAINTS.MAX_BLOCKED_WORD_LENGTH} characters`
+      );
     }
 
     // Check if word already exists
@@ -171,7 +173,10 @@ export class BlockedWordModel {
   /**
    * Update blocked word
    */
-  async update(id: number, updates: { severity?: BlockedWordSeverity; isActive?: boolean }): Promise<BlockedWord | null> {
+  async update(
+    id: number,
+    updates: { severity?: BlockedWordSeverity; isActive?: boolean }
+  ): Promise<BlockedWord | null> {
     const [word] = await this.db
       .update(blockedWords)
       .set(updates)
@@ -197,9 +202,7 @@ export class BlockedWordModel {
    * Delete blocked word
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(blockedWords)
-      .where(eq(blockedWords.id, id));
+    const result = await this.db.delete(blockedWords).where(eq(blockedWords.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -219,16 +222,12 @@ export class BlockedWordModel {
    * Get words by severity
    */
   async getBySeverity(severity: BlockedWordSeverity, activeOnly = true): Promise<BlockedWord[]> {
-    let query = this.db
-      .select()
-      .from(blockedWords)
-      .where(eq(blockedWords.severity, severity));
+    let query = this.db.select().from(blockedWords).where(eq(blockedWords.severity, severity));
 
     if (activeOnly) {
-      query = query.where(and(
-        eq(blockedWords.severity, severity),
-        eq(blockedWords.isActive, true)
-      ));
+      query = query.where(
+        and(eq(blockedWords.severity, severity), eq(blockedWords.isActive, true))
+      );
     }
 
     return await query.orderBy(asc(blockedWords.word));
@@ -242,7 +241,8 @@ export class BlockedWordModel {
     const baseResult = filterProfanity(text, activeWords);
 
     // Enhanced result with position information
-    const detectedWords: Array<{ word: string; severity: BlockedWordSeverity; position: number }> = [];
+    const detectedWords: Array<{ word: string; severity: BlockedWordSeverity; position: number }> =
+      [];
 
     for (const violation of baseResult.violations) {
       const word = activeWords.find(w => w.word === violation);
@@ -261,7 +261,7 @@ export class BlockedWordModel {
 
     const result: FilterResult = {
       ...baseResult,
-      severity: baseResult.shouldBlock ? 'block' : (baseResult.hasViolations ? 'warning' : null),
+      severity: baseResult.shouldBlock ? 'block' : baseResult.hasViolations ? 'warning' : null,
       detectedWords,
     };
 
@@ -276,7 +276,11 @@ export class BlockedWordModel {
 
     return texts.map(text => {
       const baseResult = filterProfanity(text, activeWords);
-      const detectedWords: Array<{ word: string; severity: BlockedWordSeverity; position: number }> = [];
+      const detectedWords: Array<{
+        word: string;
+        severity: BlockedWordSeverity;
+        position: number;
+      }> = [];
 
       for (const violation of baseResult.violations) {
         const word = activeWords.find(w => w.word === violation);
@@ -295,7 +299,7 @@ export class BlockedWordModel {
 
       return {
         ...baseResult,
-        severity: baseResult.shouldBlock ? 'block' : (baseResult.hasViolations ? 'warning' : null),
+        severity: baseResult.shouldBlock ? 'block' : baseResult.hasViolations ? 'warning' : null,
         detectedWords,
       } as FilterResult;
     });
@@ -304,11 +308,7 @@ export class BlockedWordModel {
   /**
    * Search and filter blocked words
    */
-  async search(
-    filters: WordSearchFilters = {},
-    page = 1,
-    limit = 50
-  ): Promise<WordListResponse> {
+  async search(filters: WordSearchFilters = {}, page = 1, limit = 50): Promise<WordListResponse> {
     let query = this.db.select().from(blockedWords);
     let countQuery = this.db.select({ count: count() }).from(blockedWords);
 
@@ -406,7 +406,11 @@ export class BlockedWordModel {
   /**
    * Bulk add words from list
    */
-  async bulkAdd(words: string[], severity: BlockedWordSeverity, addedBy: number): Promise<{
+  async bulkAdd(
+    words: string[],
+    severity: BlockedWordSeverity,
+    addedBy: number
+  ): Promise<{
     added: number;
     skipped: number;
     errors: string[];
@@ -448,7 +452,9 @@ export class BlockedWordModel {
 
         added++;
       } catch (error) {
-        errors.push(`Error adding "${word}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Error adding "${word}": ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         skipped++;
       }
     }
@@ -488,9 +494,7 @@ export class BlockedWordModel {
    * Get comprehensive word statistics
    */
   async getStats(): Promise<WordStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(blockedWords);
+    const [totalResult] = await this.db.select({ count: count() }).from(blockedWords);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -559,9 +563,7 @@ export class BlockedWordModel {
     warningWords: number;
     blockWords: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(blockedWords);
+    const [totalResult] = await this.db.select({ count: count() }).from(blockedWords);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -571,18 +573,16 @@ export class BlockedWordModel {
     const [warningResult] = await this.db
       .select({ count: count() })
       .from(blockedWords)
-      .where(and(
-        eq(blockedWords.severity, BlockedWordSeverity.WARNING),
-        eq(blockedWords.isActive, true)
-      ));
+      .where(
+        and(eq(blockedWords.severity, BlockedWordSeverity.WARNING), eq(blockedWords.isActive, true))
+      );
 
     const [blockResult] = await this.db
       .select({ count: count() })
       .from(blockedWords)
-      .where(and(
-        eq(blockedWords.severity, BlockedWordSeverity.BLOCK),
-        eq(blockedWords.isActive, true)
-      ));
+      .where(
+        and(eq(blockedWords.severity, BlockedWordSeverity.BLOCK), eq(blockedWords.isActive, true))
+      );
 
     return {
       totalWords: totalResult.count,
@@ -595,7 +595,9 @@ export class BlockedWordModel {
   /**
    * Export word list
    */
-  async export(activeOnly = true): Promise<Array<{ word: string; severity: string; addedBy: number; createdAt: string }>> {
+  async export(
+    activeOnly = true
+  ): Promise<Array<{ word: string; severity: string; addedBy: number; createdAt: string }>> {
     let query = this.db
       .select({
         word: blockedWords.word,
@@ -667,7 +669,9 @@ export class BlockedWordModel {
           imported++;
         }
       } catch (error) {
-        errors.push(`Error processing "${item.word}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Error processing "${item.word}": ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         skipped++;
       }
     }
@@ -692,7 +696,8 @@ export class BlockedWordModel {
    */
   filter(text: string, words: BlockedWord[]): FilterResult {
     const baseResult = filterProfanity(text, words);
-    const detectedWords: Array<{ word: string; severity: BlockedWordSeverity; position: number }> = [];
+    const detectedWords: Array<{ word: string; severity: BlockedWordSeverity; position: number }> =
+      [];
 
     for (const violation of baseResult.violations) {
       const word = words.find(w => w.word === violation);
@@ -711,7 +716,7 @@ export class BlockedWordModel {
 
     return {
       ...baseResult,
-      severity: baseResult.shouldBlock ? 'block' : (baseResult.hasViolations ? 'warning' : null),
+      severity: baseResult.shouldBlock ? 'block' : baseResult.hasViolations ? 'warning' : null,
       detectedWords,
     };
   }
@@ -732,12 +737,12 @@ export {
   CreateBlockedWord,
   BlockedWordSeverity,
   filterProfanity,
-  MODERATION_CONSTRAINTS
+  MODERATION_CONSTRAINTS,
 };
 export type {
   BlockedWordWithDetails,
   WordSearchFilters,
   WordListResponse,
   FilterResult,
-  WordStats
+  WordStats,
 };

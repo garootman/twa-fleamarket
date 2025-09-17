@@ -1,5 +1,14 @@
 import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
-import { users, type User, type NewUser, type CreateUser, type UpdateUser, UserStatus, getUserStatus, isUserAdmin } from '../../src/db/schema/users';
+import {
+  users,
+  type User,
+  type NewUser,
+  type CreateUser,
+  type UpdateUser,
+  UserStatus,
+  getUserStatus,
+  isUserAdmin,
+} from '../../src/db/schema/users';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 /**
@@ -74,11 +83,7 @@ export class UserModel {
    * Find user by username
    */
   async findByUsername(username: string): Promise<User | null> {
-    const [user] = await this.db
-      .select()
-      .from(users)
-      .where(eq(users.username, username))
-      .limit(1);
+    const [user] = await this.db.select().from(users).where(eq(users.username, username)).limit(1);
 
     return user || null;
   }
@@ -202,11 +207,7 @@ export class UserModel {
   /**
    * Search and filter users
    */
-  async search(
-    filters: UserSearchFilters = {},
-    page = 1,
-    limit = 50
-  ): Promise<UserListResponse> {
+  async search(filters: UserSearchFilters = {}, page = 1, limit = 50): Promise<UserListResponse> {
     let query = this.db.select().from(users);
     let countQuery = this.db.select({ count: count() }).from(users);
 
@@ -222,7 +223,10 @@ export class UserModel {
       if (filters.status.includes(UserStatus.BANNED)) {
         conditions.push(eq(users.isBanned, true));
       }
-      if (filters.status.includes(UserStatus.WARNED) && !filters.status.includes(UserStatus.BANNED)) {
+      if (
+        filters.status.includes(UserStatus.WARNED) &&
+        !filters.status.includes(UserStatus.BANNED)
+      ) {
         conditions.push(and(eq(users.isBanned, false), sql`${users.warningCount} > 0`));
       }
       if (filters.status.includes(UserStatus.ACTIVE) && filters.status.length === 1) {
@@ -369,9 +373,7 @@ export class UserModel {
    * Delete user (for GDPR compliance)
    */
   async delete(telegramId: number): Promise<boolean> {
-    const result = await this.db
-      .delete(users)
-      .where(eq(users.telegramId, telegramId));
+    const result = await this.db.delete(users).where(eq(users.telegramId, telegramId));
 
     return result.rowsAffected > 0;
   }
@@ -386,9 +388,7 @@ export class UserModel {
     warnedUsers: number;
     newUsersToday: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(users);
+    const [totalResult] = await this.db.select({ count: count() }).from(users);
 
     const [activeResult] = await this.db
       .select({ count: count() })

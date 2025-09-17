@@ -81,7 +81,10 @@ export class KVCacheService {
         // Warm KV cache
         if (this.kvNamespace) {
           await this.kvNamespace.put(key, JSON.stringify(cacheEntry.value), {
-            expirationTtl: Math.max(1, Math.floor((new Date(cacheEntry.expiresAt).getTime() - Date.now()) / 1000)),
+            expirationTtl: Math.max(
+              1,
+              Math.floor((new Date(cacheEntry.expiresAt).getTime() - Date.now()) / 1000)
+            ),
           });
         }
 
@@ -117,11 +120,7 @@ export class KVCacheService {
   /**
    * Set value in cache
    */
-  async set<T>(
-    key: string,
-    value: T,
-    options: CacheOptions = {}
-  ): Promise<boolean> {
+  async set<T>(key: string, value: T, options: CacheOptions = {}): Promise<boolean> {
     try {
       const cacheType = key.split(':')[0] || 'default';
       const ttl = options.ttl || this.cacheModel.getTTL(cacheType);
@@ -233,11 +232,13 @@ export class KVCacheService {
   /**
    * Warm cache with predefined data
    */
-  async warmCache(warmupTasks: Array<{
-    key: string;
-    loader: () => Promise<any>;
-    options?: CacheOptions;
-  }>): Promise<CacheWarmupResult> {
+  async warmCache(
+    warmupTasks: Array<{
+      key: string;
+      loader: () => Promise<any>;
+      options?: CacheOptions;
+    }>
+  ): Promise<CacheWarmupResult> {
     const startTime = Date.now();
     let warmedUp = 0;
     let failed = 0;
@@ -318,7 +319,8 @@ export class KVCacheService {
 
     const hitRate = this.stats.requests > 0 ? (this.stats.hits / this.stats.requests) * 100 : 0;
     const missRate = 100 - hitRate;
-    const averageResponseTime = this.stats.requests > 0 ? this.stats.totalResponseTime / this.stats.requests : 0;
+    const averageResponseTime =
+      this.stats.requests > 0 ? this.stats.totalResponseTime / this.stats.requests : 0;
 
     return {
       hitRate: Math.round(hitRate * 100) / 100,
@@ -373,7 +375,7 @@ export class KVCacheService {
     const results: Record<string, T | null> = {};
 
     await Promise.all(
-      keys.map(async (key) => {
+      keys.map(async key => {
         const fallback = fallbacks?.[key];
         results[key] = await this.get(key, fallback);
       })
@@ -409,11 +411,7 @@ export class KVCacheService {
   /**
    * Cache wrapper for functions
    */
-  async cached<T>(
-    key: string,
-    fn: () => Promise<T>,
-    options: CacheOptions = {}
-  ): Promise<T> {
+  async cached<T>(key: string, fn: () => Promise<T>, options: CacheOptions = {}): Promise<T> {
     const cached = await this.get(key);
     if (cached !== null) {
       return cached as T;
@@ -429,11 +427,7 @@ export class KVCacheService {
    */
   private readonly pendingRequests = new Map<string, Promise<any>>();
 
-  async getWithMutex<T>(
-    key: string,
-    fn: () => Promise<T>,
-    options: CacheOptions = {}
-  ): Promise<T> {
+  async getWithMutex<T>(key: string, fn: () => Promise<T>, options: CacheOptions = {}): Promise<T> {
     // Check cache first
     const cached = await this.get(key);
     if (cached !== null) {

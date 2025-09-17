@@ -14,7 +14,7 @@ import {
   getFeatureDisplayName,
   getFeatureDescription,
   enrichPremiumFeature,
-  PREMIUM_FEATURE_CONSTRAINTS
+  PREMIUM_FEATURE_CONSTRAINTS,
 } from '../../src/db/schema/premium';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -97,7 +97,9 @@ export class PremiumFeatureModel {
     // Validate feature type and price
     const expectedPrice = getFeaturePrice(purchaseData.featureType);
     if (purchaseData.starsPaid !== expectedPrice) {
-      throw new Error(`Invalid payment amount. Expected ${expectedPrice} stars, got ${purchaseData.starsPaid}`);
+      throw new Error(
+        `Invalid payment amount. Expected ${expectedPrice} stars, got ${purchaseData.starsPaid}`
+      );
     }
 
     // Check if user can purchase this feature
@@ -161,15 +163,20 @@ export class PremiumFeatureModel {
 
     const stats: PremiumFeatureWithStats = {
       ...enriched,
-      daysSincePurchase: Math.floor((now.getTime() - purchaseDate.getTime()) / (24 * 60 * 60 * 1000)),
-      daysRemaining: enriched.isCurrentlyActive ?
-        Math.floor((expirationDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)) : 0,
-      hoursRemaining: enriched.isCurrentlyActive ?
-        Math.floor((expirationDate.getTime() - now.getTime()) / (60 * 60 * 1000)) : 0,
+      daysSincePurchase: Math.floor(
+        (now.getTime() - purchaseDate.getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      daysRemaining: enriched.isCurrentlyActive
+        ? Math.floor((expirationDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+        : 0,
+      hoursRemaining: enriched.isCurrentlyActive
+        ? Math.floor((expirationDate.getTime() - now.getTime()) / (60 * 60 * 1000))
+        : 0,
       renewalCount: feature.autoRenewedCount,
       totalStarsSpent: feature.starsPaid * (1 + feature.autoRenewedCount),
-      isExpiringSoon: enriched.isCurrentlyActive &&
-        (expirationDate.getTime() - now.getTime()) < (24 * 60 * 60 * 1000),
+      isExpiringSoon:
+        enriched.isCurrentlyActive &&
+        expirationDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000,
     };
 
     return stats;
@@ -235,18 +242,17 @@ export class PremiumFeatureModel {
    * Get user's premium features
    */
   async getUserFeatures(userId: number, activeOnly = false): Promise<PremiumFeature[]> {
-    let query = this.db
-      .select()
-      .from(premiumFeatures)
-      .where(eq(premiumFeatures.userId, userId));
+    let query = this.db.select().from(premiumFeatures).where(eq(premiumFeatures.userId, userId));
 
     if (activeOnly) {
-      query = query.where(and(
-        eq(premiumFeatures.userId, userId),
-        eq(premiumFeatures.isActive, true),
-        gte(premiumFeatures.expiresAt, new Date().toISOString()),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      query = query.where(
+        and(
+          eq(premiumFeatures.userId, userId),
+          eq(premiumFeatures.isActive, true),
+          gte(premiumFeatures.expiresAt, new Date().toISOString()),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
     }
 
     return await query.orderBy(desc(premiumFeatures.purchasedAt));
@@ -262,12 +268,14 @@ export class PremiumFeatureModel {
       .where(eq(premiumFeatures.listingId, listingId));
 
     if (activeOnly) {
-      query = query.where(and(
-        eq(premiumFeatures.listingId, listingId),
-        eq(premiumFeatures.isActive, true),
-        gte(premiumFeatures.expiresAt, new Date().toISOString()),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      query = query.where(
+        and(
+          eq(premiumFeatures.listingId, listingId),
+          eq(premiumFeatures.isActive, true),
+          gte(premiumFeatures.expiresAt, new Date().toISOString()),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
     }
 
     return await query.orderBy(desc(premiumFeatures.purchasedAt));
@@ -280,12 +288,14 @@ export class PremiumFeatureModel {
     return await this.db
       .select()
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.featureType, featureType),
-        eq(premiumFeatures.isActive, true),
-        gte(premiumFeatures.expiresAt, new Date().toISOString()),
-        isNull(premiumFeatures.cancelledAt)
-      ))
+      .where(
+        and(
+          eq(premiumFeatures.featureType, featureType),
+          eq(premiumFeatures.isActive, true),
+          gte(premiumFeatures.expiresAt, new Date().toISOString()),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      )
       .orderBy(desc(premiumFeatures.purchasedAt));
   }
 
@@ -321,17 +331,21 @@ export class PremiumFeatureModel {
     // Active filter
     if (filters.isActive !== undefined) {
       if (filters.isActive) {
-        conditions.push(and(
-          eq(premiumFeatures.isActive, true),
-          gte(premiumFeatures.expiresAt, now),
-          isNull(premiumFeatures.cancelledAt)
-        ));
+        conditions.push(
+          and(
+            eq(premiumFeatures.isActive, true),
+            gte(premiumFeatures.expiresAt, now),
+            isNull(premiumFeatures.cancelledAt)
+          )
+        );
       } else {
-        conditions.push(or(
-          eq(premiumFeatures.isActive, false),
-          lte(premiumFeatures.expiresAt, now),
-          isNotNull(premiumFeatures.cancelledAt)
-        ));
+        conditions.push(
+          or(
+            eq(premiumFeatures.isActive, false),
+            lte(premiumFeatures.expiresAt, now),
+            isNotNull(premiumFeatures.cancelledAt)
+          )
+        );
       }
     }
 
@@ -352,12 +366,14 @@ export class PremiumFeatureModel {
     // Expiring soon filter
     if (filters.expiringSoon) {
       const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      conditions.push(and(
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, in24Hours),
-        gte(premiumFeatures.expiresAt, now),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      conditions.push(
+        and(
+          eq(premiumFeatures.isActive, true),
+          lte(premiumFeatures.expiresAt, in24Hours),
+          gte(premiumFeatures.expiresAt, now),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
     }
 
     // Cancelled filter
@@ -418,12 +434,14 @@ export class PremiumFeatureModel {
     return await this.db
       .select()
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, futureDate),
-        gte(premiumFeatures.expiresAt, now),
-        isNull(premiumFeatures.cancelledAt)
-      ))
+      .where(
+        and(
+          eq(premiumFeatures.isActive, true),
+          lte(premiumFeatures.expiresAt, futureDate),
+          gte(premiumFeatures.expiresAt, now),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      )
       .orderBy(asc(premiumFeatures.expiresAt))
       .limit(limit);
   }
@@ -437,10 +455,7 @@ export class PremiumFeatureModel {
     return await this.db
       .select()
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, now)
-      ))
+      .where(and(eq(premiumFeatures.isActive, true), lte(premiumFeatures.expiresAt, now)))
       .orderBy(asc(premiumFeatures.expiresAt));
   }
 
@@ -453,10 +468,7 @@ export class PremiumFeatureModel {
     const result = await this.db
       .update(premiumFeatures)
       .set({ isActive: false })
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, now)
-      ));
+      .where(and(eq(premiumFeatures.isActive, true), lte(premiumFeatures.expiresAt, now)));
 
     return result.rowsAffected;
   }
@@ -469,14 +481,16 @@ export class PremiumFeatureModel {
     const eligibleFeatures = await this.db
       .select()
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.featureType, PremiumFeatureType.AUTO_BUMP),
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, new Date(Date.now() + 60 * 60 * 1000).toISOString()),
-        gte(premiumFeatures.expiresAt, new Date().toISOString()),
-        isNull(premiumFeatures.cancelledAt),
-        sql`${premiumFeatures.autoRenewedCount} < ${PREMIUM_FEATURE_CONSTRAINTS.MAX_AUTO_RENEWALS}`
-      ));
+      .where(
+        and(
+          eq(premiumFeatures.featureType, PremiumFeatureType.AUTO_BUMP),
+          eq(premiumFeatures.isActive, true),
+          lte(premiumFeatures.expiresAt, new Date(Date.now() + 60 * 60 * 1000).toISOString()),
+          gte(premiumFeatures.expiresAt, new Date().toISOString()),
+          isNull(premiumFeatures.cancelledAt),
+          sql`${premiumFeatures.autoRenewedCount} < ${PREMIUM_FEATURE_CONSTRAINTS.MAX_AUTO_RENEWALS}`
+        )
+      );
 
     const results: RenewalResult[] = [];
 
@@ -526,18 +540,22 @@ export class PremiumFeatureModel {
   }> {
     const userFeatures = await this.getUserFeatures(userId);
 
-    const totalSpent = userFeatures.reduce((sum, feature) =>
-      sum + (feature.starsPaid * (1 + feature.autoRenewedCount)), 0
+    const totalSpent = userFeatures.reduce(
+      (sum, feature) => sum + feature.starsPaid * (1 + feature.autoRenewedCount),
+      0
     );
 
-    const featureBreakdown = Object.values(PremiumFeatureType).reduce((acc, type) => {
-      const typeFeatures = userFeatures.filter(f => f.featureType === type);
-      acc[type] = {
-        count: typeFeatures.length,
-        spent: typeFeatures.reduce((sum, f) => sum + (f.starsPaid * (1 + f.autoRenewedCount)), 0),
-      };
-      return acc;
-    }, {} as Record<PremiumFeatureType, { count: number; spent: number }>);
+    const featureBreakdown = Object.values(PremiumFeatureType).reduce(
+      (acc, type) => {
+        const typeFeatures = userFeatures.filter(f => f.featureType === type);
+        acc[type] = {
+          count: typeFeatures.length,
+          spent: typeFeatures.reduce((sum, f) => sum + f.starsPaid * (1 + f.autoRenewedCount), 0),
+        };
+        return acc;
+      },
+      {} as Record<PremiumFeatureType, { count: number; spent: number }>
+    );
 
     const activeFeatures = userFeatures.filter(f => isFeatureActive(f)).length;
     const lastPurchase = userFeatures.length > 0 ? userFeatures[0] : undefined;
@@ -554,24 +572,24 @@ export class PremiumFeatureModel {
    * Get comprehensive premium statistics
    */
   async getStats(): Promise<PremiumStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(premiumFeatures);
+    const [totalResult] = await this.db.select({ count: count() }).from(premiumFeatures);
 
     const now = new Date().toISOString();
     const [activeResult] = await this.db
       .select({ count: count() })
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        gte(premiumFeatures.expiresAt, now),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      .where(
+        and(
+          eq(premiumFeatures.isActive, true),
+          gte(premiumFeatures.expiresAt, now),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
 
     // Total revenue
     const [revenueResult] = await this.db
       .select({
-        total: sql<number>`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`
+        total: sql<number>`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`,
       })
       .from(premiumFeatures);
 
@@ -584,10 +602,13 @@ export class PremiumFeatureModel {
       .from(premiumFeatures)
       .groupBy(premiumFeatures.featureType);
 
-    const revenueByType = Object.values(PremiumFeatureType).reduce((acc, type) => {
-      acc[type] = revenueByTypeResults.find(r => r.featureType === type)?.revenue || 0;
-      return acc;
-    }, {} as Record<PremiumFeatureType, number>);
+    const revenueByType = Object.values(PremiumFeatureType).reduce(
+      (acc, type) => {
+        acc[type] = revenueByTypeResults.find(r => r.featureType === type)?.revenue || 0;
+        return acc;
+      },
+      {} as Record<PremiumFeatureType, number>
+    );
 
     // Features by type
     const featuresByTypeResults = await this.db
@@ -598,10 +619,13 @@ export class PremiumFeatureModel {
       .from(premiumFeatures)
       .groupBy(premiumFeatures.featureType);
 
-    const featuresByType = Object.values(PremiumFeatureType).reduce((acc, type) => {
-      acc[type] = featuresByTypeResults.find(r => r.featureType === type)?.count || 0;
-      return acc;
-    }, {} as Record<PremiumFeatureType, number>);
+    const featuresByType = Object.values(PremiumFeatureType).reduce(
+      (acc, type) => {
+        acc[type] = featuresByTypeResults.find(r => r.featureType === type)?.count || 0;
+        return acc;
+      },
+      {} as Record<PremiumFeatureType, number>
+    );
 
     // Top spenders
     const topSpenders = await this.db
@@ -611,7 +635,9 @@ export class PremiumFeatureModel {
       })
       .from(premiumFeatures)
       .groupBy(premiumFeatures.userId)
-      .orderBy(desc(sql`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`))
+      .orderBy(
+        desc(sql`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`)
+      )
       .limit(10);
 
     // Average revenue per user
@@ -619,8 +645,8 @@ export class PremiumFeatureModel {
       .select({ count: sql<number>`COUNT(DISTINCT ${premiumFeatures.userId})` })
       .from(premiumFeatures);
 
-    const avgRevenuePerUser = uniqueUsersResult.count > 0 ?
-      (revenueResult.total || 0) / uniqueUsersResult.count : 0;
+    const avgRevenuePerUser =
+      uniqueUsersResult.count > 0 ? (revenueResult.total || 0) / uniqueUsersResult.count : 0;
 
     // Recent purchases
     const recentPurchases = await this.db
@@ -638,8 +664,10 @@ export class PremiumFeatureModel {
       .from(premiumFeatures)
       .where(eq(premiumFeatures.featureType, PremiumFeatureType.AUTO_BUMP));
 
-    const autoRenewalSuccessRate = autoRenewalResult.totalAutoFeatures > 0 ?
-      (autoRenewalResult.totalRenewals / autoRenewalResult.totalAutoFeatures) * 100 : 0;
+    const autoRenewalSuccessRate =
+      autoRenewalResult.totalAutoFeatures > 0
+        ? (autoRenewalResult.totalRenewals / autoRenewalResult.totalAutoFeatures) * 100
+        : 0;
 
     return {
       totalFeatures: totalResult.count,
@@ -671,15 +699,17 @@ export class PremiumFeatureModel {
     const [activeResult] = await this.db
       .select({ count: count() })
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        gte(premiumFeatures.expiresAt, now),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      .where(
+        and(
+          eq(premiumFeatures.isActive, true),
+          gte(premiumFeatures.expiresAt, now),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
 
     const [revenueResult] = await this.db
       .select({
-        total: sql<number>`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`
+        total: sql<number>`SUM(${premiumFeatures.starsPaid} * (1 + ${premiumFeatures.autoRenewedCount}))`,
       })
       .from(premiumFeatures);
 
@@ -688,12 +718,14 @@ export class PremiumFeatureModel {
     const [expiringResult] = await this.db
       .select({ count: count() })
       .from(premiumFeatures)
-      .where(and(
-        eq(premiumFeatures.isActive, true),
-        lte(premiumFeatures.expiresAt, in24Hours),
-        gte(premiumFeatures.expiresAt, now),
-        isNull(premiumFeatures.cancelledAt)
-      ));
+      .where(
+        and(
+          eq(premiumFeatures.isActive, true),
+          lte(premiumFeatures.expiresAt, in24Hours),
+          gte(premiumFeatures.expiresAt, now),
+          isNull(premiumFeatures.cancelledAt)
+        )
+      );
 
     // Features by type
     const featuresByTypeResults = await this.db
@@ -704,10 +736,13 @@ export class PremiumFeatureModel {
       .from(premiumFeatures)
       .groupBy(premiumFeatures.featureType);
 
-    const featuresByType = Object.values(PremiumFeatureType).reduce((acc, type) => {
-      acc[type] = featuresByTypeResults.find(r => r.featureType === type)?.count || 0;
-      return acc;
-    }, {} as Record<PremiumFeatureType, number>);
+    const featuresByType = Object.values(PremiumFeatureType).reduce(
+      (acc, type) => {
+        acc[type] = featuresByTypeResults.find(r => r.featureType === type)?.count || 0;
+        return acc;
+      },
+      {} as Record<PremiumFeatureType, number>
+    );
 
     return {
       activeFeatures: activeResult.count,
@@ -733,9 +768,7 @@ export class PremiumFeatureModel {
    * Delete premium feature (admin only)
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(premiumFeatures)
-      .where(eq(premiumFeatures.id, id));
+    const result = await this.db.delete(premiumFeatures).where(eq(premiumFeatures.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -747,7 +780,12 @@ export class PremiumFeatureModel {
     return isFeatureActive(feature);
   }
 
-  canPurchase(userId: number, featureType: PremiumFeatureType, listingId: string | null, existingFeatures: PremiumFeature[]) {
+  canPurchase(
+    userId: number,
+    featureType: PremiumFeatureType,
+    listingId: string | null,
+    existingFeatures: PremiumFeature[]
+  ) {
     return canUserPurchaseFeature(userId, featureType, listingId, existingFeatures);
   }
 
@@ -787,7 +825,7 @@ export {
   getFeatureDisplayName,
   getFeatureDescription,
   enrichPremiumFeature,
-  PREMIUM_FEATURE_CONSTRAINTS
+  PREMIUM_FEATURE_CONSTRAINTS,
 };
 export type {
   PremiumFeatureWithStats,
@@ -795,5 +833,5 @@ export type {
   FeatureListResponse,
   PurchaseFeatureData,
   PremiumStats,
-  RenewalResult
+  RenewalResult,
 };

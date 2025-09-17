@@ -111,7 +111,12 @@ export interface AdminDashboardResponse {
     };
     recentActivity: Array<{
       id: string;
-      type: 'USER_REGISTERED' | 'LISTING_CREATED' | 'CONTENT_FLAGGED' | 'USER_BANNED' | 'LISTING_APPROVED';
+      type:
+        | 'USER_REGISTERED'
+        | 'LISTING_CREATED'
+        | 'CONTENT_FLAGGED'
+        | 'USER_BANNED'
+        | 'LISTING_APPROVED';
       description: string;
       timestamp: string;
       userId?: string;
@@ -156,7 +161,7 @@ export class AdminAPI {
    */
   async getAllListings(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
@@ -178,10 +183,13 @@ export class AdminAPI {
       const listingsResult = await this.adminService.getAllListings(filters, page, limit);
 
       if (!listingsResult.success) {
-        return c.json({
-          success: false,
-          error: listingsResult.error || 'Failed to fetch listings'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: listingsResult.error || 'Failed to fetch listings',
+          },
+          500
+        );
       }
 
       const response: AdminListingsResponse = {
@@ -189,7 +197,8 @@ export class AdminAPI {
         listings: listingsResult.listings?.map(listing => ({
           id: listing.id,
           title: listing.title,
-          description: listing.description.substring(0, 200) + (listing.description.length > 200 ? '...' : ''),
+          description:
+            listing.description.substring(0, 200) + (listing.description.length > 200 ? '...' : ''),
           priceUsd: listing.priceUsd,
           status: listing.status,
           categoryName: listing.category?.name || 'Unknown',
@@ -207,7 +216,8 @@ export class AdminAPI {
           },
           moderationInfo: {
             autoModerationScore: listing.moderationScore || 0,
-            requiresReview: (listing.flags?.length || 0) > 0 || (listing.moderationScore || 0) > 0.7,
+            requiresReview:
+              (listing.flags?.length || 0) > 0 || (listing.moderationScore || 0) > 0.7,
             flagReasons: listing.flags?.map(flag => flag.reason) || [],
             lastReviewedAt: listing.lastReviewedAt,
             reviewedBy: listing.reviewedBy,
@@ -223,13 +233,15 @@ export class AdminAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Admin get all listings error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -238,18 +250,21 @@ export class AdminAPI {
    */
   async stickListing(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
       const listingId = c.req.param('id');
-      const body = await c.req.json() as { stick: boolean; reason?: string };
+      const body = (await c.req.json()) as { stick: boolean; reason?: string };
 
       if (!listingId) {
-        return c.json({
-          success: false,
-          error: 'Listing ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Listing ID is required',
+          },
+          400
+        );
       }
 
       const adminUser = await this.getCurrentUser(c);
@@ -263,24 +278,29 @@ export class AdminAPI {
       );
 
       if (!result.success) {
-        return c.json({
-          success: false,
-          error: result.error || 'Failed to update listing'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: result.error || 'Failed to update listing',
+          },
+          400
+        );
       }
 
       return c.json({
         success: true,
         message: body.stick ? 'Listing pinned successfully' : 'Listing unpinned successfully',
-        listing: result.listing
+        listing: result.listing,
       });
-
     } catch (error) {
       console.error('Admin stick listing error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -289,25 +309,31 @@ export class AdminAPI {
    */
   async banUser(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
       const userId = c.req.param('id');
-      const body = await c.req.json() as BanUserRequest;
+      const body = (await c.req.json()) as BanUserRequest;
 
       if (!userId) {
-        return c.json({
-          success: false,
-          error: 'User ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'User ID is required',
+          },
+          400
+        );
       }
 
       if (!body.reason || !body.reason.trim()) {
-        return c.json({
-          success: false,
-          error: 'Ban reason is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Ban reason is required',
+          },
+          400
+        );
       }
 
       const adminUser = await this.getCurrentUser(c);
@@ -322,10 +348,13 @@ export class AdminAPI {
       );
 
       if (!banResult.success) {
-        return c.json({
-          success: false,
-          error: banResult.error || 'Failed to ban user'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: banResult.error || 'Failed to ban user',
+          },
+          400
+        );
       }
 
       // Notify user if requested
@@ -335,18 +364,20 @@ export class AdminAPI {
 
       return c.json({
         success: true,
-        message: body.duration ?
-          `User banned for ${body.duration} days` :
-          'User permanently banned',
-        user: banResult.user
+        message: body.duration
+          ? `User banned for ${body.duration} days`
+          : 'User permanently banned',
+        user: banResult.user,
       });
-
     } catch (error) {
       console.error('Admin ban user error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -355,18 +386,21 @@ export class AdminAPI {
    */
   async unbanUser(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
       const userId = c.req.param('id');
-      const body = await c.req.json() as { reason?: string; notifyUser?: boolean };
+      const body = (await c.req.json()) as { reason?: string; notifyUser?: boolean };
 
       if (!userId) {
-        return c.json({
-          success: false,
-          error: 'User ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'User ID is required',
+          },
+          400
+        );
       }
 
       const adminUser = await this.getCurrentUser(c);
@@ -379,10 +413,13 @@ export class AdminAPI {
       );
 
       if (!unbanResult.success) {
-        return c.json({
-          success: false,
-          error: unbanResult.error || 'Failed to unban user'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: unbanResult.error || 'Failed to unban user',
+          },
+          400
+        );
       }
 
       // Notify user if requested
@@ -393,15 +430,17 @@ export class AdminAPI {
       return c.json({
         success: true,
         message: 'User unbanned successfully',
-        user: unbanResult.user
+        user: unbanResult.user,
       });
-
     } catch (error) {
       console.error('Admin unban user error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -410,7 +449,7 @@ export class AdminAPI {
    */
   async getBlockedWords(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
@@ -428,10 +467,13 @@ export class AdminAPI {
       });
 
       if (!wordsResult.success) {
-        return c.json({
-          success: false,
-          error: wordsResult.error || 'Failed to fetch blocked words'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: wordsResult.error || 'Failed to fetch blocked words',
+          },
+          500
+        );
       }
 
       const response: BlockedWordsResponse = {
@@ -442,13 +484,15 @@ export class AdminAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Admin get blocked words error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -457,25 +501,31 @@ export class AdminAPI {
    */
   async addBlockedWord(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
-      const body = await c.req.json() as AddBlockedWordRequest;
+      const body = (await c.req.json()) as AddBlockedWordRequest;
 
       // Validate input
       if (!body.word || !body.word.trim()) {
-        return c.json({
-          success: false,
-          error: 'Word is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Word is required',
+          },
+          400
+        );
       }
 
       if (!body.category || !body.severity) {
-        return c.json({
-          success: false,
-          error: 'Category and severity are required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Category and severity are required',
+          },
+          400
+        );
       }
 
       const adminUser = await this.getCurrentUser(c);
@@ -490,24 +540,32 @@ export class AdminAPI {
       );
 
       if (!addResult.success) {
-        return c.json({
-          success: false,
-          error: addResult.error || 'Failed to add blocked word'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: addResult.error || 'Failed to add blocked word',
+          },
+          400
+        );
       }
 
-      return c.json({
-        success: true,
-        message: 'Blocked word added successfully',
-        word: addResult.word
-      }, 201);
-
+      return c.json(
+        {
+          success: true,
+          message: 'Blocked word added successfully',
+          word: addResult.word,
+        },
+        201
+      );
     } catch (error) {
       console.error('Admin add blocked word error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -516,17 +574,20 @@ export class AdminAPI {
    */
   async removeBlockedWord(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
       const wordId = parseInt(c.req.param('id'));
 
       if (isNaN(wordId)) {
-        return c.json({
-          success: false,
-          error: 'Invalid word ID'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Invalid word ID',
+          },
+          400
+        );
       }
 
       const adminUser = await this.getCurrentUser(c);
@@ -538,23 +599,28 @@ export class AdminAPI {
       );
 
       if (!removeResult.success) {
-        return c.json({
-          success: false,
-          error: removeResult.error || 'Failed to remove blocked word'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: removeResult.error || 'Failed to remove blocked word',
+          },
+          400
+        );
       }
 
       return c.json({
         success: true,
-        message: 'Blocked word removed successfully'
+        message: 'Blocked word removed successfully',
       });
-
     } catch (error) {
       console.error('Admin remove blocked word error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -563,7 +629,7 @@ export class AdminAPI {
    */
   async getDashboard(c: Context): Promise<Response> {
     try {
-      if (!await this.validateAdmin(c)) {
+      if (!(await this.validateAdmin(c))) {
         return this.unauthorizedResponse(c);
       }
 
@@ -571,10 +637,13 @@ export class AdminAPI {
       const dashboardData = await this.adminService.getDashboardData();
 
       if (!dashboardData.success) {
-        return c.json({
-          success: false,
-          error: dashboardData.error || 'Failed to fetch dashboard data'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: dashboardData.error || 'Failed to fetch dashboard data',
+          },
+          500
+        );
       }
 
       const response: AdminDashboardResponse = {
@@ -583,13 +652,15 @@ export class AdminAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Admin get dashboard error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -618,16 +689,21 @@ export class AdminAPI {
   }
 
   private unauthorizedResponse(c: Context): Response {
-    return c.json({
-      success: false,
-      error: 'Admin access required'
-    }, 403);
+    return c.json(
+      {
+        success: false,
+        error: 'Admin access required',
+      },
+      403
+    );
   }
 
   private async notifyUserBanned(userId: string, reason: string, duration?: number): Promise<void> {
     try {
       // In real implementation, this would send a notification via bot
-      console.log(`User ${userId} banned: ${reason}${duration ? ` for ${duration} days` : ' permanently'}`);
+      console.log(
+        `User ${userId} banned: ${reason}${duration ? ` for ${duration} days` : ' permanently'}`
+      );
     } catch (error) {
       console.error('Error notifying banned user:', error);
     }

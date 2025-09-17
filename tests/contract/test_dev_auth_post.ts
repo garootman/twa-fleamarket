@@ -271,7 +271,9 @@ describe('Contract Test T030: POST /api/dev/auth', () => {
       expect(userData.lastName === null || typeof userData.lastName === 'string').toBe(true);
 
       expect(userData).toHaveProperty('profilePhotoUrl');
-      expect(userData.profilePhotoUrl === null || typeof userData.profilePhotoUrl === 'string').toBe(true);
+      expect(
+        userData.profilePhotoUrl === null || typeof userData.profilePhotoUrl === 'string'
+      ).toBe(true);
 
       expect(userData).toHaveProperty('createdAt');
       expect(typeof userData.createdAt).toBe('string');
@@ -709,7 +711,7 @@ describe('Contract Test T030: POST /api/dev/auth', () => {
       const request = new Request('http://localhost:8787/api/dev/auth', {
         method: 'POST',
         headers: {
-          'Host': 'localhost:8787',
+          Host: 'localhost:8787',
         },
         body: JSON.stringify(authRequest),
       });

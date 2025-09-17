@@ -267,7 +267,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -318,7 +318,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -359,7 +359,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -400,7 +400,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -426,11 +426,7 @@ describe('Contract Test T019: POST /api/upload', () => {
 
   describe('Authentication failure scenarios', () => {
     it('should return 401 for missing Authorization header', async () => {
-      const jpegFile = new File(
-        [new ArrayBuffer(1024)],
-        'test-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const jpegFile = new File([new ArrayBuffer(1024)], 'test-image.jpg', { type: 'image/jpeg' });
 
       const formData = new FormData();
       formData.append('image', jpegFile);
@@ -461,11 +457,7 @@ describe('Contract Test T019: POST /api/upload', () => {
     });
 
     it('should return 401 for invalid Bearer token', async () => {
-      const jpegFile = new File(
-        [new ArrayBuffer(1024)],
-        'test-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const jpegFile = new File([new ArrayBuffer(1024)], 'test-image.jpg', { type: 'image/jpeg' });
 
       const formData = new FormData();
       formData.append('image', jpegFile);
@@ -473,7 +465,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer invalid_token',
+          Authorization: 'Bearer invalid_token',
         },
         body: formData,
       });
@@ -505,7 +497,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -533,11 +525,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const validToken = 'valid_jwt_token_user';
 
       // Create a text file instead of image
-      const textFile = new File(
-        ['This is not an image'],
-        'document.txt',
-        { type: 'text/plain' }
-      );
+      const textFile = new File(['This is not an image'], 'document.txt', { type: 'text/plain' });
 
       const formData = new FormData();
       formData.append('image', textFile);
@@ -545,7 +533,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -571,11 +559,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const validToken = 'valid_jwt_token_user';
 
       // Create a BMP file (assuming it's not supported)
-      const bmpFile = new File(
-        [new ArrayBuffer(1024)],
-        'test-image.bmp',
-        { type: 'image/bmp' }
-      );
+      const bmpFile = new File([new ArrayBuffer(1024)], 'test-image.bmp', { type: 'image/bmp' });
 
       const formData = new FormData();
       formData.append('image', bmpFile);
@@ -583,7 +567,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -608,11 +592,9 @@ describe('Contract Test T019: POST /api/upload', () => {
       const validToken = 'valid_jwt_token_user';
 
       // Create an extremely large file (20MB - assuming limit is 10MB)
-      const oversizedFile = new File(
-        [new ArrayBuffer(20 * 1024 * 1024)],
-        'huge-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const oversizedFile = new File([new ArrayBuffer(20 * 1024 * 1024)], 'huge-image.jpg', {
+        type: 'image/jpeg',
+      });
 
       const formData = new FormData();
       formData.append('image', oversizedFile);
@@ -620,7 +602,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -645,11 +627,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const validToken = 'valid_jwt_token_user';
 
       // Create an empty file
-      const emptyFile = new File(
-        [],
-        'empty-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const emptyFile = new File([], 'empty-image.jpg', { type: 'image/jpeg' });
 
       const formData = new FormData();
       formData.append('image', emptyFile);
@@ -657,7 +635,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -694,7 +672,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
         body: formData,
       });
@@ -749,11 +727,7 @@ describe('Contract Test T019: POST /api/upload', () => {
     it('should return 403 for banned user', async () => {
       const bannedUserToken = 'valid_jwt_token_banned_user';
 
-      const jpegFile = new File(
-        [new ArrayBuffer(1024)],
-        'test-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const jpegFile = new File([new ArrayBuffer(1024)], 'test-image.jpg', { type: 'image/jpeg' });
 
       const formData = new FormData();
       formData.append('image', jpegFile);
@@ -761,7 +735,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${bannedUserToken}`,
+          Authorization: `Bearer ${bannedUserToken}`,
         },
         body: formData,
       });
@@ -791,7 +765,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
       });
 
@@ -815,7 +789,7 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
+          Authorization: `Bearer ${validToken}`,
         },
       });
 
@@ -838,11 +812,7 @@ describe('Contract Test T019: POST /api/upload', () => {
     it('should include proper CORS headers for authenticated requests', async () => {
       const validToken = 'valid_jwt_token_user';
 
-      const jpegFile = new File(
-        [new ArrayBuffer(1024)],
-        'test-image.jpg',
-        { type: 'image/jpeg' }
-      );
+      const jpegFile = new File([new ArrayBuffer(1024)], 'test-image.jpg', { type: 'image/jpeg' });
 
       const formData = new FormData();
       formData.append('image', jpegFile);
@@ -850,8 +820,8 @@ describe('Contract Test T019: POST /api/upload', () => {
       const request = new Request('http://localhost:8787/api/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Origin': 'http://localhost:5173',
+          Authorization: `Bearer ${validToken}`,
+          Origin: 'http://localhost:5173',
         },
         body: formData,
       });

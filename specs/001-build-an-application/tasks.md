@@ -50,6 +50,7 @@
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
 
 ### API Contract Tests
+
 - [x] T009 [P] Contract test POST /miniApp/init (existing auth) in tests/contract/test_auth_post.ts
 - [x] T010 [P] Contract test GET /api/me in tests/contract/test_me_get.ts
 - [x] T011 [P] Contract test GET /api/categories in tests/contract/test_categories_get.ts
@@ -66,6 +67,7 @@
 - [x] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts
 
 ### Admin Contract Tests
+
 - [x] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts
 - [x] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts
 - [x] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts
@@ -74,10 +76,12 @@
 - [x] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
 
 ### Development Contract Tests
+
 - [x] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
 - [x] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
 
 ### Integration Tests (User Journeys)
+
 - [x] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
 - [x] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts
 - [x] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts
@@ -91,6 +95,7 @@
 ## Phase 3.3: Database Models (ONLY after tests are failing)
 
 ### Database Models (Drizzle ORM)
+
 - [x] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts
 - [x] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts
 - [x] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts
@@ -106,6 +111,7 @@
 ## Phase 3.4: Service Layer & Bot Commands
 
 ### Service Layer
+
 - [x] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts
 - [x] T052 [P] UserService with profile management in backend/src/services/user-service.ts
 - [x] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts
@@ -117,6 +123,7 @@
 - [x] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts
 
 ### Bot Commands (Grammy)
+
 - [x] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts
 - [x] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts
 - [x] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts
@@ -125,6 +132,7 @@
 ## Phase 3.5: API Endpoints Implementation
 
 ### Core API Endpoints (Hono)
+
 - [x] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts
 - [x] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts
 - [x] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts
@@ -141,6 +149,7 @@
 - [x] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts
 
 ### Admin Endpoints
+
 - [x] T078 GET /api/admin/listings endpoint with all listings in backend/src/api/admin.ts
 - [x] T079 POST /api/admin/listings/{id}/stick endpoint in backend/src/api/admin.ts
 - [x] T080 POST /api/admin/users/{id}/ban endpoint in backend/src/api/admin.ts
@@ -149,36 +158,39 @@
 - [x] T083 POST /api/admin/blocked-words endpoint in backend/src/api/admin.ts
 
 ### Development Endpoints
+
 - [x] T084 GET /api/dev/mock-users endpoint for testing in backend/src/api/dev.ts
 - [x] T085 POST /api/dev/auth endpoint with auth bypass in backend/src/api/dev.ts
 
 ## Phase 3.6: Frontend Components
 
 ### Frontend Components (React)
-- [ ] T086 [P] App router with Telegram WebApp integration in frontend/src/App.tsx
-- [ ] T087 [P] Auth component with Telegram initData in frontend/src/components/Auth.tsx
-- [ ] T088 [P] Listing browse component with categories in frontend/src/components/ListingBrowse.tsx
-- [ ] T089 [P] Listing detail component with gallery in frontend/src/components/ListingDetail.tsx
-- [ ] T090 [P] Create listing form with preview in frontend/src/components/CreateListing.tsx
-- [ ] T091 [P] User profile component with listings in frontend/src/components/Profile.tsx
-- [ ] T092 [P] Admin panel component for moderation in frontend/src/components/AdminPanel.tsx
-- [ ] T093 [P] Search component with full-text search in frontend/src/components/Search.tsx
-- [ ] T094 [P] Image gallery with swipe navigation in frontend/src/components/ImageGallery.tsx
+
+- [x] T086 [P] App router with Telegram WebApp integration in frontend/src/App.tsx
+- [x] T087 [P] Auth component with Telegram initData in frontend/src/components/Auth.tsx
+- [x] T088 [P] Listing browse component with categories in frontend/src/components/ListingBrowse.tsx
+- [x] T089 [P] Listing detail component with gallery in frontend/src/components/ListingDetail.tsx
+- [x] T090 [P] Create listing form with preview in frontend/src/components/CreateListing.tsx
+- [x] T091 [P] User profile component with listings in frontend/src/components/Profile.tsx
+- [x] T092 [P] Admin panel component for moderation in frontend/src/components/AdminPanel.tsx
+- [x] T093 [P] Search component with full-text search in frontend/src/components/Search.tsx
+- [x] T094 [P] Image gallery with swipe navigation in frontend/src/components/ImageGallery.tsx
 
 ## Phase 3.7: Integration & Middleware
 
-- [ ] T095 Connect ListingService to KV caching for performance in backend/src/services/listing-service.ts
-- [ ] T096 Connect ImageService to CloudFlare R2 storage in backend/src/services/image-service.ts
-- [ ] T097 Setup auth middleware with session validation in backend/src/middleware/auth.ts
-- [ ] T098 Setup admin middleware with ADMIN_ID check in backend/src/middleware/admin.ts
-- [ ] T099 Setup request/response logging middleware in backend/src/middleware/logging.ts
-- [ ] T100 Setup CORS and security headers for production in backend/src/middleware/security.ts
-- [ ] T101 Setup profanity filtering with leo-profanity + custom blocklist in backend/src/middleware/content-filter.ts
-- [ ] T102 Connect bot webhook to Telegram API with error handling in backend/src/bot/webhook.ts
+- [x] T095 Connect ListingService to KV caching for performance in backend/src/services/listing-service.ts
+- [x] T096 Connect ImageService to CloudFlare R2 storage in backend/src/services/image-service.ts
+- [x] T097 Setup auth middleware with session validation in backend/src/middleware/auth.ts
+- [x] T098 Setup admin middleware with ADMIN_ID check in backend/src/middleware/admin.ts
+- [x] T099 Setup request/response logging middleware in backend/src/middleware/logging.ts
+- [x] T100 Setup CORS and security headers for production in backend/src/middleware/security.ts
+- [x] T101 Setup profanity filtering with leo-profanity + custom blocklist in backend/src/middleware/content-filter.ts
+- [x] T102 Connect bot webhook to Telegram API with error handling in backend/src/bot/webhook.ts
 
 ## Phase 3.8: Testing & Performance
 
 ### Performance & Testing
+
 - [ ] T103 [P] Unit tests for validation logic in backend/tests/unit/test_validation.ts
 - [ ] T104 [P] Unit tests for auth service in backend/tests/unit/test_auth_service.ts
 - [ ] T105 [P] Unit tests for listing service in backend/tests/unit/test_listing_service.ts
@@ -191,6 +203,7 @@
 ## Phase 3.9: Documentation & Final Setup
 
 ### Documentation & Final Setup
+
 - [ ] T111 [P] Update project README with setup instructions
 - [ ] T112 [P] Create database migration scripts for schema changes
 - [ ] T113 [P] Setup production environment variables and secrets

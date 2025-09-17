@@ -92,10 +92,13 @@ export class DevAPI {
    */
   async getMockUsers(c: Context): Promise<Response> {
     if (!this.isDevMode) {
-      return c.json({
-        success: false,
-        error: 'Development endpoints only available in development mode'
-      }, 403);
+      return c.json(
+        {
+          success: false,
+          error: 'Development endpoints only available in development mode',
+        },
+        403
+      );
     }
 
     try {
@@ -111,7 +114,7 @@ export class DevAPI {
           isAdmin: false,
           isBanned: false,
           scenario: 'Regular User',
-          description: 'Standard user with normal permissions for testing basic functionality'
+          description: 'Standard user with normal permissions for testing basic functionality',
         },
         {
           id: 'dev_user_2',
@@ -124,7 +127,7 @@ export class DevAPI {
           isAdmin: false,
           isBanned: false,
           scenario: 'Premium User',
-          description: 'Premium user with advanced features enabled for testing paid functionality'
+          description: 'Premium user with advanced features enabled for testing paid functionality',
         },
         {
           id: 'dev_user_3',
@@ -137,7 +140,7 @@ export class DevAPI {
           isAdmin: true,
           isBanned: false,
           scenario: 'Administrator',
-          description: 'Admin user with full permissions for testing moderation and admin features'
+          description: 'Admin user with full permissions for testing moderation and admin features',
         },
         {
           id: 'dev_user_4',
@@ -150,7 +153,7 @@ export class DevAPI {
           isAdmin: false,
           isBanned: true,
           scenario: 'Banned User',
-          description: 'Banned user for testing restriction and appeal workflows'
+          description: 'Banned user for testing restriction and appeal workflows',
         },
         {
           id: 'dev_user_5',
@@ -163,7 +166,7 @@ export class DevAPI {
           isAdmin: false,
           isBanned: false,
           scenario: 'Power Seller',
-          description: 'User with many listings for testing pagination and seller features'
+          description: 'User with many listings for testing pagination and seller features',
         },
         {
           id: 'dev_user_6',
@@ -176,31 +179,31 @@ export class DevAPI {
           isAdmin: false,
           isBanned: false,
           scenario: 'New User',
-          description: 'Fresh user account for testing onboarding and first-time workflows'
-        }
+          description: 'Fresh user account for testing onboarding and first-time workflows',
+        },
       ];
 
       const scenarios = [
         {
           name: 'Basic Testing',
           description: 'Regular user interactions and standard workflows',
-          users: ['dev_user_1', 'dev_user_6']
+          users: ['dev_user_1', 'dev_user_6'],
         },
         {
           name: 'Premium Features',
           description: 'Testing premium functionality and payments',
-          users: ['dev_user_2', 'dev_user_5']
+          users: ['dev_user_2', 'dev_user_5'],
         },
         {
           name: 'Admin & Moderation',
           description: 'Administrative functions and content moderation',
-          users: ['dev_user_3', 'dev_user_4']
+          users: ['dev_user_3', 'dev_user_4'],
         },
         {
           name: 'Edge Cases',
           description: 'Banned users, heavy usage, and error scenarios',
-          users: ['dev_user_4', 'dev_user_5']
-        }
+          users: ['dev_user_4', 'dev_user_5'],
+        },
       ];
 
       const response: MockUsersResponse = {
@@ -210,13 +213,15 @@ export class DevAPI {
       };
 
       return c.json(response);
-
     } catch (error) {
       console.error('Get mock users error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -225,33 +230,42 @@ export class DevAPI {
    */
   async authenticateMockUser(c: Context): Promise<Response> {
     if (!this.isDevMode) {
-      return c.json({
-        success: false,
-        error: 'Development endpoints only available in development mode'
-      }, 403);
+      return c.json(
+        {
+          success: false,
+          error: 'Development endpoints only available in development mode',
+        },
+        403
+      );
     }
 
     try {
-      const body = await c.req.json() as DevAuthRequest;
+      const body = (await c.req.json()) as DevAuthRequest;
 
       if (!body.mockUserId) {
-        return c.json({
-          success: false,
-          error: 'Mock user ID is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Mock user ID is required',
+          },
+          400
+        );
       }
 
       // Get mock user data
       const mockUsersResponse = await this.getMockUsers(c);
-      const mockUsersData = await mockUsersResponse.json() as MockUsersResponse;
+      const mockUsersData = (await mockUsersResponse.json()) as MockUsersResponse;
 
       const mockUser = mockUsersData.users?.find(u => u.id === body.mockUserId);
 
       if (!mockUser) {
-        return c.json({
-          success: false,
-          error: 'Mock user not found'
-        }, 404);
+        return c.json(
+          {
+            success: false,
+            error: 'Mock user not found',
+          },
+          404
+        );
       }
 
       // Create or get user in database
@@ -286,10 +300,13 @@ export class DevAPI {
       );
 
       if (!authResult.success) {
-        return c.json({
-          success: false,
-          error: 'Failed to create session'
-        }, 500);
+        return c.json(
+          {
+            success: false,
+            error: 'Failed to create session',
+          },
+          500
+        );
       }
 
       const response: DevAuthResponse = {
@@ -311,17 +328,22 @@ export class DevAPI {
 
       // Set cookie for browser sessions
       if (authResult.token) {
-        c.header('Set-Cookie', `auth-token=${authResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${authResult.expiresIn || 86400}`);
+        c.header(
+          'Set-Cookie',
+          `auth-token=${authResult.token}; HttpOnly; Secure; SameSite=Strict; Max-Age=${authResult.expiresIn || 86400}`
+        );
       }
 
       return c.json(response);
-
     } catch (error) {
       console.error('Mock user auth error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -330,14 +352,17 @@ export class DevAPI {
    */
   async seedDatabase(c: Context): Promise<Response> {
     if (!this.isDevMode) {
-      return c.json({
-        success: false,
-        error: 'Development endpoints only available in development mode'
-      }, 403);
+      return c.json(
+        {
+          success: false,
+          error: 'Development endpoints only available in development mode',
+        },
+        403
+      );
     }
 
     try {
-      const body = await c.req.json() as SeedDataRequest;
+      const body = (await c.req.json()) as SeedDataRequest;
 
       const seedOptions = {
         users: body.users || 10,
@@ -384,7 +409,7 @@ export class DevAPI {
       // Create seed users
       try {
         const mockUsersResponse = await this.getMockUsers(c);
-        const mockUsersData = await mockUsersResponse.json() as MockUsersResponse;
+        const mockUsersData = (await mockUsersResponse.json()) as MockUsersResponse;
 
         for (const mockUser of mockUsersData.users || []) {
           try {
@@ -431,18 +456,24 @@ export class DevAPI {
         message: 'Database seeding completed',
         results: seedResult,
         summary: {
-          totalCreated: seedResult.usersCreated + seedResult.categoriesCreated +
-                       seedResult.listingsCreated + seedResult.interactionsCreated + seedResult.flagsCreated,
+          totalCreated:
+            seedResult.usersCreated +
+            seedResult.categoriesCreated +
+            seedResult.listingsCreated +
+            seedResult.interactionsCreated +
+            seedResult.flagsCreated,
           errors: seedResult.errors.length,
-        }
+        },
       });
-
     } catch (error) {
       console.error('Seed database error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error during seeding'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error during seeding',
+        },
+        500
+      );
     }
   }
 
@@ -451,10 +482,13 @@ export class DevAPI {
    */
   async getHealthCheck(c: Context): Promise<Response> {
     if (!this.isDevMode) {
-      return c.json({
-        success: false,
-        error: 'Development endpoints only available in development mode'
-      }, 403);
+      return c.json(
+        {
+          success: false,
+          error: 'Development endpoints only available in development mode',
+        },
+        403
+      );
     }
 
     try {
@@ -482,25 +516,27 @@ export class DevAPI {
           listings: await this.countRecords('listings'),
           categories: await this.countRecords('categories'),
           flags: await this.countRecords('flags'),
-        }
+        },
       };
 
       return c.json({
         success: true,
         health,
       });
-
     } catch (error) {
       console.error('Health check error:', error);
-      return c.json({
-        success: false,
-        error: 'Health check failed',
-        health: {
-          status: 'unhealthy',
-          timestamp: new Date().toISOString(),
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Health check failed',
+          health: {
+            status: 'unhealthy',
+            timestamp: new Date().toISOString(),
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        },
+        500
+      );
     }
   }
 
@@ -552,7 +588,12 @@ export class DevAPI {
 /**
  * Setup development routes with Hono
  */
-export function setupDevRoutes(app: any, db: DrizzleD1Database, botToken: string, isDevMode = false) {
+export function setupDevRoutes(
+  app: any,
+  db: DrizzleD1Database,
+  botToken: string,
+  isDevMode = false
+) {
   const devAPI = new DevAPI(db, botToken, isDevMode);
 
   app.get('/api/dev/mock-users', (c: Context) => devAPI.getMockUsers(c));

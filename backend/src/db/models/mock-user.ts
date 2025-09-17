@@ -7,7 +7,7 @@ import {
   MockUserRole,
   getDefaultMockUsers,
   mockUserToTelegramUser,
-  MOCK_USER_CONSTRAINTS
+  MOCK_USER_CONSTRAINTS,
 } from '../../src/db/schema/sessions';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -80,9 +80,13 @@ export class MockUserModel {
    */
   async create(userData: CreateMockUser): Promise<MockUser> {
     // Validate Telegram ID range
-    if (userData.telegramId < MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID ||
-        userData.telegramId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID) {
-      throw new Error(`Telegram ID must be between ${MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID} and ${MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID}`);
+    if (
+      userData.telegramId < MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID ||
+      userData.telegramId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID
+    ) {
+      throw new Error(
+        `Telegram ID must be between ${MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID} and ${MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID}`
+      );
     }
 
     // Check if Telegram ID already exists
@@ -99,15 +103,24 @@ export class MockUserModel {
 
     // Validate lengths
     if (userData.username.length > MOCK_USER_CONSTRAINTS.MAX_USERNAME_LENGTH) {
-      throw new Error(`Username cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_USERNAME_LENGTH} characters`);
+      throw new Error(
+        `Username cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_USERNAME_LENGTH} characters`
+      );
     }
 
     if (userData.firstName.length > MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH) {
-      throw new Error(`First name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH} characters`);
+      throw new Error(
+        `First name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH} characters`
+      );
     }
 
-    if (userData.lastName && userData.lastName.length > MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH) {
-      throw new Error(`Last name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH} characters`);
+    if (
+      userData.lastName &&
+      userData.lastName.length > MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH
+    ) {
+      throw new Error(
+        `Last name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH} characters`
+      );
     }
 
     const [user] = await this.db
@@ -130,11 +143,7 @@ export class MockUserModel {
    * Find mock user by ID
    */
   async findById(id: number): Promise<MockUser | null> {
-    const [user] = await this.db
-      .select()
-      .from(mockUsers)
-      .where(eq(mockUsers.id, id))
-      .limit(1);
+    const [user] = await this.db.select().from(mockUsers).where(eq(mockUsers.id, id)).limit(1);
 
     return user || null;
   }
@@ -188,13 +197,16 @@ export class MockUserModel {
   /**
    * Update mock user
    */
-  async update(id: number, updates: {
-    username?: string;
-    firstName?: string;
-    lastName?: string;
-    role?: MockUserRole;
-    isActive?: boolean;
-  }): Promise<MockUser | null> {
+  async update(
+    id: number,
+    updates: {
+      username?: string;
+      firstName?: string;
+      lastName?: string;
+      role?: MockUserRole;
+      isActive?: boolean;
+    }
+  ): Promise<MockUser | null> {
     // Validate username uniqueness if updating
     if (updates.username) {
       const existingUser = await this.findByUsername(updates.username);
@@ -228,9 +240,7 @@ export class MockUserModel {
    * Delete mock user
    */
   async delete(id: number): Promise<boolean> {
-    const result = await this.db
-      .delete(mockUsers)
-      .where(eq(mockUsers.id, id));
+    const result = await this.db.delete(mockUsers).where(eq(mockUsers.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -239,16 +249,10 @@ export class MockUserModel {
    * Get users by role
    */
   async getByRole(role: MockUserRole, activeOnly = true): Promise<MockUser[]> {
-    let query = this.db
-      .select()
-      .from(mockUsers)
-      .where(eq(mockUsers.role, role));
+    let query = this.db.select().from(mockUsers).where(eq(mockUsers.role, role));
 
     if (activeOnly) {
-      query = query.where(and(
-        eq(mockUsers.role, role),
-        eq(mockUsers.isActive, true)
-      ));
+      query = query.where(and(eq(mockUsers.role, role), eq(mockUsers.isActive, true)));
     }
 
     return await query.orderBy(asc(mockUsers.username));
@@ -381,7 +385,9 @@ export class MockUserModel {
         await this.create(userData);
         created++;
       } catch (error) {
-        errors.push(`Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         skipped++;
       }
     }
@@ -411,7 +417,9 @@ export class MockUserModel {
         const user = await this.create(userData);
         created.push(user);
       } catch (error) {
-        errors.push(`Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
@@ -464,8 +472,7 @@ export class MockUserModel {
    * Reset all mock users (for test cleanup)
    */
   async resetAll(): Promise<number> {
-    const result = await this.db
-      .delete(mockUsers);
+    const result = await this.db.delete(mockUsers);
 
     return result.rowsAffected;
   }
@@ -474,9 +481,7 @@ export class MockUserModel {
    * Reset mock users by role
    */
   async resetByRole(role: MockUserRole): Promise<number> {
-    const result = await this.db
-      .delete(mockUsers)
-      .where(eq(mockUsers.role, role));
+    const result = await this.db.delete(mockUsers).where(eq(mockUsers.role, role));
 
     return result.rowsAffected;
   }
@@ -496,8 +501,9 @@ export class MockUserModel {
     }
 
     const nextId = lastUser.telegramId + 1;
-    return nextId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID ?
-      MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID : nextId;
+    return nextId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID
+      ? MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID
+      : nextId;
   }
 
   /**
@@ -534,7 +540,9 @@ export class MockUserModel {
         const user = await this.create(userData);
         created.push(user);
       } catch (error) {
-        errors.push(`Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Error creating user ${userData.username}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
@@ -545,9 +553,7 @@ export class MockUserModel {
    * Get comprehensive mock user statistics
    */
   async getStats(): Promise<MockUserStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(mockUsers);
+    const [totalResult] = await this.db.select({ count: count() }).from(mockUsers);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -568,10 +574,13 @@ export class MockUserModel {
       .from(mockUsers)
       .groupBy(mockUsers.role);
 
-    const usersByRole = Object.values(MockUserRole).reduce((acc, role) => {
-      acc[role] = usersByRoleResults.find(r => r.role === role)?.count || 0;
-      return acc;
-    }, {} as Record<MockUserRole, number>);
+    const usersByRole = Object.values(MockUserRole).reduce(
+      (acc, role) => {
+        acc[role] = usersByRoleResults.find(r => r.role === role)?.count || 0;
+        return acc;
+      },
+      {} as Record<MockUserRole, number>
+    );
 
     const recentUsers = await this.db
       .select()
@@ -600,9 +609,7 @@ export class MockUserModel {
     usersByRole: Record<MockUserRole, number>;
     usersWithRealAccount: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(mockUsers);
+    const [totalResult] = await this.db.select({ count: count() }).from(mockUsers);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -618,10 +625,13 @@ export class MockUserModel {
       .from(mockUsers)
       .groupBy(mockUsers.role);
 
-    const usersByRole = Object.values(MockUserRole).reduce((acc, role) => {
-      acc[role] = usersByRoleResults.find(r => r.role === role)?.count || 0;
-      return acc;
-    }, {} as Record<MockUserRole, number>);
+    const usersByRole = Object.values(MockUserRole).reduce(
+      (acc, role) => {
+        acc[role] = usersByRoleResults.find(r => r.role === role)?.count || 0;
+        return acc;
+      },
+      {} as Record<MockUserRole, number>
+    );
 
     return {
       totalUsers: totalResult.count,
@@ -649,9 +659,13 @@ export class MockUserModel {
   validateUserData(userData: CreateMockUser): string[] {
     const errors: string[] = [];
 
-    if (userData.telegramId < MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID ||
-        userData.telegramId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID) {
-      errors.push(`Telegram ID must be between ${MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID} and ${MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID}`);
+    if (
+      userData.telegramId < MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID ||
+      userData.telegramId > MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID
+    ) {
+      errors.push(
+        `Telegram ID must be between ${MOCK_USER_CONSTRAINTS.MIN_TELEGRAM_ID} and ${MOCK_USER_CONSTRAINTS.MAX_TELEGRAM_ID}`
+      );
     }
 
     if (userData.username.length === 0) {
@@ -667,11 +681,18 @@ export class MockUserModel {
     }
 
     if (userData.firstName.length > MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH) {
-      errors.push(`First name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH} characters`);
+      errors.push(
+        `First name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_FIRST_NAME_LENGTH} characters`
+      );
     }
 
-    if (userData.lastName && userData.lastName.length > MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH) {
-      errors.push(`Last name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH} characters`);
+    if (
+      userData.lastName &&
+      userData.lastName.length > MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH
+    ) {
+      errors.push(
+        `Last name cannot exceed ${MOCK_USER_CONSTRAINTS.MAX_LAST_NAME_LENGTH} characters`
+      );
     }
 
     if (!Object.values(MockUserRole).includes(userData.role)) {
@@ -773,12 +794,12 @@ export {
   MockUserRole,
   getDefaultMockUsers,
   mockUserToTelegramUser,
-  MOCK_USER_CONSTRAINTS
+  MOCK_USER_CONSTRAINTS,
 };
 export type {
   MockUserWithDetails,
   MockUserSearchFilters,
   MockUserListResponse,
   TestScenario,
-  MockUserStats
+  MockUserStats,
 };

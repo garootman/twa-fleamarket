@@ -29,6 +29,13 @@ export const users = sqliteTable(
     supportsInlineQueries: integer('supportsInlineQueries', { mode: 'boolean' }),
     canJoinGroups: integer('canJoinGroups', { mode: 'boolean' }),
     canReadAllGroupMessages: integer('canReadAllGroupMessages', { mode: 'boolean' }),
+
+    // Admin and moderation fields
+    isAdmin: integer('isAdmin', { mode: 'boolean' }).default(false),
+    isBanned: integer('isBanned', { mode: 'boolean' }).default(false),
+    banReason: text('banReason'),
+    bannedAt: text('bannedAt'),
+    warningCount: integer('warningCount').default(0),
   },
   table => ({
     telegramIdIdx: index('telegramIdIndex').on(table.telegramId),
@@ -77,6 +84,13 @@ export const UserInsertSchema = z.object({
   supportsInlineQueries: z.boolean().optional(),
   canJoinGroups: z.boolean().optional(),
   canReadAllGroupMessages: z.boolean().optional(),
+
+  // Admin and moderation fields
+  isAdmin: z.boolean().optional(),
+  isBanned: z.boolean().optional(),
+  banReason: z.string().optional(),
+  bannedAt: z.string().optional(),
+  warningCount: z.number().optional(),
 });
 
 // TokenInsertSchema removed - now handled by KV

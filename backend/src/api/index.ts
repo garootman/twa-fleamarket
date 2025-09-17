@@ -80,21 +80,24 @@ export function createAPIApp(
   setupAPIRoutes(apiApp, db, kv, r2, botToken, isDevMode);
 
   // 404 handler for API routes
-  apiApp.all('*', (c) => {
-    return c.json({
-      success: false,
-      error: 'API endpoint not found',
-      availableEndpoints: [
-        'POST /api/auth',
-        'GET /api/me',
-        'GET /api/categories',
-        'GET /api/listings',
-        'POST /api/listings',
-        'POST /api/upload',
-        'GET /api/admin/listings',
-        'GET /api/dev/mock-users (dev mode only)'
-      ]
-    }, 404);
+  apiApp.all('*', c => {
+    return c.json(
+      {
+        success: false,
+        error: 'API endpoint not found',
+        availableEndpoints: [
+          'POST /api/auth',
+          'GET /api/me',
+          'GET /api/categories',
+          'GET /api/listings',
+          'POST /api/listings',
+          'POST /api/upload',
+          'GET /api/admin/listings',
+          'GET /api/dev/mock-users (dev mode only)',
+        ],
+      },
+      404
+    );
   });
 
   return apiApp;

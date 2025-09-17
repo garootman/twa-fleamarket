@@ -450,14 +450,17 @@ describe('Contract Test T024: POST /api/admin/listings/{id}/stick', () => {
       const invalidListingId = 'not-a-valid-uuid';
       const stickRequest: StickRequest = { days: 7 };
 
-      const request = new Request(`http://localhost:8787/api/admin/listings/${invalidListingId}/stick`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-        body: JSON.stringify(stickRequest),
-      });
+      const request = new Request(
+        `http://localhost:8787/api/admin/listings/${invalidListingId}/stick`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+          body: JSON.stringify(stickRequest),
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -480,14 +483,17 @@ describe('Contract Test T024: POST /api/admin/listings/{id}/stick', () => {
       const nonExistentId = '99999999-9999-9999-9999-999999999999';
       const stickRequest: StickRequest = { days: 7 };
 
-      const request = new Request(`http://localhost:8787/api/admin/listings/${nonExistentId}/stick`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-        body: JSON.stringify(stickRequest),
-      });
+      const request = new Request(
+        `http://localhost:8787/api/admin/listings/${nonExistentId}/stick`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+          body: JSON.stringify(stickRequest),
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -743,7 +749,7 @@ describe('Contract Test T024: POST /api/admin/listings/{id}/stick', () => {
       const request = new Request(`http://localhost:8787/api/admin/listings/${listingId}/stick`, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer mock_admin_jwt_token',
+          Authorization: 'Bearer mock_admin_jwt_token',
         },
         body: JSON.stringify(stickRequest),
       });

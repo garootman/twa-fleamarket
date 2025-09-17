@@ -125,11 +125,13 @@ interface BotResponse {
   message_id?: number;
   parse_mode?: 'HTML' | 'Markdown' | 'MarkdownV2';
   reply_markup?: {
-    inline_keyboard?: Array<Array<{
-      text: string;
-      url?: string;
-      callback_data?: string;
-    }>>;
+    inline_keyboard?: Array<
+      Array<{
+        text: string;
+        url?: string;
+        callback_data?: string;
+      }>
+    >;
   };
 }
 
@@ -202,8 +204,8 @@ const mockDB: D1Database = {
           return mockListings.find(l => params.includes(l.id));
         }
         if (query.includes('SELECT') && query.includes('communication_threads')) {
-          return mockThreads.find(t =>
-            params.includes(t.listing_id) && params.includes(t.buyer_id)
+          return mockThreads.find(
+            t => params.includes(t.listing_id) && params.includes(t.buyer_id)
           );
         }
         return null;
@@ -223,7 +225,13 @@ const mockDB: D1Database = {
           mockThreads.push(newThread);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newThread.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newThread.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         if (query.includes('INSERT INTO messages')) {
@@ -241,7 +249,13 @@ const mockDB: D1Database = {
           mockMessages.push(newMessage);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newMessage.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newMessage.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         return { success: true, meta: {} as any };
@@ -252,7 +266,7 @@ const mockDB: D1Database = {
           return {
             results: mockMessages.filter(m => m.thread_id === threadId),
             success: true,
-            meta: {} as any
+            meta: {} as any,
           };
         }
         return { results: [], success: true, meta: {} as any };
@@ -435,8 +449,8 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
       expect(mockThreads.length).toBe(1);
 
       // System should create initial message in thread
-      const systemMessage = mockMessages.find(m =>
-        m.thread_id === mockThreads[0].id && m.message_type === 'system'
+      const systemMessage = mockMessages.find(
+        m => m.thread_id === mockThreads[0].id && m.message_type === 'system'
       );
       expect(systemMessage).toBeDefined();
       expect(systemMessage?.content).toMatch(/Jane.*interested.*iPhone/i);
@@ -578,7 +592,9 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
       expect(mockMessages.length).toBe(1);
       expect(mockMessages[0].sender_id).toBe(987654321);
       expect(mockMessages[0].recipient_id).toBe(123456789);
-      expect(mockMessages[0].content).toBe('Hi, is this iPhone still available? Can we meet tomorrow?');
+      expect(mockMessages[0].content).toBe(
+        'Hi, is this iPhone still available? Can we meet tomorrow?'
+      );
 
       // Seller responds
       const sellerMessageUpdate: TelegramUpdate = {
@@ -596,7 +612,7 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
             id: 123456789,
             type: 'private',
           },
-          text: 'Yes, it\'s still available! Tomorrow at 2 PM works for me.',
+          text: "Yes, it's still available! Tomorrow at 2 PM works for me.",
         },
       };
 
@@ -656,7 +672,7 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
             id: 987654321,
             type: 'private',
           },
-          text: 'What\'s the battery health?',
+          text: "What's the battery health?",
         },
       };
 
@@ -985,7 +1001,7 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
       const analyticsRequest = new Request('http://localhost:8787/api/listings/1/analytics', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_token',
+          Authorization: 'Bearer mock_token',
         },
       });
 
@@ -1062,7 +1078,7 @@ describe('Integration Test T033: Buyer-Seller Communication Flow', () => {
       const historyRequest = new Request('http://localhost:8787/api/messages/thread/1', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_buyer_token',
+          Authorization: 'Bearer mock_buyer_token',
         },
       });
 

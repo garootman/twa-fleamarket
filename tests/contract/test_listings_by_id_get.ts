@@ -95,12 +95,10 @@ const mockDB: D1Database = {
         user_id: 123456789,
         category_id: 1,
         title: 'Amazing Product for Sale',
-        description: 'This is a detailed description of an amazing product that you definitely want to buy.',
+        description:
+          'This is a detailed description of an amazing product that you definitely want to buy.',
         price_usd: 99.99,
-        images: [
-          'https://example.com/image1.jpg',
-          'https://example.com/image2.jpg'
-        ],
+        images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
         created_at: '2025-09-15T10:00:00Z',
         expires_at: '2025-10-15T10:00:00Z',
         status: 'active',
@@ -134,7 +132,7 @@ const mockDB: D1Database = {
           {
             type: 'color_highlight',
             expires_at: '2025-10-01T10:00:00Z',
-          }
+          },
         ],
       }),
       run: async () => ({ success: true, meta: {} as any }),
@@ -272,7 +270,9 @@ describe('Contract Test T014: GET /api/listings/{id}', () => {
       expect(() => new Date(listingData.expires_at)).not.toThrow();
 
       expect(listingData).toHaveProperty('status');
-      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(listingData.status);
+      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+        listingData.status
+      );
 
       expect(listingData).toHaveProperty('is_sticky');
       expect(typeof listingData.is_sticky).toBe('boolean');
@@ -291,7 +291,9 @@ describe('Contract Test T014: GET /api/listings/{id}', () => {
       expect(typeof listingData.contact_username).toBe('string');
 
       expect(listingData).toHaveProperty('published_at');
-      expect(listingData.published_at === null || typeof listingData.published_at === 'string').toBe(true);
+      expect(
+        listingData.published_at === null || typeof listingData.published_at === 'string'
+      ).toBe(true);
 
       expect(listingData).toHaveProperty('time_left');
       expect(typeof listingData.time_left).toBe('string');
@@ -450,9 +452,16 @@ describe('Contract Test T014: GET /api/listings/{id}', () => {
       expect(listingData.user.first_name).toBeDefined();
 
       // These can be null
-      expect(listingData.user.username === null || typeof listingData.user.username === 'string').toBe(true);
-      expect(listingData.user.last_name === null || typeof listingData.user.last_name === 'string').toBe(true);
-      expect(listingData.user.profile_photo_url === null || typeof listingData.user.profile_photo_url === 'string').toBe(true);
+      expect(
+        listingData.user.username === null || typeof listingData.user.username === 'string'
+      ).toBe(true);
+      expect(
+        listingData.user.last_name === null || typeof listingData.user.last_name === 'string'
+      ).toBe(true);
+      expect(
+        listingData.user.profile_photo_url === null ||
+          typeof listingData.user.profile_photo_url === 'string'
+      ).toBe(true);
     });
   });
 

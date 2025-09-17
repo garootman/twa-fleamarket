@@ -211,8 +211,8 @@ const mockDB: D1Database = {
               last_row_id: newListing.id,
               duration: 10,
               rows_read: 0,
-              rows_written: 1
-            }
+              rows_written: 1,
+            },
           };
         }
         return { success: true, meta: {} as any };
@@ -373,7 +373,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
         new Request('http://localhost:8787/api/upload', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
           },
           body: uploadFormData,
         }),
@@ -391,7 +391,8 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       // Step 3: Create listing draft
       const createListingRequest: CreateListingRequest = {
         title: 'iPhone 14 Pro Max',
-        description: 'Excellent condition iPhone 14 Pro Max, 256GB, Space Black. Used for 6 months, includes original box and charger.',
+        description:
+          'Excellent condition iPhone 14 Pro Max, 256GB, Space Black. Used for 6 months, includes original box and charger.',
         price: 89999, // 899.99 in cents
         category_id: 2, // Smartphones category
         condition: 'excellent',
@@ -426,7 +427,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
         new Request(`http://localhost:8787/api/listings/${listing.id}/preview`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
           },
         }),
         mockEnv,
@@ -441,11 +442,10 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       expect(previewData.expires_at).toBeDefined();
 
       // Verify preview URL is accessible
-      const previewUrlResponse = await worker.fetch(
-        new Request(previewData.preview_url),
-        mockEnv,
-        { waitUntil: () => {}, passThroughOnException: () => {} }
-      );
+      const previewUrlResponse = await worker.fetch(new Request(previewData.preview_url), mockEnv, {
+        waitUntil: () => {},
+        passThroughOnException: () => {},
+      });
 
       expect(previewUrlResponse.status).toBe(200);
 
@@ -454,7 +454,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
         new Request(`http://localhost:8787/api/listings/${listing.id}/publish`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${authToken}`,
+            Authorization: `Bearer ${authToken}`,
           },
         }),
         mockEnv,
@@ -478,9 +478,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       expect(searchResponse.status).toBe(200);
 
       const searchResults = await searchResponse.json();
-      expect(searchResults.listings).toContain(
-        expect.objectContaining({ id: listing.id })
-      );
+      expect(searchResults.listings).toContain(expect.objectContaining({ id: listing.id }));
     });
   });
 
@@ -493,13 +491,17 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
 
       // Upload first image
       const image1FormData = new FormData();
-      image1FormData.append('image', new Blob(['image1 data'], { type: 'image/jpeg' }), 'image1.jpg');
+      image1FormData.append(
+        'image',
+        new Blob(['image1 data'], { type: 'image/jpeg' }),
+        'image1.jpg'
+      );
       image1FormData.append('alt_text', 'Front view');
 
       const upload1Response = await worker.fetch(
         new Request('http://localhost:8787/api/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
           body: image1FormData,
         }),
         mockEnv,
@@ -511,13 +513,17 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
 
       // Upload second image
       const image2FormData = new FormData();
-      image2FormData.append('image', new Blob(['image2 data'], { type: 'image/png' }), 'image2.png');
+      image2FormData.append(
+        'image',
+        new Blob(['image2 data'], { type: 'image/png' }),
+        'image2.png'
+      );
       image2FormData.append('alt_text', 'Side view');
 
       const upload2Response = await worker.fetch(
         new Request('http://localhost:8787/api/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
           body: image2FormData,
         }),
         mockEnv,
@@ -567,12 +573,16 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
 
       // Try to upload invalid format
       const invalidFormData = new FormData();
-      invalidFormData.append('image', new Blob(['not an image'], { type: 'text/plain' }), 'text.txt');
+      invalidFormData.append(
+        'image',
+        new Blob(['not an image'], { type: 'text/plain' }),
+        'text.txt'
+      );
 
       const invalidResponse = await worker.fetch(
         new Request('http://localhost:8787/api/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
           body: invalidFormData,
         }),
         mockEnv,
@@ -589,7 +599,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       const largeResponse = await worker.fetch(
         new Request('http://localhost:8787/api/upload', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
           body: largeFormData,
         }),
         mockEnv,
@@ -654,7 +664,8 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       // Test content with blocked words
       const spamRequest: CreateListingRequest = {
         title: 'URGENT SALE!!! MUST SEE!!!',
-        description: 'Buy now or regret forever! Limited time offer! Call immediately! This is the best deal ever!',
+        description:
+          'Buy now or regret forever! Limited time offer! Call immediately! This is the best deal ever!',
         price: 1,
         category_id: 1,
         condition: 'new',
@@ -764,7 +775,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       const previewResponse = await worker.fetch(
         new Request(`http://localhost:8787/api/listings/${listing.id}/preview`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }),
         mockEnv,
         { waitUntil: () => {}, passThroughOnException: () => {} }
@@ -795,11 +806,10 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       // Mock expired preview URL
       const expiredPreviewUrl = 'http://localhost:8787/api/listings/preview/expired-token-123';
 
-      const expiredResponse = await worker.fetch(
-        new Request(expiredPreviewUrl),
-        mockEnv,
-        { waitUntil: () => {}, passThroughOnException: () => {} }
-      );
+      const expiredResponse = await worker.fetch(new Request(expiredPreviewUrl), mockEnv, {
+        waitUntil: () => {},
+        passThroughOnException: () => {},
+      });
 
       expect(expiredResponse.status).toBe(410); // Gone
 
@@ -845,7 +855,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       const publishResponse = await worker.fetch(
         new Request(`http://localhost:8787/api/listings/${listing.id}/publish`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }),
         mockEnv,
         { waitUntil: () => {}, passThroughOnException: () => {} }
@@ -863,9 +873,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       expect(categoryResponse.status).toBe(200);
 
       const categoryResults = await categoryResponse.json();
-      expect(categoryResults.listings).toContain(
-        expect.objectContaining({ id: listing.id })
-      );
+      expect(categoryResults.listings).toContain(expect.objectContaining({ id: listing.id }));
 
       // Verify full-text search works
       const searchResponse = await worker.fetch(
@@ -877,9 +885,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       expect(searchResponse.status).toBe(200);
 
       const searchResults = await searchResponse.json();
-      expect(searchResults.listings).toContain(
-        expect.objectContaining({ id: listing.id })
-      );
+      expect(searchResults.listings).toContain(expect.objectContaining({ id: listing.id }));
     });
 
     it('should set proper expiration dates based on listing type', async () => {
@@ -918,7 +924,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       const publishResponse = await worker.fetch(
         new Request(`http://localhost:8787/api/listings/${regularListing.id}/publish`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }),
         mockEnv,
         { waitUntil: () => {}, passThroughOnException: () => {} }
@@ -929,7 +935,9 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       // Regular listings should expire after 30 days
       const expiresAt = new Date(publishedListing.expires_at!);
       const publishedAt = new Date(publishedListing.published_at!);
-      const daysDifference = Math.ceil((expiresAt.getTime() - publishedAt.getTime()) / (1000 * 60 * 60 * 24));
+      const daysDifference = Math.ceil(
+        (expiresAt.getTime() - publishedAt.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       expect(daysDifference).toBe(30);
     });
@@ -974,7 +982,7 @@ describe('Integration Test T032: Listing Creation Flow with Preview', () => {
       // Verify listing status remains unchanged after failed publish
       const getResponse = await worker.fetch(
         new Request(`http://localhost:8787/api/listings/${listing.id}`, {
-          headers: { 'Authorization': `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }),
         mockEnv,
         { waitUntil: () => {}, passThroughOnException: () => {} }

@@ -72,7 +72,6 @@ export class StartCommand {
       } else {
         await this.sendGroupWelcomeMessage(ctx);
       }
-
     } catch (error) {
       console.error('Error handling /start command:', error);
       await this.sendErrorMessage(ctx);
@@ -207,8 +206,10 @@ Need help? Use /help or /question to contact support.
 /question - Contact admin for support
     `.trim();
 
-    const keyboard = new InlineKeyboard()
-      .url('💬 Start Private Chat', `https://t.me/${this.context.botName}?start=group_referral`);
+    const keyboard = new InlineKeyboard().url(
+      '💬 Start Private Chat',
+      `https://t.me/${this.context.botName}?start=group_referral`
+    );
 
     await ctx.reply(groupMessage, {
       reply_markup: keyboard,
@@ -411,7 +412,10 @@ Open the marketplace to see detailed statistics!
       await ctx.editMessageText(accountMessage, {
         parse_mode: 'Markdown',
         reply_markup: new InlineKeyboard()
-          .webApp('📊 View Full Stats', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/profile`)
+          .webApp(
+            '📊 View Full Stats',
+            `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/profile`
+          )
           .row()
           .text('← Back to Start', 'back_to_start'),
       });
@@ -447,7 +451,10 @@ Open the marketplace to see detailed statistics!
     await ctx.editMessageText(settingsMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('⚙️ Advanced Settings', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/settings`)
+        .webApp(
+          '⚙️ Advanced Settings',
+          `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/settings`
+        )
         .row()
         .text('← Back to Start', 'back_to_start'),
     });

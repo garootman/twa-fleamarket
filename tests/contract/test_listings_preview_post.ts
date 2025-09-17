@@ -291,7 +291,9 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       expect(listing.images.length).toBeLessThanOrEqual(9);
 
       expect(listing).toHaveProperty('status');
-      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(listing.status);
+      expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+        listing.status
+      );
 
       expect(listing).toHaveProperty('user');
       expect(typeof listing.user).toBe('object');
@@ -305,7 +307,7 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       expect(Array.isArray(listing.premium_features)).toBe(true);
 
       // Validate warnings array (should contain strings)
-      previewData.warnings.forEach((warning) => {
+      previewData.warnings.forEach(warning => {
         expect(typeof warning).toBe('string');
         expect(warning.length).toBeGreaterThan(0);
       });
@@ -315,13 +317,16 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const wellFormedListingId = 'test-well-formed-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${wellFormedListingId}/preview`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${wellFormedListingId}/preview`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -350,13 +355,16 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const problematicListingId = 'test-problematic-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${problematicListingId}/preview`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${problematicListingId}/preview`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -384,7 +392,7 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       // - "Description might be too generic"
       // - "Price seems unusually high/low for category"
       // - "Images quality could be improved"
-      previewData.warnings.forEach((warning) => {
+      previewData.warnings.forEach(warning => {
         expect(typeof warning).toBe('string');
         expect(warning.length).toBeGreaterThan(0);
       });
@@ -394,13 +402,16 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const popularCategoryListingId = 'test-popular-category-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${popularCategoryListingId}/preview`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${popularCategoryListingId}/preview`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented
@@ -712,13 +723,16 @@ describe('Contract Test T020: POST /api/listings/{id}/preview', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const archivedListingId = 'test-archived-listing-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${archivedListingId}/preview`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${archivedListingId}/preview`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

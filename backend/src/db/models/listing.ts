@@ -15,7 +15,7 @@ import {
   validateListingOwnership,
   canUserCreateListing,
   isValidStatusTransition,
-  LISTING_CONSTRAINTS
+  LISTING_CONSTRAINTS,
 } from '../../src/db/schema/listings';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -90,13 +90,19 @@ export class ListingModel {
     const isAdmin = false; // Would be checked from user data
 
     if (!canUserCreateListing(userListingsCount, isAdmin)) {
-      throw new Error(`Maximum ${LISTING_CONSTRAINTS.MAX_LISTINGS_PER_USER} listings per user exceeded`);
+      throw new Error(
+        `Maximum ${LISTING_CONSTRAINTS.MAX_LISTINGS_PER_USER} listings per user exceeded`
+      );
     }
 
     // Validate price range
-    if (listingData.priceUsd < LISTING_CONSTRAINTS.MIN_PRICE ||
-        listingData.priceUsd > LISTING_CONSTRAINTS.MAX_PRICE) {
-      throw new Error(`Price must be between $${LISTING_CONSTRAINTS.MIN_PRICE} and $${LISTING_CONSTRAINTS.MAX_PRICE}`);
+    if (
+      listingData.priceUsd < LISTING_CONSTRAINTS.MIN_PRICE ||
+      listingData.priceUsd > LISTING_CONSTRAINTS.MAX_PRICE
+    ) {
+      throw new Error(
+        `Price must be between $${LISTING_CONSTRAINTS.MIN_PRICE} and $${LISTING_CONSTRAINTS.MAX_PRICE}`
+      );
     }
 
     const id = generateListingId();
@@ -117,7 +123,9 @@ export class ListingModel {
         status: isDraft ? ListingStatus.DRAFT : ListingStatus.ACTIVE,
         publishedAt: isDraft ? null : now,
         createdAt: now,
-        expiresAt: new Date(Date.now() + LISTING_CONSTRAINTS.EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(
+          Date.now() + LISTING_CONSTRAINTS.EXPIRATION_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString(),
       })
       .returning();
 
@@ -128,11 +136,7 @@ export class ListingModel {
    * Find listing by ID
    */
   async findById(id: string): Promise<Listing | null> {
-    const [listing] = await this.db
-      .select()
-      .from(listings)
-      .where(eq(listings.id, id))
-      .limit(1);
+    const [listing] = await this.db.select().from(listings).where(eq(listings.id, id)).limit(1);
 
     return listing || null;
   }
@@ -150,9 +154,12 @@ export class ListingModel {
       flagCount: 0,
       reportCount: 0,
       premiumFeaturesActive: [],
-      daysSinceCreated: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      hoursSinceLastBump: listing.bumpedAt ?
-        Math.floor((Date.now() - new Date(listing.bumpedAt).getTime()) / (60 * 60 * 1000)) : undefined,
+      daysSinceCreated: Math.floor(
+        (Date.now() - new Date(listing.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      hoursSinceLastBump: listing.bumpedAt
+        ? Math.floor((Date.now() - new Date(listing.bumpedAt).getTime()) / (60 * 60 * 1000))
+        : undefined,
       viewsToday: 0,
       avgDailyViews: 0,
       contactClickCount: 0,
@@ -179,13 +186,24 @@ export class ListingModel {
     }
 
     // Validate status transition
-    if (updateData.status && !isValidStatusTransition(existingListing.status as ListingStatus, updateData.status as ListingStatus)) {
-      throw new Error(`Invalid status transition from ${existingListing.status} to ${updateData.status}`);
+    if (
+      updateData.status &&
+      !isValidStatusTransition(
+        existingListing.status as ListingStatus,
+        updateData.status as ListingStatus
+      )
+    ) {
+      throw new Error(
+        `Invalid status transition from ${existingListing.status} to ${updateData.status}`
+      );
     }
 
     // Set publishedAt when moving from draft to active
     const updates: any = { ...updateData };
-    if (updateData.status === ListingStatus.ACTIVE && existingListing.status === ListingStatus.DRAFT) {
+    if (
+      updateData.status === ListingStatus.ACTIVE &&
+      existingListing.status === ListingStatus.DRAFT
+    ) {
       updates.publishedAt = new Date().toISOString();
     }
 
@@ -219,15 +237,15 @@ export class ListingModel {
 
     // Check if can bump
     if (!canBumpListing(listing)) {
-      const nextBump = listing.bumpedAt ?
-        new Date(new Date(listing.bumpedAt).getTime() + 24 * 60 * 60 * 1000).toISOString() :
-        new Date().toISOString();
+      const nextBump = listing.bumpedAt
+        ? new Date(new Date(listing.bumpedAt).getTime() + 24 * 60 * 60 * 1000).toISOString()
+        : new Date().toISOString();
 
       return {
         success: false,
         listing: null,
         error: 'Cannot bump listing yet',
-        nextBumpAvailable: nextBump
+        nextBumpAvailable: nextBump,
       };
     }
 
@@ -237,7 +255,9 @@ export class ListingModel {
       .set({
         bumpedAt: now,
         status: ListingStatus.ACTIVE, // Reactivate if expired
-        expiresAt: new Date(Date.now() + LISTING_CONSTRAINTS.EXPIRATION_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(
+          Date.now() + LISTING_CONSTRAINTS.EXPIRATION_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString(),
       })
       .where(eq(listings.id, id))
       .returning();
@@ -266,7 +286,7 @@ export class ListingModel {
     await this.db
       .update(listings)
       .set({
-        viewCount: sql`${listings.viewCount} + 1`
+        viewCount: sql`${listings.viewCount} + 1`,
       })
       .where(eq(listings.id, id));
   }
@@ -322,7 +342,9 @@ export class ListingModel {
 
     // Expiring soon filter
     if (filters.expiringWithinDays) {
-      const futureDate = new Date(Date.now() + filters.expiringWithinDays * 24 * 60 * 60 * 1000).toISOString();
+      const futureDate = new Date(
+        Date.now() + filters.expiringWithinDays * 24 * 60 * 60 * 1000
+      ).toISOString();
       conditions.push(lte(listings.expiresAt, futureDate));
     }
 
@@ -381,7 +403,7 @@ export class ListingModel {
         orderBy = [
           desc(listings.isSticky),
           desc(sql`COALESCE(${listings.bumpedAt}, ${listings.createdAt})`),
-          desc(listings.createdAt)
+          desc(listings.createdAt),
         ];
     }
 
@@ -403,11 +425,14 @@ export class ListingModel {
       premiumFeaturesActive: [
         listing.isSticky ? 'sticky' : '',
         listing.isHighlighted ? 'highlighted' : '',
-        listing.autoBumpEnabled ? 'auto_bump' : ''
+        listing.autoBumpEnabled ? 'auto_bump' : '',
       ].filter(Boolean),
-      daysSinceCreated: Math.floor((Date.now() - new Date(listing.createdAt).getTime()) / (24 * 60 * 60 * 1000)),
-      hoursSinceLastBump: listing.bumpedAt ?
-        Math.floor((Date.now() - new Date(listing.bumpedAt).getTime()) / (60 * 60 * 1000)) : undefined,
+      daysSinceCreated: Math.floor(
+        (Date.now() - new Date(listing.createdAt).getTime()) / (24 * 60 * 60 * 1000)
+      ),
+      hoursSinceLastBump: listing.bumpedAt
+        ? Math.floor((Date.now() - new Date(listing.bumpedAt).getTime()) / (60 * 60 * 1000))
+        : undefined,
       viewsToday: 0,
       avgDailyViews: 0,
       contactClickCount: 0,
@@ -435,10 +460,7 @@ export class ListingModel {
    * Get user's listings
    */
   async getUserListings(userId: number, status?: ListingStatus): Promise<Listing[]> {
-    let query = this.db
-      .select()
-      .from(listings)
-      .where(eq(listings.userId, userId));
+    let query = this.db.select().from(listings).where(eq(listings.userId, userId));
 
     if (status) {
       query = query.where(and(eq(listings.userId, userId), eq(listings.status, status)));
@@ -454,10 +476,12 @@ export class ListingModel {
     const [result] = await this.db
       .select({ count: count() })
       .from(listings)
-      .where(and(
-        eq(listings.userId, userId),
-        inArray(listings.status, [ListingStatus.ACTIVE, ListingStatus.DRAFT])
-      ));
+      .where(
+        and(
+          eq(listings.userId, userId),
+          inArray(listings.status, [ListingStatus.ACTIVE, ListingStatus.DRAFT])
+        )
+      );
 
     return result.count;
   }
@@ -469,10 +493,7 @@ export class ListingModel {
     return await this.db
       .select()
       .from(listings)
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        eq(listings.isSticky, true)
-      ))
+      .where(and(eq(listings.status, ListingStatus.ACTIVE), eq(listings.isSticky, true)))
       .orderBy(desc(listings.bumpedAt), desc(listings.createdAt))
       .limit(limit);
   }
@@ -484,10 +505,7 @@ export class ListingModel {
     return await this.db
       .select()
       .from(listings)
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        sql`${listings.bumpedAt} IS NOT NULL`
-      ))
+      .where(and(eq(listings.status, ListingStatus.ACTIVE), sql`${listings.bumpedAt} IS NOT NULL`))
       .orderBy(desc(listings.bumpedAt))
       .limit(limit);
   }
@@ -501,10 +519,7 @@ export class ListingModel {
     return await this.db
       .select()
       .from(listings)
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        lte(listings.expiresAt, futureDate)
-      ))
+      .where(and(eq(listings.status, ListingStatus.ACTIVE), lte(listings.expiresAt, futureDate)))
       .orderBy(asc(listings.expiresAt))
       .limit(limit);
   }
@@ -518,10 +533,7 @@ export class ListingModel {
     const result = await this.db
       .update(listings)
       .set({ status: ListingStatus.EXPIRED })
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        lte(listings.expiresAt, now)
-      ));
+      .where(and(eq(listings.status, ListingStatus.ACTIVE), lte(listings.expiresAt, now)));
 
     return result.rowsAffected;
   }
@@ -538,9 +550,7 @@ export class ListingModel {
       throw new Error('Not authorized to delete this listing');
     }
 
-    const result = await this.db
-      .delete(listings)
-      .where(eq(listings.id, id));
+    const result = await this.db.delete(listings).where(eq(listings.id, id));
 
     return result.rowsAffected > 0;
   }
@@ -558,9 +568,7 @@ export class ListingModel {
     avgPrice: number;
     totalViews: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(listings);
+    const [totalResult] = await this.db.select({ count: count() }).from(listings);
 
     const [activeResult] = await this.db
       .select({ count: count() })
@@ -585,16 +593,18 @@ export class ListingModel {
     const [premiumResult] = await this.db
       .select({ count: count() })
       .from(listings)
-      .where(or(
-        eq(listings.isSticky, true),
-        eq(listings.isHighlighted, true),
-        eq(listings.autoBumpEnabled, true)
-      ));
+      .where(
+        or(
+          eq(listings.isSticky, true),
+          eq(listings.isHighlighted, true),
+          eq(listings.autoBumpEnabled, true)
+        )
+      );
 
     const [priceResult] = await this.db
       .select({
         avg: sql<number>`AVG(${listings.priceUsd})`,
-        totalViews: sql<number>`SUM(${listings.viewCount})`
+        totalViews: sql<number>`SUM(${listings.viewCount})`,
       })
       .from(listings)
       .where(eq(listings.status, ListingStatus.ACTIVE));
@@ -632,10 +642,7 @@ export class ListingModel {
     return await this.db
       .select()
       .from(listings)
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        gte(listings.createdAt, startDate)
-      ))
+      .where(and(eq(listings.status, ListingStatus.ACTIVE), gte(listings.createdAt, startDate)))
       .orderBy(desc(listings.viewCount), desc(listings.createdAt))
       .limit(limit);
   }
@@ -652,13 +659,15 @@ export class ListingModel {
     return await this.db
       .select()
       .from(listings)
-      .where(and(
-        eq(listings.status, ListingStatus.ACTIVE),
-        eq(listings.categoryId, baseListing.categoryId),
-        sql`${listings.id} != ${listingId}`,
-        gte(listings.priceUsd, baseListing.priceUsd - priceRange),
-        lte(listings.priceUsd, baseListing.priceUsd + priceRange)
-      ))
+      .where(
+        and(
+          eq(listings.status, ListingStatus.ACTIVE),
+          eq(listings.categoryId, baseListing.categoryId),
+          sql`${listings.id} != ${listingId}`,
+          gte(listings.priceUsd, baseListing.priceUsd - priceRange),
+          lte(listings.priceUsd, baseListing.priceUsd + priceRange)
+        )
+      )
       .orderBy(desc(listings.createdAt))
       .limit(limit);
   }
@@ -677,7 +686,9 @@ export class ListingModel {
 
     if ('description' in listing && listing.description) {
       if (listing.description.length > LISTING_CONSTRAINTS.MAX_DESCRIPTION_LENGTH) {
-        errors.push(`Description cannot exceed ${LISTING_CONSTRAINTS.MAX_DESCRIPTION_LENGTH} characters`);
+        errors.push(
+          `Description cannot exceed ${LISTING_CONSTRAINTS.MAX_DESCRIPTION_LENGTH} characters`
+        );
       }
     }
 
@@ -743,11 +754,6 @@ export {
   validateListingOwnership,
   canUserCreateListing,
   isValidStatusTransition,
-  LISTING_CONSTRAINTS
+  LISTING_CONSTRAINTS,
 };
-export type {
-  ListingSearchFilters,
-  ListingListResponse,
-  ListingCreateData,
-  BumpResult
-};
+export type { ListingSearchFilters, ListingListResponse, ListingCreateData, BumpResult };

@@ -389,13 +389,16 @@ describe('Contract Test T016: POST /api/listings/{id}/bump', () => {
       const validToken = 'valid_jwt_token_listing_owner';
       const recentlyBumpedListingId = 'test-recently-bumped-uuid';
 
-      const request = new Request(`http://localhost:8787/api/listings/${recentlyBumpedListingId}/bump`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${validToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings/${recentlyBumpedListingId}/bump`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${validToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

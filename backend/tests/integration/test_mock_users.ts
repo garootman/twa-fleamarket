@@ -161,14 +161,20 @@ const mockDB = {
           mockUsers.push(newMockUser);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newMockUser.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newMockUser.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         if (query.includes('DELETE FROM mock_users')) {
           mockUsers = mockUsers.filter(u => !params.includes(u.telegram_id));
           return {
             success: true,
-            meta: { changes: 1, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: { changes: 1, duration: 10, rows_read: 0, rows_written: 1 },
           };
         }
         return { success: true, meta: {} as any };
@@ -509,7 +515,7 @@ describe('Integration Test T039: Mock User System for Local Development', () => 
       const testRequest = new Request('http://localhost:8787/api/me', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${tempAuthResponse.temp_token}`,
+          Authorization: `Bearer ${tempAuthResponse.temp_token}`,
         },
       });
 
@@ -625,12 +631,15 @@ describe('Integration Test T039: Mock User System for Local Development', () => 
       const executionId = startResult.execution_id;
 
       // Check progress
-      const progressRequest = new Request(`http://localhost:8787/api/dev/scenarios/${executionId}/progress`, {
-        method: 'GET',
-        headers: {
-          'X-Dev-Mode': 'true',
-        },
-      });
+      const progressRequest = new Request(
+        `http://localhost:8787/api/dev/scenarios/${executionId}/progress`,
+        {
+          method: 'GET',
+          headers: {
+            'X-Dev-Mode': 'true',
+          },
+        }
+      );
 
       const progressResponse = await worker.fetch(progressRequest, mockEnv, {
         waitUntil: () => {},
@@ -799,12 +808,15 @@ describe('Integration Test T039: Mock User System for Local Development', () => 
         return;
       }
 
-      const analyticsRequest = new Request('http://localhost:8787/api/dev/mock-users/analytics?period=24h', {
-        method: 'GET',
-        headers: {
-          'X-Dev-Mode': 'true',
-        },
-      });
+      const analyticsRequest = new Request(
+        'http://localhost:8787/api/dev/mock-users/analytics?period=24h',
+        {
+          method: 'GET',
+          headers: {
+            'X-Dev-Mode': 'true',
+          },
+        }
+      );
 
       const response = await worker.fetch(analyticsRequest, mockEnv, {
         waitUntil: () => {},

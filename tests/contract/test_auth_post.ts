@@ -158,7 +158,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
   describe('Successful authentication scenarios', () => {
     it('should authenticate user with valid Telegram initData', async () => {
       // This test MUST fail initially - endpoint doesn't exist yet
-      const validInitData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22testuser%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
+      const validInitData =
+        'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22testuser%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: validInitData,
@@ -213,7 +214,9 @@ describe('Contract Test T009: POST /miniApp/init', () => {
       expect(userData.last_name === null || typeof userData.last_name === 'string').toBe(true);
 
       expect(userData).toHaveProperty('profile_photo_url');
-      expect(userData.profile_photo_url === null || typeof userData.profile_photo_url === 'string').toBe(true);
+      expect(
+        userData.profile_photo_url === null || typeof userData.profile_photo_url === 'string'
+      ).toBe(true);
 
       expect(userData).toHaveProperty('created_at');
       expect(typeof userData.created_at).toBe('string');
@@ -232,7 +235,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
     });
 
     it('should handle new user registration through auth', async () => {
-      const newUserInitData = 'user=%7B%22id%22%3A987654321%2C%22first_name%22%3A%22New%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22newuser%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
+      const newUserInitData =
+        'user=%7B%22id%22%3A987654321%2C%22first_name%22%3A%22New%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22newuser%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: newUserInitData,
@@ -269,7 +273,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
     });
 
     it('should handle user with minimal data (no username, no last_name)', async () => {
-      const minimalUserInitData = 'user=%7B%22id%22%3A555666777%2C%22first_name%22%3A%22Minimal%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
+      const minimalUserInitData =
+        'user=%7B%22id%22%3A555666777%2C%22first_name%22%3A%22Minimal%22%2C%22language_code%22%3A%22en%22%7D&chat_instance=-3076134733061800000&chat_type=sender&start_param=debug&auth_date=1694762050&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: minimalUserInitData,
@@ -308,7 +313,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
     });
 
     it('should return valid JWT token that can be used for authentication', async () => {
-      const validInitData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22username%22%3A%22testuser%22%7D&auth_date=1694762050&hash=mock_hash';
+      const validInitData =
+        'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22username%22%3A%22testuser%22%7D&auth_date=1694762050&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: validInitData,
@@ -441,7 +447,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
     });
 
     it('should return 400 for init_data with invalid hash', async () => {
-      const invalidHashInitData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D&auth_date=1694762050&hash=invalid_hash';
+      const invalidHashInitData =
+        'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D&auth_date=1694762050&hash=invalid_hash';
 
       const authRequest: AuthRequest = {
         initData: invalidHashInitData,
@@ -474,7 +481,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
 
     it('should return 400 for expired init_data', async () => {
       // Use old auth_date (more than 5 minutes ago)
-      const expiredInitData = 'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D&auth_date=1694700000&hash=mock_hash';
+      const expiredInitData =
+        'user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%7D&auth_date=1694700000&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: expiredInitData,
@@ -506,7 +514,8 @@ describe('Contract Test T009: POST /miniApp/init', () => {
     });
 
     it('should return 400 for banned user attempting authentication', async () => {
-      const bannedUserInitData = 'user=%7B%22id%22%3A999999999%2C%22first_name%22%3A%22Banned%22%2C%22username%22%3A%22banneduser%22%7D&auth_date=1694762050&hash=mock_hash';
+      const bannedUserInitData =
+        'user=%7B%22id%22%3A999999999%2C%22first_name%22%3A%22Banned%22%2C%22username%22%3A%22banneduser%22%7D&auth_date=1694762050&hash=mock_hash';
 
       const authRequest: AuthRequest = {
         initData: bannedUserInitData,

@@ -112,10 +112,10 @@ const mockDB: D1Database = {
             is_sticky: true,
             flag_count: 0,
             admin_notes: 'Promoted listing',
-          }
+          },
         ],
         success: true,
-        meta: {} as any
+        meta: {} as any,
       }),
     }),
     first: async () => ({
@@ -258,7 +258,9 @@ describe('Contract Test T023: GET /api/admin/listings', () => {
         expect(() => new Date(listing.expires_at)).not.toThrow();
 
         expect(listing).toHaveProperty('status');
-        expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(listing.status);
+        expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+          listing.status
+        );
 
         expect(listing).toHaveProperty('is_sticky');
         expect(typeof listing.is_sticky).toBe('boolean');
@@ -502,13 +504,16 @@ describe('Contract Test T023: GET /api/admin/listings', () => {
 
   describe('Query parameter validation scenarios', () => {
     it('should return 400 for invalid status parameter', async () => {
-      const request = new Request('http://localhost:8787/api/admin/listings?status=invalid_status', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/listings?status=invalid_status',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

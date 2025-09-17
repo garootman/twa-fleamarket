@@ -161,7 +161,13 @@ const mockDB = {
           mockPaymentOrders.push(newOrder);
           return {
             success: true,
-            meta: { changes: 1, last_row_id: newOrder.id, duration: 10, rows_read: 0, rows_written: 1 }
+            meta: {
+              changes: 1,
+              last_row_id: newOrder.id,
+              duration: 10,
+              rows_read: 0,
+              rows_written: 1,
+            },
           };
         }
         if (query.includes('UPDATE listings') && query.includes('is_premium')) {
@@ -170,7 +176,9 @@ const mockDB = {
           if (listing) {
             listing.is_premium = true;
             listing.premium_features = ['highlight', 'extended_duration', 'priority_search'];
-            listing.premium_expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            listing.premium_expires_at = new Date(
+              Date.now() + 30 * 24 * 60 * 60 * 1000
+            ).toISOString();
             listing.highlight_color = '#FFD700';
           }
         }
@@ -193,7 +201,7 @@ const mockDB = {
               { metric: 'avg_premium_views', value: 156 },
             ],
             success: true,
-            meta: {} as any
+            meta: {} as any,
           };
         }
         return { results: [], success: true, meta: {} as any };
@@ -587,7 +595,7 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       const request = new Request('http://localhost:8787/api/premium/dashboard', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_premium_token',
+          Authorization: 'Bearer mock_premium_token',
         },
       });
 
@@ -651,7 +659,7 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       const request = new Request('http://localhost:8787/api/listings/2/premium/analytics', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_premium_token',
+          Authorization: 'Bearer mock_premium_token',
         },
       });
 
@@ -676,12 +684,15 @@ describe('Integration Test T036: Premium Features with Payment', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/premium/analytics/comparison?period=30d', {
-        method: 'GET',
-        headers: {
-          'Authorization': 'Bearer mock_premium_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/premium/analytics/comparison?period=30d',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: 'Bearer mock_premium_token',
+          },
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -694,7 +705,9 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       expect(comparison.premium_listings).toBeDefined();
       expect(comparison.regular_listings).toBeDefined();
       expect(comparison.performance_metrics).toBeDefined();
-      expect(comparison.performance_metrics.avg_views_premium).toBeGreaterThan(comparison.performance_metrics.avg_views_regular);
+      expect(comparison.performance_metrics.avg_views_premium).toBeGreaterThan(
+        comparison.performance_metrics.avg_views_regular
+      );
     });
 
     it('should provide spending and ROI analytics', async () => {
@@ -706,7 +719,7 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       const request = new Request('http://localhost:8787/api/premium/spending/analytics', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_premium_token',
+          Authorization: 'Bearer mock_premium_token',
         },
       });
 
@@ -886,7 +899,7 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       const request = new Request('http://localhost:8787/api/listings/1/premium/analytics', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_user_token', // Regular user
+          Authorization: 'Bearer mock_user_token', // Regular user
         },
       });
 
@@ -911,7 +924,7 @@ describe('Integration Test T036: Premium Features with Payment', () => {
       const request = new Request('http://localhost:8787/api/premium/features', {
         method: 'GET',
         headers: {
-          'Authorization': 'Bearer mock_user_token',
+          Authorization: 'Bearer mock_user_token',
         },
       });
 

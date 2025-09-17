@@ -1,8 +1,9 @@
 /**
- * ImageService - T055
+ * ImageService - T055 / T096
  *
  * Provides business logic for image upload, processing, and R2 storage integration.
- * Handles image validation, resizing, optimization, and CDN delivery.
+ * Handles image validation, resizing, optimization, and CDN delivery with CloudFlare R2.
+ * Enhanced with connection management, retry logic, and error handling.
  */
 
 export interface ImageUploadResult {
@@ -43,22 +44,45 @@ export interface ImageValidationResult {
   };
 }
 
+export interface R2UploadOptions {
+  retryAttempts?: number;
+  retryDelay?: number;
+  timeout?: number;
+}
+
+export interface R2ConnectionConfig {
+  bucket: any;
+  cdnBaseUrl: string;
+  region?: string;
+  publicUrl?: string;
+}
+
 export class ImageService {
   private r2Bucket: any; // R2 bucket instance
   private cdnBaseUrl: string;
   private maxFileSize: number;
   private allowedTypes: string[];
+  private uploadOptions: R2UploadOptions;
+  private connectionHealth: boolean = true;
+  private lastHealthCheck: number = 0;
+  private healthCheckInterval: number = 300000; // 5 minutes
 
   constructor(
-    r2Bucket: any,
-    cdnBaseUrl: string,
+    config: R2ConnectionConfig,
     maxFileSize = 5 * 1024 * 1024, // 5MB
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    allowedTypes = ['image/jpeg', 'image/png', 'image/webp'],
+    uploadOptions: R2UploadOptions = {}
   ) {
-    this.r2Bucket = r2Bucket;
-    this.cdnBaseUrl = cdnBaseUrl;
+    this.r2Bucket = config.bucket;
+    this.cdnBaseUrl = config.cdnBaseUrl;
     this.maxFileSize = maxFileSize;
     this.allowedTypes = allowedTypes;
+    this.uploadOptions = {
+      retryAttempts: 3,
+      retryDelay: 1000,
+      timeout: 30000,
+      ...uploadOptions,
+    };
   }
 
   /**
@@ -89,18 +113,29 @@ export class ImageService {
         ? await this.generateThumbnail(file, options.thumbnailSize || 300)
         : undefined;
 
-      // Upload to R2
+      // Check R2 connection health
+      await this.ensureR2Connection();
+
+      // Upload to R2 with retry logic
       const uploadPromises = [
-        this.uploadToR2(storageKey, processedImage.buffer, processedImage.contentType)
+        this.uploadToR2WithRetry(storageKey, processedImage.buffer, processedImage.contentType),
       ];
 
       if (thumbnail && thumbnailKey) {
         uploadPromises.push(
-          this.uploadToR2(thumbnailKey, thumbnail.buffer, thumbnail.contentType)
+          this.uploadToR2WithRetry(thumbnailKey, thumbnail.buffer, thumbnail.contentType)
         );
       }
 
-      await Promise.all(uploadPromises);
+      const uploadResults = await Promise.allSettled(uploadPromises);
+
+      // Check if all uploads succeeded
+      const failedUploads = uploadResults.filter(result => result.status === 'rejected');
+      if (failedUploads.length > 0) {
+        throw new Error(
+          `Upload failed: ${failedUploads.map(f => (f as PromiseRejectedResult).reason).join(', ')}`
+        );
+      }
 
       // Generate URLs
       const url = `${this.cdnBaseUrl}/${storageKey}`;
@@ -164,12 +199,15 @@ export class ImageService {
    */
   async deleteImage(storageKey: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await this.r2Bucket.delete(storageKey);
+      await this.ensureR2Connection();
+
+      // Delete main image with retry
+      await this.deleteFromR2WithRetry(storageKey);
 
       // Also delete thumbnail if exists
       const thumbnailKey = `${storageKey}_thumb`;
       try {
-        await this.r2Bucket.delete(thumbnailKey);
+        await this.deleteFromR2WithRetry(thumbnailKey);
       } catch {
         // Thumbnail might not exist, ignore error
       }
@@ -192,7 +230,7 @@ export class ImageService {
     failureCount: number;
   }> {
     const results = await Promise.all(
-      storageKeys.map(async (key) => {
+      storageKeys.map(async key => {
         const result = await this.deleteImage(key);
         return { key, ...result };
       })
@@ -273,7 +311,9 @@ export class ImageService {
 
     // Size validation
     if (size > this.maxFileSize) {
-      errors.push(`File size ${this.formatFileSize(size)} exceeds maximum ${this.formatFileSize(this.maxFileSize)}`);
+      errors.push(
+        `File size ${this.formatFileSize(size)} exceeds maximum ${this.formatFileSize(this.maxFileSize)}`
+      );
     }
 
     if (size < 1024) {
@@ -282,7 +322,9 @@ export class ImageService {
 
     // Type validation
     if (!this.allowedTypes.includes(type)) {
-      errors.push(`File type ${type} is not allowed. Allowed types: ${this.allowedTypes.join(', ')}`);
+      errors.push(
+        `File type ${type} is not allowed. Allowed types: ${this.allowedTypes.join(', ')}`
+      );
     }
 
     // Image signature validation
@@ -337,7 +379,7 @@ export class ImageService {
     // like sharp, canvas, or WebAssembly-based solution
 
     const buffer = file instanceof File ? await file.arrayBuffer() : file;
-    const dimensions = await this.getImageDimensions(buffer) || { width: 800, height: 600 };
+    const dimensions = (await this.getImageDimensions(buffer)) || { width: 800, height: 600 };
 
     // For now, return the original image
     // In production, would resize/optimize based on options
@@ -371,11 +413,7 @@ export class ImageService {
   /**
    * Upload to R2 storage
    */
-  private async uploadToR2(
-    key: string,
-    buffer: ArrayBuffer,
-    contentType: string
-  ): Promise<void> {
+  private async uploadToR2(key: string, buffer: ArrayBuffer, contentType: string): Promise<void> {
     await this.r2Bucket.put(key, buffer, {
       httpMetadata: {
         contentType,
@@ -418,8 +456,8 @@ export class ImageService {
   private validateImageSignature(buffer: Uint8Array): boolean {
     // Check for common image file signatures
     const signatures = {
-      jpeg: [0xFF, 0xD8, 0xFF],
-      png: [0x89, 0x50, 0x4E, 0x47],
+      jpeg: [0xff, 0xd8, 0xff],
+      png: [0x89, 0x50, 0x4e, 0x47],
       webp: [0x52, 0x49, 0x46, 0x46], // RIFF (WebP starts with RIFF)
     };
 
@@ -448,7 +486,9 @@ export class ImageService {
   /**
    * Get image dimensions (simplified implementation)
    */
-  private async getImageDimensions(buffer: ArrayBuffer): Promise<{ width: number; height: number } | null> {
+  private async getImageDimensions(
+    buffer: ArrayBuffer
+  ): Promise<{ width: number; height: number } | null> {
     // In a real implementation, this would parse image headers to get dimensions
     // For now, return mock dimensions
     return { width: 800, height: 600 };
@@ -490,23 +530,218 @@ export class ImageService {
   /**
    * Cleanup orphaned images
    */
-  async cleanupOrphanedImages(
-    activeImageUrls: string[]
-  ): Promise<{
+  async cleanupOrphanedImages(activeImageUrls: string[]): Promise<{
     deletedCount: number;
     freedSpace: number;
     errors: string[];
   }> {
-    // In a real implementation, this would:
-    // 1. List all images in R2
-    // 2. Compare with activeImageUrls
-    // 3. Delete orphaned images
-    // 4. Return cleanup statistics
+    try {
+      await this.ensureR2Connection();
 
-    return {
-      deletedCount: 0,
-      freedSpace: 0,
-      errors: [],
-    };
+      // In a real implementation, this would:
+      // 1. List all images in R2
+      // 2. Compare with activeImageUrls
+      // 3. Delete orphaned images
+      // 4. Return cleanup statistics
+
+      // For now, return empty stats
+      return {
+        deletedCount: 0,
+        freedSpace: 0,
+        errors: [],
+      };
+    } catch (error) {
+      return {
+        deletedCount: 0,
+        freedSpace: 0,
+        errors: [error instanceof Error ? error.message : 'Cleanup failed'],
+      };
+    }
+  }
+
+  /**
+   * Ensure R2 connection is healthy
+   */
+  private async ensureR2Connection(): Promise<void> {
+    const now = Date.now();
+
+    // Skip health check if recently verified
+    if (this.connectionHealth && now - this.lastHealthCheck < this.healthCheckInterval) {
+      return;
+    }
+
+    try {
+      // Simple health check - try to list bucket contents
+      await this.r2Bucket.list({ limit: 1 });
+      this.connectionHealth = true;
+      this.lastHealthCheck = now;
+    } catch (error) {
+      this.connectionHealth = false;
+      throw new Error(`R2 connection failed: ${error}`);
+    }
+  }
+
+  /**
+   * Upload to R2 with retry logic
+   */
+  private async uploadToR2WithRetry(
+    key: string,
+    buffer: ArrayBuffer,
+    contentType: string
+  ): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= (this.uploadOptions.retryAttempts || 3); attempt++) {
+      try {
+        await this.uploadToR2(key, buffer, contentType);
+        return; // Success
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt === (this.uploadOptions.retryAttempts || 3)) {
+          break; // Don't retry on final attempt
+        }
+
+        // Wait before retry
+        await this.delay(this.uploadOptions.retryDelay || 1000);
+      }
+    }
+
+    throw new Error(
+      `Upload failed after ${this.uploadOptions.retryAttempts} attempts: ${lastError?.message}`
+    );
+  }
+
+  /**
+   * Delete from R2 with retry logic
+   */
+  private async deleteFromR2WithRetry(key: string): Promise<void> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= (this.uploadOptions.retryAttempts || 3); attempt++) {
+      try {
+        await this.r2Bucket.delete(key);
+        return; // Success
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt === (this.uploadOptions.retryAttempts || 3)) {
+          break; // Don't retry on final attempt
+        }
+
+        // Wait before retry
+        await this.delay(this.uploadOptions.retryDelay || 1000);
+      }
+    }
+
+    throw new Error(
+      `Delete failed after ${this.uploadOptions.retryAttempts} attempts: ${lastError?.message}`
+    );
+  }
+
+  /**
+   * Enhanced upload to R2 with timeout and error handling
+   */
+  private async uploadToR2(key: string, buffer: ArrayBuffer, contentType: string): Promise<void> {
+    try {
+      // Add timeout wrapper
+      const uploadPromise = this.r2Bucket.put(key, buffer, {
+        httpMetadata: {
+          contentType,
+          cacheControl: 'public, max-age=31536000', // 1 year
+        },
+        customMetadata: {
+          uploadedAt: new Date().toISOString(),
+          source: 'telegram-marketplace',
+        },
+      });
+
+      // Implement timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Upload timeout')), this.uploadOptions.timeout || 30000);
+      });
+
+      await Promise.race([uploadPromise, timeoutPromise]);
+    } catch (error) {
+      // Add more specific error handling
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          throw new Error(`Upload timeout for key: ${key}`);
+        }
+        if (error.message.includes('network')) {
+          throw new Error(`Network error uploading: ${key}`);
+        }
+        if (error.message.includes('quota') || error.message.includes('limit')) {
+          throw new Error(`Storage quota exceeded for key: ${key}`);
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Delay utility for retry logic
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Get R2 connection status
+   */
+  async getConnectionStatus(): Promise<{
+    healthy: boolean;
+    lastCheck: Date | null;
+    error?: string;
+  }> {
+    try {
+      await this.ensureR2Connection();
+      return {
+        healthy: this.connectionHealth,
+        lastCheck: this.lastHealthCheck ? new Date(this.lastHealthCheck) : null,
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        lastCheck: this.lastHealthCheck ? new Date(this.lastHealthCheck) : null,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Get enhanced storage statistics from R2
+   */
+  async getStorageStats(): Promise<{
+    totalImages: number;
+    totalSize: number;
+    averageSize: number;
+    storageUsed: string;
+    quotaUsed: number;
+    connectionHealth: boolean;
+  }> {
+    try {
+      await this.ensureR2Connection();
+
+      // In production, this would query R2 for actual usage stats
+      // For now, return mock data with connection health
+      return {
+        totalImages: 0,
+        totalSize: 0,
+        averageSize: 0,
+        storageUsed: '0 MB',
+        quotaUsed: 0,
+        connectionHealth: this.connectionHealth,
+      };
+    } catch (error) {
+      return {
+        totalImages: 0,
+        totalSize: 0,
+        averageSize: 0,
+        storageUsed: 'Unknown',
+        quotaUsed: 0,
+        connectionHealth: false,
+      };
+    }
   }
 }

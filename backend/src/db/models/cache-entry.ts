@@ -7,7 +7,7 @@ import {
   generateCacheKey,
   getCacheTTL,
   isCacheEntryValid,
-  CACHE_CONSTRAINTS
+  CACHE_CONSTRAINTS,
 } from '../../src/db/schema/sessions';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
@@ -110,8 +110,11 @@ export class CacheEntryModel {
     }
 
     // Determine TTL
-    const ttlSeconds = cacheData.ttlSeconds ||
-      (cacheData.cacheType ? getCacheTTL(cacheData.cacheType) : CACHE_CONSTRAINTS.DEFAULT_TTL_SECONDS);
+    const ttlSeconds =
+      cacheData.ttlSeconds ||
+      (cacheData.cacheType
+        ? getCacheTTL(cacheData.cacheType)
+        : CACHE_CONSTRAINTS.DEFAULT_TTL_SECONDS);
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlSeconds * 1000);
@@ -208,9 +211,7 @@ export class CacheEntryModel {
    * Delete cache entry
    */
   async delete(key: string): Promise<boolean> {
-    const result = await this.db
-      .delete(cacheEntries)
-      .where(eq(cacheEntries.key, key));
+    const result = await this.db.delete(cacheEntries).where(eq(cacheEntries.key, key));
 
     return result.rowsAffected > 0;
   }
@@ -278,14 +279,18 @@ export class CacheEntryModel {
     const timeToExpiry = this.formatTimeRemaining(expiresDate.getTime() - now.getTime());
 
     // Calculate average hits per day
-    const daysSinceCreated = Math.max(1, Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000)));
+    const daysSinceCreated = Math.max(
+      1,
+      Math.floor((now.getTime() - createdDate.getTime()) / (24 * 60 * 60 * 1000))
+    );
     const averageHitsPerDay = entry.hitCount / daysSinceCreated;
 
     const entryWithDetails: CacheEntryWithDetails = {
       ...entry,
       daysSinceCreated,
-      hoursSinceLastHit: lastHitDate ?
-        Math.floor((now.getTime() - lastHitDate.getTime()) / (60 * 60 * 1000)) : undefined,
+      hoursSinceLastHit: lastHitDate
+        ? Math.floor((now.getTime() - lastHitDate.getTime()) / (60 * 60 * 1000))
+        : undefined,
       isCurrentlyValid: isCacheEntryValid(entry),
       isExpired: expiresDate <= now,
       isInvalidated: !!entry.invalidatedAt,
@@ -300,11 +305,7 @@ export class CacheEntryModel {
   /**
    * Search and filter cache entries
    */
-  async search(
-    filters: CacheSearchFilters = {},
-    page = 1,
-    limit = 50
-  ): Promise<CacheListResponse> {
+  async search(filters: CacheSearchFilters = {}, page = 1, limit = 50): Promise<CacheListResponse> {
     let query = this.db.select().from(cacheEntries);
     let countQuery = this.db.select({ count: count() }).from(cacheEntries);
 
@@ -325,10 +326,7 @@ export class CacheEntryModel {
     // Valid filter
     if (filters.isValid !== undefined) {
       if (filters.isValid) {
-        conditions.push(and(
-          gte(cacheEntries.expiresAt, now),
-          isNull(cacheEntries.invalidatedAt)
-        ));
+        conditions.push(and(gte(cacheEntries.expiresAt, now), isNull(cacheEntries.invalidatedAt)));
       } else {
         conditions.push(sql`(
           ${cacheEntries.expiresAt} < ${now} OR
@@ -438,9 +436,7 @@ export class CacheEntryModel {
   async cleanupExpired(): Promise<number> {
     const now = new Date().toISOString();
 
-    const result = await this.db
-      .delete(cacheEntries)
-      .where(lte(cacheEntries.expiresAt, now));
+    const result = await this.db.delete(cacheEntries).where(lte(cacheEntries.expiresAt, now));
 
     return result.rowsAffected;
   }
@@ -449,9 +445,7 @@ export class CacheEntryModel {
    * Clean up invalidated entries
    */
   async cleanupInvalidated(): Promise<number> {
-    const result = await this.db
-      .delete(cacheEntries)
-      .where(isNotNull(cacheEntries.invalidatedAt));
+    const result = await this.db.delete(cacheEntries).where(isNotNull(cacheEntries.invalidatedAt));
 
     return result.rowsAffected;
   }
@@ -488,11 +482,13 @@ export class CacheEntryModel {
 
     if (validOnly) {
       const now = new Date().toISOString();
-      query = query.where(and(
-        like(cacheEntries.key, `${cacheType}:%`),
-        gte(cacheEntries.expiresAt, now),
-        isNull(cacheEntries.invalidatedAt)
-      ));
+      query = query.where(
+        and(
+          like(cacheEntries.key, `${cacheType}:%`),
+          gte(cacheEntries.expiresAt, now),
+          isNull(cacheEntries.invalidatedAt)
+        )
+      );
     }
 
     return await query.orderBy(desc(cacheEntries.lastHit));
@@ -501,7 +497,9 @@ export class CacheEntryModel {
   /**
    * Get cache hit statistics by type
    */
-  async getHitStatsByType(): Promise<Record<string, { entries: number; totalHits: number; avgHits: number }>> {
+  async getHitStatsByType(): Promise<
+    Record<string, { entries: number; totalHits: number; avgHits: number }>
+  > {
     const entries = await this.db.select().from(cacheEntries);
 
     const statsByType: Record<string, { entries: number; totalHits: number; avgHits: number }> = {};
@@ -520,7 +518,8 @@ export class CacheEntryModel {
     // Calculate averages
     for (const type in statsByType) {
       const stats = statsByType[type];
-      stats.avgHits = stats.entries > 0 ? Math.round((stats.totalHits / stats.entries) * 100) / 100 : 0;
+      stats.avgHits =
+        stats.entries > 0 ? Math.round((stats.totalHits / stats.entries) * 100) / 100 : 0;
     }
 
     return statsByType;
@@ -530,19 +529,14 @@ export class CacheEntryModel {
    * Get comprehensive cache statistics
    */
   async getStats(): Promise<CacheStats> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(cacheEntries);
+    const [totalResult] = await this.db.select({ count: count() }).from(cacheEntries);
 
     const now = new Date().toISOString();
 
     const [validResult] = await this.db
       .select({ count: count() })
       .from(cacheEntries)
-      .where(and(
-        gte(cacheEntries.expiresAt, now),
-        isNull(cacheEntries.invalidatedAt)
-      ));
+      .where(and(gte(cacheEntries.expiresAt, now), isNull(cacheEntries.invalidatedAt)));
 
     const [expiredResult] = await this.db
       .select({ count: count() })
@@ -569,16 +563,22 @@ export class CacheEntryModel {
 
     let hitRate = 0;
     if (oldestEntry) {
-      const hoursActive = Math.max(1, (Date.now() - new Date(oldestEntry.createdAt).getTime()) / (60 * 60 * 1000));
+      const hoursActive = Math.max(
+        1,
+        (Date.now() - new Date(oldestEntry.createdAt).getTime()) / (60 * 60 * 1000)
+      );
       hitRate = (hitsResult.totalHits || 0) / hoursActive;
     }
 
     // Entries by type
     const entriesByType = await this.getHitStatsByType();
-    const entriesByTypeCount = Object.keys(entriesByType).reduce((acc, type) => {
-      acc[type] = entriesByType[type].entries;
-      return acc;
-    }, {} as Record<string, number>);
+    const entriesByTypeCount = Object.keys(entriesByType).reduce(
+      (acc, type) => {
+        acc[type] = entriesByType[type].entries;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     // Top keys by hit count
     const topKeys = await this.db
@@ -626,7 +626,8 @@ export class CacheEntryModel {
       performanceMetrics: {
         cacheSize: Math.round(totalSize * 100) / 100,
         avgEntrySize: Math.round(avgEntrySize * 100) / 100,
-        memoryEfficiency: totalResult.count > 0 ? Math.round((validResult.count / totalResult.count) * 100) : 0,
+        memoryEfficiency:
+          totalResult.count > 0 ? Math.round((validResult.count / totalResult.count) * 100) : 0,
       },
     };
   }
@@ -642,19 +643,14 @@ export class CacheEntryModel {
     totalHits: number;
     averageHitCount: number;
   }> {
-    const [totalResult] = await this.db
-      .select({ count: count() })
-      .from(cacheEntries);
+    const [totalResult] = await this.db.select({ count: count() }).from(cacheEntries);
 
     const now = new Date().toISOString();
 
     const [validResult] = await this.db
       .select({ count: count() })
       .from(cacheEntries)
-      .where(and(
-        gte(cacheEntries.expiresAt, now),
-        isNull(cacheEntries.invalidatedAt)
-      ));
+      .where(and(gte(cacheEntries.expiresAt, now), isNull(cacheEntries.invalidatedAt)));
 
     const [expiredResult] = await this.db
       .select({ count: count() })
@@ -736,7 +732,7 @@ export {
   generateCacheKey,
   getCacheTTL,
   isCacheEntryValid,
-  CACHE_CONSTRAINTS
+  CACHE_CONSTRAINTS,
 };
 export type {
   CacheEntryWithDetails,
@@ -744,5 +740,5 @@ export type {
   CacheListResponse,
   SetCacheData,
   CacheStats,
-  InvalidateResult
+  InvalidateResult,
 };

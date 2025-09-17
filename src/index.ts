@@ -138,7 +138,10 @@ app.use('*', async (c, next): Promise<Response | void> => {
                 createdDate: '2025-09-15T10:00:00Z',
                 isBanned: true,
               });
-            } else if (tokenWithoutPrefix.includes('invalid') || tokenWithoutPrefix.includes('expired')) {
+            } else if (
+              tokenWithoutPrefix.includes('invalid') ||
+              tokenWithoutPrefix.includes('expired')
+            ) {
               // Invalid/expired tokens return null
               return null;
             } else if (tokenWithoutPrefix.length > 10) {
@@ -532,7 +535,7 @@ app.post('/init', async c => {
 });
 
 // Basic API endpoints for testing - simplified implementation
-app.get('/api/me', async (c) => {
+app.get('/api/me', async c => {
   const appContext = c.get('app');
   if (!appContext) {
     return c.json({ success: false, error: 'Application context not available' }, 500);
@@ -544,7 +547,10 @@ app.get('/api/me', async (c) => {
     const token = authHeader?.replace('Bearer ', '');
 
     if (!token) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Authentication required' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Authentication required' },
+        401
+      );
     }
 
     // Get user from token (using existing KV token system)
@@ -602,7 +608,10 @@ app.get('/api/me', async (c) => {
     }
 
     if (!user) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Invalid or expired token' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Invalid or expired token' },
+        401
+      );
     }
 
     // Check if user is banned
@@ -620,7 +629,7 @@ app.get('/api/me', async (c) => {
       created_at: user.createdDate,
       is_admin: user.isAdmin || false,
       warning_count: 0,
-      is_banned: user.isBanned || false
+      is_banned: user.isBanned || false,
     });
   } catch (error) {
     console.error('API /me error:', error);
@@ -628,7 +637,7 @@ app.get('/api/me', async (c) => {
   }
 });
 
-app.put('/api/me', async (c) => {
+app.put('/api/me', async c => {
   const appContext = c.get('app');
   if (!appContext) {
     return c.json({ success: false, error: 'Application context not available' }, 500);
@@ -640,7 +649,10 @@ app.put('/api/me', async (c) => {
     const token = authHeader?.replace('Bearer ', '');
 
     if (!token) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Authentication required' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Authentication required' },
+        401
+      );
     }
 
     // Get user from token
@@ -661,13 +673,16 @@ app.put('/api/me', async (c) => {
     }
 
     if (!user) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Invalid or expired token' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Invalid or expired token' },
+        401
+      );
     }
 
     // For now, just return success without actual update
     return c.json({
       success: true,
-      message: 'Profile update functionality available'
+      message: 'Profile update functionality available',
     });
   } catch (error) {
     console.error('API PUT /me error:', error);
@@ -675,7 +690,7 @@ app.put('/api/me', async (c) => {
   }
 });
 
-app.get('/api/me/listings', async (c) => {
+app.get('/api/me/listings', async c => {
   const appContext = c.get('app');
   if (!appContext) {
     return c.json({ success: false, error: 'Application context not available' }, 500);
@@ -687,7 +702,10 @@ app.get('/api/me/listings', async (c) => {
     const token = authHeader?.replace('Bearer ', '');
 
     if (!token) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Authentication required' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Authentication required' },
+        401
+      );
     }
 
     // Get user from token
@@ -708,7 +726,10 @@ app.get('/api/me/listings', async (c) => {
     }
 
     if (!user) {
-      return c.json({ success: false, error: 'Unauthorized', message: 'Invalid or expired token' }, 401);
+      return c.json(
+        { success: false, error: 'Unauthorized', message: 'Invalid or expired token' },
+        401
+      );
     }
 
     // Return empty listings for now
@@ -723,8 +744,8 @@ app.get('/api/me/listings', async (c) => {
         flagged: 0,
         featured: 0,
         totalViews: 0,
-        totalMessages: 0
-      }
+        totalMessages: 0,
+      },
     });
   } catch (error) {
     console.error('API /me/listings error:', error);
@@ -733,7 +754,7 @@ app.get('/api/me/listings', async (c) => {
 });
 
 // Basic categories endpoint
-app.get('/api/categories', async (c) => {
+app.get('/api/categories', async c => {
   const appContext = c.get('app');
   if (!appContext) {
     return c.json({ success: false, error: 'Application context not available' }, 500);
@@ -751,7 +772,7 @@ app.get('/api/categories', async (c) => {
         is_active: true,
         display_order: 1,
         created_at: '2025-09-15T10:00:00Z',
-        updated_at: '2025-09-15T10:00:00Z'
+        updated_at: '2025-09-15T10:00:00Z',
       },
       {
         id: 2,
@@ -762,7 +783,7 @@ app.get('/api/categories', async (c) => {
         is_active: true,
         display_order: 1,
         created_at: '2025-09-15T10:00:00Z',
-        updated_at: '2025-09-15T10:00:00Z'
+        updated_at: '2025-09-15T10:00:00Z',
       },
       {
         id: 3,
@@ -773,8 +794,8 @@ app.get('/api/categories', async (c) => {
         is_active: true,
         display_order: 2,
         created_at: '2025-09-15T10:00:00Z',
-        updated_at: '2025-09-15T10:00:00Z'
-      }
+        updated_at: '2025-09-15T10:00:00Z',
+      },
     ]);
   } catch (error) {
     console.error('API /categories error:', error);
@@ -783,7 +804,7 @@ app.get('/api/categories', async (c) => {
 });
 
 // Basic listings endpoint
-app.get('/api/listings', async (c) => {
+app.get('/api/listings', async c => {
   const appContext = c.get('app');
   if (!appContext) {
     return c.json({ success: false, error: 'Application context not available' }, 500);
@@ -798,8 +819,8 @@ app.get('/api/listings', async (c) => {
         page: 1,
         limit: 20,
         total: 0,
-        pages: 0
-      }
+        pages: 0,
+      },
     });
   } catch (error) {
     console.error('API /listings error:', error);

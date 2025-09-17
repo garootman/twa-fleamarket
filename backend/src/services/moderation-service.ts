@@ -11,7 +11,7 @@ import type {
   FlagWithDetails,
   FlagSearchFilters,
   ReviewFlagData,
-  FlagStats
+  FlagStats,
 } from '../db/models/flag';
 import type {
   CreateModerationAction,
@@ -20,7 +20,7 @@ import type {
   ModerationSearchFilters,
   BanUserData,
   WarnUserData,
-  ModerationStats
+  ModerationStats,
 } from '../db/models/moderation-action';
 
 /**
@@ -186,7 +186,8 @@ export class ModerationService {
       if (recentFlagsCount >= 5) {
         return {
           success: false,
-          error: 'Too many flags submitted in the last 24 hours. Please wait before submitting more.',
+          error:
+            'Too many flags submitted in the last 24 hours. Please wait before submitting more.',
         };
       }
 
@@ -213,7 +214,9 @@ export class ModerationService {
 
       const warnings: string[] = [];
       if (contentAnalysis.hasViolations) {
-        warnings.push('Content analysis detected potential violations. This flag has been prioritized for review.');
+        warnings.push(
+          'Content analysis detected potential violations. This flag has been prioritized for review.'
+        );
       }
 
       return {
@@ -286,7 +289,9 @@ export class ModerationService {
         if (listing) {
           // Get user's moderation history to determine appropriate action
           const userHistory = await this.moderationActionModel.getUserHistory(listing.userId);
-          const escalationPath = this.moderationActionModel.getEscalationPath(userHistory.totalActions + 1);
+          const escalationPath = this.moderationActionModel.getEscalationPath(
+            userHistory.totalActions + 1
+          );
 
           // Create moderation action based on escalation path
           if (escalationPath.actionType === 'WARNING') {
@@ -299,7 +304,8 @@ export class ModerationService {
 
             // Update user warning count
             await this.userModel.update(listing.userId, {
-              warningCount: (await this.userModel.findByTelegramId(listing.userId))!.warningCount + 1,
+              warningCount:
+                (await this.userModel.findByTelegramId(listing.userId))!.warningCount + 1,
             });
           } else if (escalationPath.actionType === 'BAN') {
             moderationAction = await this.moderationActionModel.banUser({
@@ -321,7 +327,11 @@ export class ModerationService {
             const userListings = await this.listingModel.getUserListings(listing.userId);
             for (const userListing of userListings) {
               if (userListing.status === 'active') {
-                await this.listingModel.update(userListing.id, { status: 'removed' }, listing.userId);
+                await this.listingModel.update(
+                  userListing.id,
+                  { status: 'removed' },
+                  listing.userId
+                );
               }
             }
           }
@@ -374,7 +384,8 @@ export class ModerationService {
         details: `Blocked words detected: ${blockedWordResult.violations.join(', ')}`,
         confidence: 0.9,
       });
-      riskScore += severity === 'critical' ? 40 : severity === 'high' ? 25 : severity === 'medium' ? 15 : 5;
+      riskScore +=
+        severity === 'critical' ? 40 : severity === 'high' ? 25 : severity === 'medium' ? 15 : 5;
     }
 
     // Check for spam patterns
@@ -485,7 +496,8 @@ export class ModerationService {
       flagsThisWeek: flagsThisWeek.totalCount,
       flagsLastWeek: flagsLastWeek.totalCount,
       resolutionTimeImprovement: 5.2, // Percentage improvement
-      accuracyRate: flagStats.upheldFlags / (flagStats.upheldFlags + flagStats.dismissedFlags) * 100 || 0,
+      accuracyRate:
+        (flagStats.upheldFlags / (flagStats.upheldFlags + flagStats.dismissedFlags)) * 100 || 0,
     };
 
     return {
@@ -574,7 +586,10 @@ export class ModerationService {
    */
   async shouldAutoModerate(listing: any): Promise<boolean> {
     const analysis = await this.analyzeListingContent(listing);
-    return analysis.recommendedAction.severity === 'critical' && analysis.recommendedAction.automaticAction;
+    return (
+      analysis.recommendedAction.severity === 'critical' &&
+      analysis.recommendedAction.automaticAction
+    );
   }
 
   /**
@@ -665,7 +680,8 @@ export class ModerationService {
     // Check for excessive caps
     const title = listing.title || '';
     const description = listing.description || '';
-    const capsRatio = (title + description).replace(/[^A-Z]/g, '').length / (title + description).length;
+    const capsRatio =
+      (title + description).replace(/[^A-Z]/g, '').length / (title + description).length;
     if (capsRatio > 0.5) {
       reasons.push('Excessive use of capital letters');
       spamScore += 20;
@@ -700,7 +716,8 @@ export class ModerationService {
     }
 
     const isSpam = spamScore >= 30;
-    const severity: 'low' | 'medium' | 'high' = spamScore >= 60 ? 'high' : spamScore >= 40 ? 'medium' : 'low';
+    const severity: 'low' | 'medium' | 'high' =
+      spamScore >= 60 ? 'high' : spamScore >= 40 ? 'medium' : 'low';
     const confidence = Math.min(0.9, spamScore / 100);
 
     return { isSpam, severity, confidence, reasons };
@@ -722,10 +739,18 @@ export class ModerationService {
 
     // Common scam phrases
     const scamPhrases = [
-      'urgent sale', 'must sell today', 'no questions asked',
-      'cash only', 'overseas buyer', 'shipping only',
-      'western union', 'money gram', 'paypal friends',
-      'inheritance', 'lottery winner', 'government grant'
+      'urgent sale',
+      'must sell today',
+      'no questions asked',
+      'cash only',
+      'overseas buyer',
+      'shipping only',
+      'western union',
+      'money gram',
+      'paypal friends',
+      'inheritance',
+      'lottery winner',
+      'government grant',
     ];
 
     for (const phrase of scamPhrases) {
@@ -736,7 +761,11 @@ export class ModerationService {
     }
 
     // Check for too-good-to-be-true pricing
-    if (listing.priceUsd && listing.priceUsd < 10 && text.includes('iphone' || 'macbook' || 'car')) {
+    if (
+      listing.priceUsd &&
+      listing.priceUsd < 10 &&
+      text.includes('iphone' || 'macbook' || 'car')
+    ) {
       reasons.push('Unrealistically low price for expensive item');
       scamScore += 40;
     }
@@ -750,7 +779,8 @@ export class ModerationService {
     }
 
     const isScam = scamScore >= 40;
-    const severity: 'medium' | 'high' | 'critical' = scamScore >= 80 ? 'critical' : scamScore >= 60 ? 'high' : 'medium';
+    const severity: 'medium' | 'high' | 'critical' =
+      scamScore >= 80 ? 'critical' : scamScore >= 60 ? 'high' : 'medium';
     const confidence = Math.min(0.95, scamScore / 100);
 
     return { isScam, severity, confidence, reasons };
@@ -894,13 +924,17 @@ export class ModerationService {
     flag: any,
     analysis: ContentAnalysisResult
   ): Promise<ModerationWorkflow> {
-    const priority = analysis.riskScore >= 60 ? 'urgent' :
-                    analysis.riskScore >= 40 ? 'high' :
-                    analysis.riskScore >= 20 ? 'medium' : 'low';
+    const priority =
+      analysis.riskScore >= 60
+        ? 'urgent'
+        : analysis.riskScore >= 40
+          ? 'high'
+          : analysis.riskScore >= 20
+            ? 'medium'
+            : 'low';
 
-    const estimatedResolutionTime = priority === 'urgent' ? 1 :
-                                  priority === 'high' ? 4 :
-                                  priority === 'medium' ? 12 : 24;
+    const estimatedResolutionTime =
+      priority === 'urgent' ? 1 : priority === 'high' ? 4 : priority === 'medium' ? 12 : 24;
 
     return {
       flagId: flag.id,

@@ -86,7 +86,6 @@ export class QuestionCommand {
         // Show question submission interface
         await this.showQuestionInterface(ctx, userInfo);
       }
-
     } catch (error) {
       console.error('Error handling /question command:', error);
       await this.sendErrorMessage(ctx);
@@ -173,7 +172,10 @@ Use the buttons below for common question types.
       .text('🛡️ Report Problem', 'question_report')
       .text('❓ General Question', 'question_general')
       .row()
-      .webApp('📋 Support Center', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`);
+      .webApp(
+        '📋 Support Center',
+        `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`
+      );
 
     if (isBanned) {
       keyboard.row().text('⚖️ Appeal Suspension', 'submit_appeal');
@@ -230,10 +232,11 @@ Use the buttons below for common question types.
         priority: ticket.priority,
         timestamp: ticket.createdAt.toISOString(),
       });
-
     } catch (error) {
       console.error('Error processing question:', error);
-      await ctx.reply('❌ Error submitting your question. Please try again or contact support directly.');
+      await ctx.reply(
+        '❌ Error submitting your question. Please try again or contact support directly.'
+      );
     }
   }
 
@@ -243,19 +246,39 @@ Use the buttons below for common question types.
   private categorizeQuestion(text: string): string {
     const lowerText = text.toLowerCase();
 
-    if (lowerText.includes('payment') || lowerText.includes('money') || lowerText.includes('refund')) {
+    if (
+      lowerText.includes('payment') ||
+      lowerText.includes('money') ||
+      lowerText.includes('refund')
+    ) {
       return 'payment';
     }
-    if (lowerText.includes('upload') || lowerText.includes('image') || lowerText.includes('error')) {
+    if (
+      lowerText.includes('upload') ||
+      lowerText.includes('image') ||
+      lowerText.includes('error')
+    ) {
       return 'technical';
     }
-    if (lowerText.includes('listing') || lowerText.includes('post') || lowerText.includes('publish')) {
+    if (
+      lowerText.includes('listing') ||
+      lowerText.includes('post') ||
+      lowerText.includes('publish')
+    ) {
       return 'listing';
     }
-    if (lowerText.includes('account') || lowerText.includes('profile') || lowerText.includes('banned')) {
+    if (
+      lowerText.includes('account') ||
+      lowerText.includes('profile') ||
+      lowerText.includes('banned')
+    ) {
       return 'account';
     }
-    if (lowerText.includes('report') || lowerText.includes('abuse') || lowerText.includes('inappropriate')) {
+    if (
+      lowerText.includes('report') ||
+      lowerText.includes('abuse') ||
+      lowerText.includes('inappropriate')
+    ) {
       return 'report';
     }
 
@@ -269,12 +292,20 @@ Use the buttons below for common question types.
     const lowerText = text.toLowerCase();
 
     // Urgent priorities
-    if (lowerText.includes('hack') || lowerText.includes('security') || lowerText.includes('fraud')) {
+    if (
+      lowerText.includes('hack') ||
+      lowerText.includes('security') ||
+      lowerText.includes('fraud')
+    ) {
       return 'urgent';
     }
 
     // High priorities
-    if (lowerText.includes('payment') || lowerText.includes('money') || lowerText.includes('banned')) {
+    if (
+      lowerText.includes('payment') ||
+      lowerText.includes('money') ||
+      lowerText.includes('banned')
+    ) {
       return 'high';
     }
 
@@ -372,7 +403,6 @@ Use the admin panel for detailed ticket management.
           .text('🔒 Close Ticket', `close_ticket_${ticket.id}`)
           .text('⬆️ Escalate', `escalate_ticket_${ticket.id}`),
       });
-
     } catch (error) {
       console.error('Failed to forward question to admin:', error);
     }
@@ -413,7 +443,10 @@ Thank you for contacting our support team! 🌟
     `.trim();
 
     const keyboard = new InlineKeyboard()
-      .webApp('📋 View Ticket', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support/ticket/${ticket.id}`)
+      .webApp(
+        '📋 View Ticket',
+        `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support/ticket/${ticket.id}`
+      )
       .row()
       .text('📚 Browse FAQ', 'help_faq')
       .text('💬 Ask Another', 'new_question');
@@ -467,7 +500,11 @@ Thank you for contacting our support team! 🌟
   /**
    * Send category-specific prompt
    */
-  private async sendCategoryPrompt(ctx: Context, category: string, categoryName: string): Promise<void> {
+  private async sendCategoryPrompt(
+    ctx: Context,
+    category: string,
+    categoryName: string
+  ): Promise<void> {
     const prompts = {
       technical: {
         message: `
@@ -494,7 +531,7 @@ To help us assist you better, please include:
 **Example:**
 \`/question I'm getting "Upload failed" error when trying to add images to my listing. Using Chrome on Windows 10, files are JPG under 5MB.\`
         `.trim(),
-        placeholder: 'Describe your technical issue in detail...'
+        placeholder: 'Describe your technical issue in detail...',
       },
       payment: {
         message: `
@@ -521,7 +558,7 @@ For payment-related issues, please provide:
 **Example:**
 \`/question Payment failed for order #12345 using credit card. Error: "Payment declined". Transaction was for $25.99 on March 15th.\`
         `.trim(),
-        placeholder: 'Describe your payment issue with transaction details...'
+        placeholder: 'Describe your payment issue with transaction details...',
       },
       listing: {
         message: `
@@ -547,7 +584,7 @@ For listing-related questions, include:
 **Example:**
 \`/question My listing "Digital Art Pack" (ID: LST123) isn't showing in search results. Published 3 days ago in Art category.\`
         `.trim(),
-        placeholder: 'Describe your listing question with specific details...'
+        placeholder: 'Describe your listing question with specific details...',
       },
       account: {
         message: `
@@ -573,7 +610,7 @@ For account-related problems, tell us:
 **Example:**
 \`/question Can't update my profile photo. Upload button doesn't work and getting "Invalid file" error.\`
         `.trim(),
-        placeholder: 'Describe your account issue...'
+        placeholder: 'Describe your account issue...',
       },
       report: {
         message: `
@@ -599,7 +636,7 @@ To report inappropriate content or behavior:
 **Example:**
 \`/question Reporting user @scammer123 for sending fake payment confirmations. They're trying to scam buyers with listing ID LST456.\`
         `.trim(),
-        placeholder: 'Describe what you need to report with evidence...'
+        placeholder: 'Describe what you need to report with evidence...',
       },
       general: {
         message: `
@@ -625,8 +662,8 @@ For general inquiries, feel free to ask about:
 **Example:**
 \`/question What's the difference between bumping a listing and promoting it? Which is better for new sellers?\`
         `.trim(),
-        placeholder: 'Ask your general question...'
-      }
+        placeholder: 'Ask your general question...',
+      },
     };
 
     const prompt = prompts[category as keyof typeof prompts];
@@ -676,8 +713,7 @@ If you believe your account was suspended incorrectly:
 
     await ctx.editMessageText(appealMessage, {
       parse_mode: 'Markdown',
-      reply_markup: new InlineKeyboard()
-        .text('← Back to Support', 'back_to_question'),
+      reply_markup: new InlineKeyboard().text('← Back to Support', 'back_to_question'),
     });
   }
 
@@ -696,7 +732,7 @@ If you believe your account was suspended incorrectly:
       listing: '📝',
       account: '👤',
       report: '🛡️',
-      general: '❓'
+      general: '❓',
     };
     return emojis[category as keyof typeof emojis] || '📋';
   }
@@ -706,7 +742,7 @@ If you believe your account was suspended incorrectly:
       urgent: 'within 2 hours',
       high: 'within 4 hours',
       medium: 'within 12 hours',
-      low: 'within 24 hours'
+      low: 'within 24 hours',
     };
     return times[priority as keyof typeof times] || 'within 24 hours';
   }
@@ -740,7 +776,10 @@ For urgent issues, mention "URGENT" in your message and try again.
 
     const keyboard = new InlineKeyboard()
       .text('🔄 Try Again', 'retry_question')
-      .webApp('🌐 Web Support', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`);
+      .webApp(
+        '🌐 Web Support',
+        `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`
+      );
 
     await ctx.reply(errorMessage, {
       reply_markup: keyboard,

@@ -92,7 +92,8 @@ let mockListings: SearchableListing[] = [
   {
     id: 1,
     title: 'iPhone 14 Pro Max 256GB Space Black',
-    description: 'Excellent condition iPhone 14 Pro Max with 256GB storage. Includes original box, charger, and unused accessories.',
+    description:
+      'Excellent condition iPhone 14 Pro Max with 256GB storage. Includes original box, charger, and unused accessories.',
     price: 89999,
     category_id: 2,
     condition: 'excellent',
@@ -107,7 +108,8 @@ let mockListings: SearchableListing[] = [
   {
     id: 2,
     title: 'MacBook Pro 16" M2 Max 32GB RAM',
-    description: 'Powerful MacBook Pro with M2 Max chip, 32GB RAM, 1TB SSD. Perfect for video editing and development work.',
+    description:
+      'Powerful MacBook Pro with M2 Max chip, 32GB RAM, 1TB SSD. Perfect for video editing and development work.',
     price: 299999,
     category_id: 3,
     condition: 'new',
@@ -152,7 +154,8 @@ let mockListings: SearchableListing[] = [
   {
     id: 5,
     title: 'Vintage Vinyl Record Collection',
-    description: 'Rare vintage vinyl records from the 70s and 80s. Over 200 albums in excellent condition.',
+    description:
+      'Rare vintage vinyl records from the 70s and 80s. Over 200 albums in excellent condition.',
     price: 150000,
     category_id: 5,
     condition: 'good',
@@ -248,10 +251,11 @@ const mockDB = {
           if (params.length > 0) {
             const searchTerm = params[0]?.toLowerCase();
             if (searchTerm) {
-              filteredListings = filteredListings.filter(listing =>
-                listing.title.toLowerCase().includes(searchTerm) ||
-                listing.description.toLowerCase().includes(searchTerm) ||
-                listing.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+              filteredListings = filteredListings.filter(
+                listing =>
+                  listing.title.toLowerCase().includes(searchTerm) ||
+                  listing.description.toLowerCase().includes(searchTerm) ||
+                  listing.tags.some(tag => tag.toLowerCase().includes(searchTerm))
               );
             }
           }
@@ -487,7 +491,9 @@ describe('Integration Test T037: Search and Discovery Features', () => {
       expect(categoriesData.categories).toBeDefined();
       expect(categoriesData.categories.length).toBeGreaterThan(0);
 
-      const electronicsCategory = categoriesData.categories.find((c: any) => c.name === 'Electronics');
+      const electronicsCategory = categoriesData.categories.find(
+        (c: any) => c.name === 'Electronics'
+      );
       expect(electronicsCategory).toBeDefined();
       expect(electronicsCategory.listing_count).toBeGreaterThan(0);
       expect(electronicsCategory.subcategories).toBeDefined();
@@ -544,7 +550,9 @@ describe('Integration Test T037: Search and Discovery Features', () => {
       expect(subcategoriesData.parent_category.name).toBe('Electronics');
 
       // Should include Smartphones and Computers as subcategories
-      const smartphonesSubcat = subcategoriesData.subcategories.find((c: any) => c.name === 'Smartphones');
+      const smartphonesSubcat = subcategoriesData.subcategories.find(
+        (c: any) => c.name === 'Smartphones'
+      );
       expect(smartphonesSubcat).toBeDefined();
     });
   });
@@ -556,9 +564,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?min_price=50000&max_price=100000', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?min_price=50000&max_price=100000',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -659,9 +670,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?category_id=2&condition=excellent&min_price=70000&sort=price_desc', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?category_id=2&condition=excellent&min_price=70000&sort=price_desc',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -718,9 +732,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?location=San Francisco, CA&radius_km=50', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?location=San Francisco, CA&radius_km=50',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -747,9 +764,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?location=San Francisco, CA&sort=distance', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?location=San Francisco, CA&sort=distance',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -776,9 +796,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?search=phone&include_facets=true', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?search=phone&include_facets=true',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -807,9 +830,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?category_id=2&include_facets=true', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?category_id=2&include_facets=true',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -838,9 +864,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
       }
 
       const searchQuery = 'gaming console';
-      const request = new Request(`http://localhost:8787/api/listings?search=${encodeURIComponent(searchQuery)}`, {
-        method: 'GET',
-      });
+      const request = new Request(
+        `http://localhost:8787/api/listings?search=${encodeURIComponent(searchQuery)}`,
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -935,9 +964,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
         return;
       }
 
-      const request = new Request('http://localhost:8787/api/listings?search=macbook&sort=relevance', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?search=macbook&sort=relevance',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},
@@ -995,9 +1027,12 @@ describe('Integration Test T037: Search and Discovery Features', () => {
 
       const startTime = Date.now();
 
-      const request = new Request('http://localhost:8787/api/listings?search=smartphone&category_id=2&min_price=50000', {
-        method: 'GET',
-      });
+      const request = new Request(
+        'http://localhost:8787/api/listings?search=smartphone&category_id=2&min_price=50000',
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},

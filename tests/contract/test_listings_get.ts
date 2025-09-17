@@ -343,11 +343,14 @@ describe('Contract Test: GET /api/listings', () => {
         expect(Array.isArray(listing.images)).toBe(true);
 
         // Validate status enum
-        expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden'])
-          .toContain(listing.status);
+        expect(['draft', 'active', 'expired', 'sold', 'archived', 'hidden']).toContain(
+          listing.status
+        );
 
         // Validate UUID format for id
-        expect(listing.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        expect(listing.id).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        );
 
         // Validate images array constraints (1-9 items)
         expect(listing.images.length).toBeGreaterThanOrEqual(1);
@@ -396,9 +399,12 @@ describe('Contract Test: GET /api/listings', () => {
     });
 
     it('should return 400 for invalid price parameters', async () => {
-      const request = new Request(`${BASE_URL}/api/listings?min_price=invalid&max_price=not_a_number`, {
-        method: 'GET',
-      });
+      const request = new Request(
+        `${BASE_URL}/api/listings?min_price=invalid&max_price=not_a_number`,
+        {
+          method: 'GET',
+        }
+      );
 
       const response = await worker.fetch(request, mockEnv, {
         waitUntil: () => {},

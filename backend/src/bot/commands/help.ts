@@ -62,7 +62,6 @@ export class HelpCommand {
       } else {
         await this.sendGroupHelp(ctx, userInfo);
       }
-
     } catch (error) {
       console.error('Error handling /help command:', error);
       await this.sendErrorMessage(ctx);
@@ -429,7 +428,12 @@ All marketplace functions are available through the web app interface. Use the "
     await ctx.editMessageText(tipsMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('🛍️ Apply Tips in App', this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`)
+        .webApp(
+          '🛍️ Apply Tips in App',
+          this.context.isLocalhost
+            ? 'https://localhost:5173'
+            : `https://${this.context.env.WEBAPP_DOMAIN}`
+        )
         .row()
         .text('← Back to Help', 'back_to_help'),
     });
@@ -488,7 +492,12 @@ All marketplace functions are available through the web app interface. Use the "
     await ctx.editMessageText(buyerHelpMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('🛒 Start Shopping', this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`)
+        .webApp(
+          '🛒 Start Shopping',
+          this.context.isLocalhost
+            ? 'https://localhost:5173'
+            : `https://${this.context.env.WEBAPP_DOMAIN}`
+        )
         .row()
         .text('💬 Contact Support', 'contact_support')
         .text('← Back to Help', 'back_to_help'),
@@ -555,7 +564,10 @@ All marketplace functions are available through the web app interface. Use the "
     await ctx.editMessageText(sellerHelpMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('📝 Create Listing', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/create`)
+        .webApp(
+          '📝 Create Listing',
+          `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/create`
+        )
         .row()
         .text('💬 Contact Support', 'contact_support')
         .text('← Back to Help', 'back_to_help'),
@@ -609,7 +621,10 @@ A: You'll receive notification with the reason. Use /appeal if you believe it's 
     await ctx.editMessageText(faqMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('📋 Full FAQ', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/faq`)
+        .webApp(
+          '📋 Full FAQ',
+          `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/faq`
+        )
         .row()
         .text('💬 Ask Question', 'contact_support')
         .text('← Back to Help', 'back_to_help'),
@@ -680,7 +695,10 @@ A: You'll receive notification with the reason. Use /appeal if you believe it's 
     await ctx.editMessageText(adminHelpMessage, {
       parse_mode: 'Markdown',
       reply_markup: new InlineKeyboard()
-        .webApp('🔧 Admin Panel', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/admin`)
+        .webApp(
+          '🔧 Admin Panel',
+          `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/admin`
+        )
         .row()
         .text('📊 Quick Stats', 'admin_quick_stats')
         .text('← Back to Help', 'back_to_help'),
@@ -740,7 +758,10 @@ Our support team is here to help you succeed! 🌟
       reply_markup: new InlineKeyboard()
         .text('📝 Submit Question', 'submit_question')
         .row()
-        .webApp('💬 Live Chat', `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`)
+        .webApp(
+          '💬 Live Chat',
+          `${this.context.isLocalhost ? 'https://localhost:5173' : `https://${this.context.env.WEBAPP_DOMAIN}`}/support`
+        )
         .row()
         .text('← Back to Help', 'back_to_help'),
     });

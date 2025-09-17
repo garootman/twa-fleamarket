@@ -169,13 +169,15 @@ export class CategoriesAPI {
       );
 
       return c.json(cachedResult);
-
     } catch (error) {
       console.error('Get categories error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -187,10 +189,13 @@ export class CategoriesAPI {
       const categoryId = parseInt(c.req.param('id'));
 
       if (isNaN(categoryId)) {
-        return c.json({
-          success: false,
-          error: 'Invalid category ID'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Invalid category ID',
+          },
+          400
+        );
       }
 
       const includeListings = c.req.query('includeListings') === 'true';
@@ -207,7 +212,7 @@ export class CategoriesAPI {
           if (!categoryDetails) {
             return {
               success: false,
-              error: 'Category not found'
+              error: 'Category not found',
             };
           }
 
@@ -224,7 +229,7 @@ export class CategoriesAPI {
             category: {
               ...categoryDetails,
               recentListings,
-            }
+            },
           };
         },
         { ttl: 300 } // Cache for 5 minutes
@@ -235,13 +240,15 @@ export class CategoriesAPI {
       }
 
       return c.json(cachedResult);
-
     } catch (error) {
       console.error('Get category details error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -255,17 +262,23 @@ export class CategoriesAPI {
       const includeStats = c.req.query('includeStats') === 'true';
 
       if (!query.trim()) {
-        return c.json({
-          success: false,
-          error: 'Search query is required'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Search query is required',
+          },
+          400
+        );
       }
 
       if (query.length < 2) {
-        return c.json({
-          success: false,
-          error: 'Search query must be at least 2 characters'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Search query must be at least 2 characters',
+          },
+          400
+        );
       }
 
       const searchResult = await this.categoryService.searchCategories(query, {
@@ -280,13 +293,15 @@ export class CategoriesAPI {
         totalCount: searchResult.totalCount,
         suggestions: searchResult.suggestions,
       });
-
     } catch (error) {
       console.error('Search categories error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -297,21 +312,27 @@ export class CategoriesAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       // Check admin permissions
-      if (!await this.isAdmin(user.telegramId)) {
-        return c.json({
-          success: false,
-          error: 'Admin privileges required'
-        }, 403);
+      if (!(await this.isAdmin(user.telegramId))) {
+        return c.json(
+          {
+            success: false,
+            error: 'Admin privileges required',
+          },
+          403
+        );
       }
 
-      const body = await c.req.json() as CreateCategoryRequest;
+      const body = (await c.req.json()) as CreateCategoryRequest;
 
       // Validate input
       const validationErrors: string[] = [];
@@ -335,37 +356,48 @@ export class CategoriesAPI {
       }
 
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Create category
       const createResult = await this.categoryService.createCategory(body);
 
       if (!createResult.success) {
-        return c.json({
-          success: false,
-          error: createResult.error || 'Failed to create category'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: createResult.error || 'Failed to create category',
+          },
+          400
+        );
       }
 
       // Invalidate cache
       await this.invalidateCategoriesCache();
 
-      return c.json({
-        success: true,
-        category: createResult.category,
-      }, 201);
-
+      return c.json(
+        {
+          success: true,
+          category: createResult.category,
+        },
+        201
+      );
     } catch (error) {
       console.error('Create category error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -376,30 +408,39 @@ export class CategoriesAPI {
     try {
       const user = await this.getCurrentUser(c);
       if (!user) {
-        return c.json({
-          success: false,
-          error: 'Authentication required'
-        }, 401);
+        return c.json(
+          {
+            success: false,
+            error: 'Authentication required',
+          },
+          401
+        );
       }
 
       // Check admin permissions
-      if (!await this.isAdmin(user.telegramId)) {
-        return c.json({
-          success: false,
-          error: 'Admin privileges required'
-        }, 403);
+      if (!(await this.isAdmin(user.telegramId))) {
+        return c.json(
+          {
+            success: false,
+            error: 'Admin privileges required',
+          },
+          403
+        );
       }
 
       const categoryId = parseInt(c.req.param('id'));
 
       if (isNaN(categoryId)) {
-        return c.json({
-          success: false,
-          error: 'Invalid category ID'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Invalid category ID',
+          },
+          400
+        );
       }
 
-      const body = await c.req.json() as Partial<CreateCategoryRequest>;
+      const body = (await c.req.json()) as Partial<CreateCategoryRequest>;
 
       // Validate input
       const validationErrors: string[] = [];
@@ -421,21 +462,27 @@ export class CategoriesAPI {
       }
 
       if (validationErrors.length > 0) {
-        return c.json({
-          success: false,
-          error: 'Validation failed',
-          details: validationErrors
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: validationErrors,
+          },
+          400
+        );
       }
 
       // Update category
       const updateResult = await this.categoryService.updateCategory(categoryId, body);
 
       if (!updateResult.success) {
-        return c.json({
-          success: false,
-          error: updateResult.error || 'Failed to update category'
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            error: updateResult.error || 'Failed to update category',
+          },
+          400
+        );
       }
 
       // Invalidate cache
@@ -445,13 +492,15 @@ export class CategoriesAPI {
         success: true,
         category: updateResult.category,
       });
-
     } catch (error) {
       console.error('Update category error:', error);
-      return c.json({
-        success: false,
-        error: 'Internal server error'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: 'Internal server error',
+        },
+        500
+      );
     }
   }
 
@@ -479,10 +528,7 @@ export class CategoriesAPI {
   private async invalidateCategoriesCache(): Promise<void> {
     try {
       // Invalidate all categories cache keys
-      const cachePatterns = [
-        'categories:*',
-        'category:*',
-      ];
+      const cachePatterns = ['categories:*', 'category:*'];
 
       for (const pattern of cachePatterns) {
         await this.cacheService.invalidatePattern(pattern);

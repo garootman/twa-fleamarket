@@ -278,8 +278,8 @@ describe('T011: GET /api/categories Contract Test', () => {
     const request = new Request('http://localhost/api/categories', {
       method: 'GET',
       headers: {
-        'Origin': 'http://localhost:5173'
-      }
+        Origin: 'http://localhost:5173',
+      },
     });
 
     const response = await worker.fetch(request, mockEnv, {
@@ -295,8 +295,8 @@ describe('T011: GET /api/categories Contract Test', () => {
     const request = new Request('http://localhost/api/categories', {
       method: 'OPTIONS',
       headers: {
-        'Origin': 'http://localhost:5173'
-      }
+        Origin: 'http://localhost:5173',
+      },
     });
 
     const response = await worker.fetch(request, mockEnv, {

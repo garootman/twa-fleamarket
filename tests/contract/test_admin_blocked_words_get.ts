@@ -93,10 +93,10 @@ const mockDB: D1Database = {
             id: 5,
             word: 'cheap',
             severity: 'warning',
-          }
+          },
         ],
         success: true,
-        meta: {} as any
+        meta: {} as any,
       }),
     }),
     first: async () => ({
@@ -287,7 +287,7 @@ describe('Contract Test T027: GET /api/admin/blocked-words', () => {
             all: async () => ({
               results: [],
               success: true,
-              meta: {} as any
+              meta: {} as any,
             }),
           }),
         }),
@@ -644,13 +644,16 @@ describe('Contract Test T027: GET /api/admin/blocked-words', () => {
 
   describe('Query parameters (if supported)', () => {
     it('should ignore unknown query parameters gracefully', async () => {
-      const request = new Request('http://localhost:8787/api/admin/blocked-words?unknown_param=value&limit=100', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock_admin_jwt_token',
-        },
-      });
+      const request = new Request(
+        'http://localhost:8787/api/admin/blocked-words?unknown_param=value&limit=100',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer mock_admin_jwt_token',
+          },
+        }
+      );
 
       if (!worker) {
         // Expected failure - endpoint not implemented

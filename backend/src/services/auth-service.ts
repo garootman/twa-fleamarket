@@ -50,11 +50,7 @@ export class AuthService {
   private botToken: string;
   private isDevelopment: boolean;
 
-  constructor(
-    db: DrizzleD1Database,
-    botToken: string,
-    isDevelopment = false
-  ) {
+  constructor(db: DrizzleD1Database, botToken: string, isDevelopment = false) {
     this.userModel = new UserModel(db);
     this.sessionModel = new UserSessionModel(db);
     this.mockUserModel = new MockUserModel(db);
@@ -99,7 +95,7 @@ export class AuthService {
       };
 
       const user = await this.userModel.createOrUpdate(userData);
-      const isNewUser = !await this.userModel.exists(authData.id);
+      const isNewUser = !(await this.userModel.exists(authData.id));
 
       // Check if user is banned
       if (user.isBanned) {
@@ -172,7 +168,7 @@ export class AuthService {
       };
 
       const user = await this.userModel.createOrUpdate(userData);
-      const isNewUser = !await this.userModel.exists(mockUser.telegramId);
+      const isNewUser = !(await this.userModel.exists(mockUser.telegramId));
 
       // Create session
       const session = await this.sessionModel.create({
@@ -310,7 +306,10 @@ export class AuthService {
   /**
    * Logout from all devices
    */
-  async logoutAll(userId: number, exceptToken?: string): Promise<{ success: boolean; revokedCount: number; error?: string }> {
+  async logoutAll(
+    userId: number,
+    exceptToken?: string
+  ): Promise<{ success: boolean; revokedCount: number; error?: string }> {
     try {
       const revokedCount = await this.sessionModel.revokeAllUserSessions(userId, exceptToken);
 
@@ -371,7 +370,9 @@ export class AuthService {
   /**
    * Extract user info from session token without validation (for middleware)
    */
-  async getSessionInfo(token: string): Promise<{ userId?: number; sessionId?: number; error?: string }> {
+  async getSessionInfo(
+    token: string
+  ): Promise<{ userId?: number; sessionId?: number; error?: string }> {
     try {
       const session = await this.sessionModel.findByToken(token);
       if (!session) {
@@ -423,14 +424,11 @@ export class AuthService {
 
     // Get recent logins (last 24 hours)
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const recentSessions = await this.sessionModel.search(
-      { createdAfter: yesterday },
-      1,
-      1000
-    );
+    const recentSessions = await this.sessionModel.search({ createdAfter: yesterday }, 1, 1000);
 
     return {
-      totalSessions: sessionStats.activeSessions + sessionStats.expiredSessions + sessionStats.revokedSessions,
+      totalSessions:
+        sessionStats.activeSessions + sessionStats.expiredSessions + sessionStats.revokedSessions,
       activeSessions: sessionStats.activeSessions,
       uniqueUsers: sessionStats.uniqueUsers,
       recentLogins: recentSessions.totalCount,
