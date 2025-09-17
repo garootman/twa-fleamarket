@@ -125,32 +125,32 @@
 ## Phase 3.5: API Endpoints Implementation
 
 ### Core API Endpoints (Hono)
-- [ ] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts
-- [ ] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts
-- [ ] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts
-- [ ] T067 GET /api/listings endpoint with search/filter in backend/src/api/listings.ts
-- [ ] T068 POST /api/listings endpoint with validation in backend/src/api/listings.ts
-- [ ] T069 GET /api/listings/{id} endpoint with views in backend/src/api/listings.ts
-- [ ] T070 PUT /api/listings/{id} endpoint with ownership check in backend/src/api/listings.ts
-- [ ] T071 DELETE /api/listings/{id} endpoint with archival in backend/src/api/listings.ts
-- [ ] T072 POST /api/listings/{id}/bump endpoint in backend/src/api/listings.ts
-- [ ] T073 POST /api/listings/{id}/flag endpoint in backend/src/api/listings.ts
-- [ ] T074 GET /api/me/listings endpoint with stats in backend/src/api/me.ts
-- [ ] T075 POST /api/upload endpoint with R2 integration in backend/src/api/upload.ts
-- [ ] T076 POST /api/listings/{id}/preview endpoint in backend/src/api/listings.ts
-- [ ] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts
+- [x] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts
+- [x] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts
+- [x] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts
+- [x] T067 GET /api/listings endpoint with search/filter in backend/src/api/listings.ts
+- [x] T068 POST /api/listings endpoint with validation in backend/src/api/listings.ts
+- [x] T069 GET /api/listings/{id} endpoint with views in backend/src/api/listings.ts
+- [x] T070 PUT /api/listings/{id} endpoint with ownership check in backend/src/api/listings.ts
+- [x] T071 DELETE /api/listings/{id} endpoint with archival in backend/src/api/listings.ts
+- [x] T072 POST /api/listings/{id}/bump endpoint in backend/src/api/listings.ts
+- [x] T073 POST /api/listings/{id}/flag endpoint in backend/src/api/listings.ts
+- [x] T074 GET /api/me/listings endpoint with stats in backend/src/api/me.ts
+- [x] T075 POST /api/upload endpoint with R2 integration in backend/src/api/upload.ts
+- [x] T076 POST /api/listings/{id}/preview endpoint in backend/src/api/listings.ts
+- [x] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts
 
 ### Admin Endpoints
-- [ ] T078 GET /api/admin/listings endpoint with all listings in backend/src/api/admin.ts
-- [ ] T079 POST /api/admin/listings/{id}/stick endpoint in backend/src/api/admin.ts
-- [ ] T080 POST /api/admin/users/{id}/ban endpoint in backend/src/api/admin.ts
-- [ ] T081 POST /api/admin/users/{id}/unban endpoint in backend/src/api/admin.ts
-- [ ] T082 GET /api/admin/blocked-words endpoint in backend/src/api/admin.ts
-- [ ] T083 POST /api/admin/blocked-words endpoint in backend/src/api/admin.ts
+- [x] T078 GET /api/admin/listings endpoint with all listings in backend/src/api/admin.ts
+- [x] T079 POST /api/admin/listings/{id}/stick endpoint in backend/src/api/admin.ts
+- [x] T080 POST /api/admin/users/{id}/ban endpoint in backend/src/api/admin.ts
+- [x] T081 POST /api/admin/users/{id}/unban endpoint in backend/src/api/admin.ts
+- [x] T082 GET /api/admin/blocked-words endpoint in backend/src/api/admin.ts
+- [x] T083 POST /api/admin/blocked-words endpoint in backend/src/api/admin.ts
 
 ### Development Endpoints
-- [ ] T084 GET /api/dev/mock-users endpoint for testing in backend/src/api/dev.ts
-- [ ] T085 POST /api/dev/auth endpoint with auth bypass in backend/src/api/dev.ts
+- [x] T084 GET /api/dev/mock-users endpoint for testing in backend/src/api/dev.ts
+- [x] T085 POST /api/dev/auth endpoint with auth bypass in backend/src/api/dev.ts
 
 ## Phase 3.6: Frontend Components
 

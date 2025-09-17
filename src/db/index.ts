@@ -13,6 +13,11 @@ export class Database {
     this.d1 = d1Database;
   }
 
+  // Getter to access the Drizzle instance for new API services
+  get drizzle() {
+    return this.db;
+  }
+
   // Legacy methods that still use raw SQL (these are deprecated and removed now)
   async getSetting(_settingName: string): Promise<string | null> {
     throw new Error('Settings table removed - use environment variables or KV instead');

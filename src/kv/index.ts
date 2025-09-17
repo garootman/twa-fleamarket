@@ -10,6 +10,11 @@ export class KVStorage {
     this.cache = new CacheService(kvNamespace);
   }
 
+  // Getter to access the KV namespace for new API services
+  get namespace() {
+    return this.kv;
+  }
+
   // Token operations
   async saveToken(tokenHash: string, userData: User, ttlSeconds: number = 86400): Promise<void> {
     await this.kv.put(`token:${tokenHash}`, JSON.stringify(userData), {
