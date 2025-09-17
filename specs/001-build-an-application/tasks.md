@@ -78,30 +78,30 @@
 - [x] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
 
 ### Integration Tests (User Journeys)
-- [ ] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
-- [ ] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts
-- [ ] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts
-- [ ] T034 [P] Integration test moderation and flagging system in backend/tests/integration/test_moderation_system.ts
-- [ ] T035 [P] Integration test admin panel functionality in backend/tests/integration/test_admin_panel.ts
-- [ ] T036 [P] Integration test premium features with payment in backend/tests/integration/test_premium_features.ts
-- [ ] T037 [P] Integration test search and discovery features in backend/tests/integration/test_search_discovery.ts
-- [ ] T038 [P] Integration test KV caching performance in backend/tests/integration/test_kv_caching.ts
-- [ ] T039 [P] Integration test mock user system for local dev in backend/tests/integration/test_mock_users.ts
+- [x] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
+- [x] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts
+- [x] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts
+- [x] T034 [P] Integration test moderation and flagging system in backend/tests/integration/test_moderation_system.ts
+- [x] T035 [P] Integration test admin panel functionality in backend/tests/integration/test_admin_panel.ts
+- [x] T036 [P] Integration test premium features with payment in backend/tests/integration/test_premium_features.ts
+- [x] T037 [P] Integration test search and discovery features in backend/tests/integration/test_search_discovery.ts
+- [x] T038 [P] Integration test KV caching performance in backend/tests/integration/test_kv_caching.ts
+- [x] T039 [P] Integration test mock user system for local dev in backend/tests/integration/test_mock_users.ts
 
 ## Phase 3.3: Database Models (ONLY after tests are failing)
 
 ### Database Models (Drizzle ORM)
-- [ ] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts
-- [ ] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts
-- [ ] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts
-- [ ] T043 [P] Flag model for content moderation in backend/src/db/models/flag.ts
-- [ ] T044 [P] ModerationAction model for admin actions in backend/src/db/models/moderation-action.ts
-- [ ] T045 [P] Appeal model for user appeals in backend/src/db/models/appeal.ts
-- [ ] T046 [P] PremiumFeature model for paid features in backend/src/db/models/premium-feature.ts
-- [ ] T047 [P] UserSession model for auth tokens in backend/src/db/models/user-session.ts
-- [ ] T048 [P] BlockedWord model for content filtering in backend/src/db/models/blocked-word.ts
-- [ ] T049 [P] MockUser model for local testing in backend/src/db/models/mock-user.ts
-- [ ] T050 [P] CacheEntry model for KV cache in backend/src/db/models/cache-entry.ts
+- [x] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts
+- [x] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts
+- [x] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts
+- [x] T043 [P] Flag model for content moderation in backend/src/db/models/flag.ts
+- [x] T044 [P] ModerationAction model for admin actions in backend/src/db/models/moderation-action.ts
+- [x] T045 [P] Appeal model for user appeals in backend/src/db/models/appeal.ts
+- [x] T046 [P] PremiumFeature model for paid features in backend/src/db/models/premium-feature.ts
+- [x] T047 [P] UserSession model for auth tokens in backend/src/db/models/user-session.ts
+- [x] T048 [P] BlockedWord model for content filtering in backend/src/db/models/blocked-word.ts
+- [x] T049 [P] MockUser model for local testing in backend/src/db/models/mock-user.ts
+- [x] T050 [P] CacheEntry model for KV cache in backend/src/db/models/cache-entry.ts
 
 ## Phase 3.4: Service Layer & Bot Commands
 
