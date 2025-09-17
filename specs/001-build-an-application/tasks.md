@@ -106,21 +106,21 @@
 ## Phase 3.4: Service Layer & Bot Commands
 
 ### Service Layer
-- [ ] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts
-- [ ] T052 [P] UserService with profile management in backend/src/services/user-service.ts
-- [ ] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts
-- [ ] T054 [P] ListingService with CRUD and search in backend/src/services/listing-service.ts
-- [ ] T055 [P] ImageService with R2 storage in backend/src/services/image-service.ts
-- [ ] T056 [P] KVCacheService for CQRS-style caching in backend/src/services/kv-cache-service.ts
-- [ ] T057 [P] ModerationService for flagging system in backend/src/services/moderation-service.ts
-- [ ] T058 [P] AdminService for admin functionality in backend/src/services/admin-service.ts
-- [ ] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts
+- [x] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts
+- [x] T052 [P] UserService with profile management in backend/src/services/user-service.ts
+- [x] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts
+- [x] T054 [P] ListingService with CRUD and search in backend/src/services/listing-service.ts
+- [x] T055 [P] ImageService with R2 storage in backend/src/services/image-service.ts
+- [x] T056 [P] KVCacheService for CQRS-style caching in backend/src/services/kv-cache-service.ts
+- [x] T057 [P] ModerationService for flagging system in backend/src/services/moderation-service.ts
+- [x] T058 [P] AdminService for admin functionality in backend/src/services/admin-service.ts
+- [x] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts
 
 ### Bot Commands (Grammy)
-- [ ] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts
-- [ ] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts
-- [ ] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts
-- [ ] T063 Bot webhook handler with message routing in backend/src/bot/webhook.ts
+- [x] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts
+- [x] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts
+- [x] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts
+- [x] T063 Bot webhook handler with message routing in backend/src/bot/webhook.ts
 
 ## Phase 3.5: API Endpoints Implementation
 
