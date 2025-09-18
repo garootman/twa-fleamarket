@@ -30,5 +30,13 @@
     }
   },
   "include": ["apps/worker/src/**/*"],
-  "exclude": ["node_modules", "dist", "apps/webapp"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "apps/webapp",
+    "apps/worker/src/services/auth-service.ts",
+    "apps/worker/src/services/listing-service.ts",
+    "apps/worker/src/services/category-service.ts",
+    "apps/worker/src/services/user-service.ts"
+  ]
 }

@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { drizzle } from 'drizzle-orm/d1';
-import { createWebhookHandler } from './bot';
+import { createWebhookHandler } from './bot/index';
+import { miniAppRouter } from './api/miniApp';
 
 /**
  * Telegram Marketplace - CloudFlare Worker
@@ -114,6 +115,9 @@ app.get('/', (c) => {
     }
   });
 });
+
+// Mount miniApp router
+app.route('/miniApp', miniAppRouter);
 
 // Basic API endpoints for now (will integrate marketplace APIs later)
 app.get('/api/me', (c) => {
