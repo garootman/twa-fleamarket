@@ -205,9 +205,9 @@
 ### Documentation & Final Setup
 
 - [x] T111 [P] Update project README with setup instructions
-- [ ] T112 [P] Create database migration scripts for schema changes
-- [ ] T113 [P] Setup production environment variables and secrets
-- [ ] T114 Run quickstart.md validation scenarios with mock users
+- [x] T112 [P] Create database migration scripts for schema changes
+- [x] T113 [P] Setup production environment variables and secrets
+- [x] T114 Run quickstart.md validation scenarios with mock users
 
 ## Dependencies
 

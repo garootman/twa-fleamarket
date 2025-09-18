@@ -32,10 +32,9 @@ Thumbs.db
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+.dev.vars
+!.dev.vars.example
 
 # Test files
 coverage/

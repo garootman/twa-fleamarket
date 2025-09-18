@@ -1,3 +1,100 @@
+# Telegram Marketplace - Development Environment Variables
+#
+# Copy this file to .dev.vars for local development
+# Configure these in CloudFlare Workers for production
+#
+# Generate secrets with: openssl rand -hex 32
+
+# =============================================================================
+# CORE TELEGRAM CONFIGURATION (Required)
+# =============================================================================
+
+# Get from @BotFather when creating your bot
 TELEGRAM_BOT_TOKEN=0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+# Set to true for development, false for production
 TELEGRAM_USE_TEST_API=true
-FRONTEND_URL=https://aaaaaaaa-0000.euw.devtunnels.ms
+
+# Generate with: openssl rand -hex 32
+TELEGRAM_WEBHOOK_SECRET=your_webhook_secret_here
+
+# =============================================================================
+# APPLICATION SECRETS (Required)
+# =============================================================================
+
+# Generate with: openssl rand -hex 24
+INIT_SECRET=your_initialization_secret_here
+
+# Generate with: openssl rand -hex 32
+JWT_SECRET=your_jwt_secret_key_here
+
+# Generate with: openssl rand -hex 32
+SESSION_ENCRYPTION_KEY=your_session_encryption_key_here
+
+# =============================================================================
+# APPLICATION CONFIGURATION
+# =============================================================================
+
+NODE_ENV=development
+FRONTEND_URL=http://localhost:5173
+ADMIN_TELEGRAM_ID=your_telegram_id
+
+# =============================================================================
+# DEVELOPMENT FEATURES
+# =============================================================================
+
+DEV_MODE_ENABLED=true
+MOCK_USERS_ENABLED=true
+AUTH_BYPASS_ENABLED=true
+DEBUG_MODE=true
+VERBOSE_LOGGING=true
+
+# =============================================================================
+# DATABASE & STORAGE (CloudFlare Resources)
+# =============================================================================
+
+D1_DATABASE_NAME=marketplace-dev-db
+R2_BUCKET_NAME=marketplace-dev-images
+KV_CACHE_NAMESPACE=marketplace-dev-cache
+KV_SESSION_NAMESPACE=marketplace-dev-sessions
+
+# =============================================================================
+# FEATURE CONFIGURATION
+# =============================================================================
+
+PREMIUM_FEATURES_ENABLED=true
+CONTENT_MODERATION_ENABLED=true
+CACHE_ENABLED=true
+RATE_LIMIT_ENABLED=false
+
+# Pricing (Development - Lower costs)
+BUMP_PRICE_STARS=1
+FEATURED_PRICE_STARS=2
+URGENT_PRICE_STARS=1
+
+# Performance Settings
+CACHE_DEFAULT_TTL=60
+CACHE_SEARCH_TTL=30
+CACHE_CATEGORY_TTL=300
+
+# Security (Relaxed for development)
+CORS_ORIGIN=*
+SECURITY_HEADERS_ENABLED=false
+
+# Content Moderation (Lenient for development)
+PROFANITY_FILTER_STRICT_MODE=false
+AUTO_HIDE_FLAG_THRESHOLD=10
+AUTO_BAN_FLAG_THRESHOLD=20
+
+# File Upload
+MAX_UPLOAD_SIZE=10485760
+MAX_IMAGES_PER_LISTING=10
+
+# Session Configuration
+SESSION_TTL_HOURS=168
+SESSION_REFRESH_THRESHOLD_HOURS=24
+
+# Error Reporting (Disabled for development)
+ERROR_REPORTING_ENABLED=false
+ANALYTICS_ENABLED=false
+PERFORMANCE_MONITORING_ENABLED=true
