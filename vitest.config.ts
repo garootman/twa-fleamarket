@@ -4,12 +4,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'tests/**/*.ts'],
+    include: ['apps/worker/tests/**/*.ts', 'apps/worker/src/**/*.test.ts'],
     exclude: ['webapp/**/*', 'node_modules/**/*'],
   },
   resolve: {
     alias: {
-      '@': './src',
+      '@': './apps/worker/src',
     },
   },
 });

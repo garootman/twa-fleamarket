@@ -50,13 +50,13 @@ DEBUG_MODE=true
 VERBOSE_LOGGING=true
 
 # =============================================================================
-# DATABASE & STORAGE (CloudFlare Resources)
+# NOTE: Database & Storage Resources
 # =============================================================================
-
-D1_DATABASE_NAME=marketplace-dev-db
-R2_BUCKET_NAME=marketplace-dev-images
-KV_CACHE_NAMESPACE=marketplace-dev-cache
-KV_SESSION_NAMESPACE=marketplace-dev-sessions
+# CloudFlare resource bindings are configured in wrangler.toml:
+# - D1 databases (binding: "DB")
+# - KV namespaces (binding: "CACHE_KV", "SESSION_KV")
+# - R2 buckets (binding: "R2_BUCKET")
+# Only application secrets and configuration go in .dev.vars
 
 # =============================================================================
 # FEATURE CONFIGURATION

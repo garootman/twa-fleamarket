@@ -16,20 +16,19 @@
     "exactOptionalPropertyTypes": true,
     "declaration": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./apps/worker/src",
     "forceConsistentCasingInFileNames": true,
     "types": ["vitest/globals", "@cloudflare/workers-types"],
-    "baseUrl": "./src",
+    "baseUrl": "./apps/worker/src",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/admin/*": ["./src/admin/*"],
-      "@/bot/*": ["./src/bot/*"],
-      "@/db/*": ["./src/db/*"],
-      "@/dev/*": ["./src/dev/*"],
-      "@/kv/*": ["./src/kv/*"],
-      "@/r2/*": ["./src/r2/*"]
+      "@/*": ["./apps/worker/src/*"],
+      "@/api/*": ["./apps/worker/src/api/*"],
+      "@/bot/*": ["./apps/worker/src/bot/*"],
+      "@/db/*": ["./apps/worker/src/db/*"],
+      "@/services/*": ["./apps/worker/src/services/*"],
+      "@/middleware/*": ["./apps/worker/src/middleware/*"]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "webapp"]
+  "include": ["apps/worker/src/**/*"],
+  "exclude": ["node_modules", "dist", "apps/webapp"]
 }

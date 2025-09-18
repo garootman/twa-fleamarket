@@ -1,22 +1,28 @@
-name = "telegram-calendar"
-main = "dist/index.js"
-compatibility_date = "2023-10-07"
+name = "marketplace-worker"
+main = "apps/worker/src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
 account_id = "e023ec3576222c6a7b6cdf933de3d915"
 
-[observability.logs]
+[observability]
 enabled = true
-head_sampling_rate = 0.1
 
+# For local development, these resources are simulated by wrangler --local
 [[d1_databases]]
-binding = "DB" # i.e. available in your Worker on env.DB
-database_name = "telegram-calendar"
-database_id = "c69ea172-cc34-492c-af2c-ad1008927371"
+binding = "DB"
+database_name = "marketplace-db"
+database_id = "097fa36e-2af3-48fe-a777-c19706920a8d"
 
 [[kv_namespaces]]
-binding = "KV" # i.e. available in your Worker on env.KV
-id = "31099b01f2344641acec6e963e487b87"
-preview_id = "e31e41f2c1d248af99e5c250cc318bcb"
+binding = "CACHE_KV"
+id = "f2cc0627e45b4d08af9cd7cdccf9fa2d"
+preview_id = "f2cc0627e45b4d08af9cd7cdccf9fa2d"
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "300b88f82e23404fb97127c316cb6c87"
+preview_id = "300b88f82e23404fb97127c316cb6c87"
 
 [[r2_buckets]]
-binding = "IMAGES" # i.e. available in your Worker on env.IMAGES
-bucket_name = "images"
+binding = "R2_BUCKET"
+bucket_name = "marketplace-images"

@@ -3,6 +3,35 @@
 **Input**: Design documents from `/specs/001-build-an-application/`
 **Prerequisites**: plan.md (✓), research.md (✓), data-model.md (✓), contracts/ (✓)
 
+## ⚠️ CURRENT STATUS SUMMARY (Updated 2025-09-18)
+
+**What's Actually Working:**
+- ✅ **Frontend webapp** (localhost:5173) - Most React components exist and work
+- ✅ **Basic backend worker** (localhost:8787) - Minimal API with health, categories, listings endpoints
+- ✅ **Bot foundation** - Basic commands (/start, /help, /question) exist
+- ✅ **Test structure** - 152 test files exist (TDD approach), but 150/229 tests fail due to missing implementation
+- ✅ **Dependencies** - All required packages installed
+
+**What's Missing (marked as ✓ but NOT implemented):**
+- ❌ **Backend structure** - Missing: services/, api/, middleware/, admin/, kv/, r2/, dev/ folders
+- ❌ **Database models** - No models/ folder, only basic db structure
+- ❌ **API endpoints** - Tests expect /miniApp/* but worker has /api/*, most endpoints return 404
+- ❌ **Authentication** - No proper auth system implemented
+- ❌ **Complex features** - KV caching, R2 storage, admin panel, moderation, premium features
+
+**Key Issues:**
+1. **Test/Implementation Mismatch** - Tests were created (TDD) but implementation is incomplete
+2. **API URL Mismatch** - Frontend uses external backend (devtunnel), local worker has different endpoints
+3. **Structure Gap** - Many folders/files marked as complete don't exist
+
+**Legend:**
+- [x] = Actually implemented and working
+- [~] = Partially implemented
+- [!] = Test exists but implementation missing/incomplete
+- [ ] = Not done
+
+This file has been updated to reflect the ACTUAL state vs original markings.
+
 ## Execution Flow (main)
 
 ```
@@ -36,14 +65,14 @@
 
 **CRITICAL: Restructure existing working code first**
 
-- [x] T001 [P] Reorganize backend bot commands to `/src/bot/` folder structure
-- [x] T002 [P] Restructure database files to `/src/db/` with proper schema organization
-- [x] T003 [P] Move KV caching logic to `/src/kv/` library folder
-- [x] T004 [P] Organize R2 image handling to `/src/r2/` folder
-- [x] T005 [P] Create admin functionality folder `/src/admin/` for management features
-- [x] T006 [P] Setup dev utilities in `/src/dev/` for mock users and auth bypass
-- [x] T007 Add missing dependencies: leo-profanity, Artillery for load testing
-- [x] T008 [P] Configure TypeScript paths for new folder structure
+- [x] T001 [P] Reorganize backend bot commands to `/src/bot/` folder structure (✅ DONE - basic bot structure exists)
+- [ ] T002 [P] Restructure database files to `/src/db/` with proper schema organization (❌ INCOMPLETE - basic db folder exists but no models)
+- [ ] T003 [P] Move KV caching logic to `/src/kv/` library folder (❌ NOT DONE - kv/ folder missing)
+- [ ] T004 [P] Organize R2 image handling to `/src/r2/` folder (❌ NOT DONE - r2/ folder missing)
+- [ ] T005 [P] Create admin functionality folder `/src/admin/` for management features (❌ NOT DONE - admin/ folder missing)
+- [ ] T006 [P] Setup dev utilities in `/src/dev/` for mock users and auth bypass (❌ NOT DONE - dev/ folder missing)
+- [x] T007 Add missing dependencies: leo-profanity, Artillery for load testing (✅ DONE - dependencies added)
+- [ ] T008 [P] Configure TypeScript paths for new folder structure (❌ INCOMPLETE - paths don't match actual structure)
 
 ## Phase 3.2: Contract Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 
@@ -51,102 +80,102 @@
 
 ### API Contract Tests
 
-- [x] T009 [P] Contract test POST /miniApp/init (existing auth) in tests/contract/test_auth_post.ts
-- [x] T010 [P] Contract test GET /api/me in tests/contract/test_me_get.ts
-- [x] T011 [P] Contract test GET /api/categories in tests/contract/test_categories_get.ts
-- [x] T012 [P] Contract test GET /api/listings in tests/contract/test_listings_get.ts
-- [x] T013 [P] Contract test POST /api/listings in tests/contract/test_listings_post.ts
-- [x] T014 [P] Contract test GET /api/listings/{id} in tests/contract/test_listings_by_id_get.ts
-- [x] T015 [P] Contract test PUT /api/listings/{id} in tests/contract/test_listings_by_id_put.ts
-- [x] T016 [P] Contract test POST /api/listings/{id}/bump in tests/contract/test_listings_bump_post.ts
-- [x] T017 [P] Contract test POST /api/listings/{id}/flag in tests/contract/test_listings_flag_post.ts
-- [x] T018 [P] Contract test GET /api/me/listings in tests/contract/test_me_listings_get.ts
-- [x] T019 [P] Contract test POST /api/upload in tests/contract/test_upload_post.ts
-- [x] T020 [P] Contract test POST /api/listings/{id}/preview in tests/contract/test_listings_preview_post.ts
-- [x] T021 [P] Contract test POST /api/listings/{id}/publish in tests/contract/test_listings_publish_post.ts
-- [x] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts
+- [!] T009 [P] Contract test POST /miniApp/init (existing auth) in tests/contract/test_auth_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T010 [P] Contract test GET /api/me in tests/contract/test_me_get.ts (⚠️ TEST EXISTS but returns basic response only)
+- [!] T011 [P] Contract test GET /api/categories in tests/contract/test_categories_get.ts (⚠️ TEST EXISTS, basic endpoint works)
+- [!] T012 [P] Contract test GET /api/listings in tests/contract/test_listings_get.ts (⚠️ TEST EXISTS, basic endpoint works)
+- [!] T013 [P] Contract test POST /api/listings in tests/contract/test_listings_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T014 [P] Contract test GET /api/listings/{id} in tests/contract/test_listings_by_id_get.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T015 [P] Contract test PUT /api/listings/{id} in tests/contract/test_listings_by_id_put.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T016 [P] Contract test POST /api/listings/{id}/bump in tests/contract/test_listings_bump_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T017 [P] Contract test POST /api/listings/{id}/flag in tests/contract/test_listings_flag_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T018 [P] Contract test GET /api/me/listings in tests/contract/test_me_listings_get.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T019 [P] Contract test POST /api/upload in tests/contract/test_upload_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T020 [P] Contract test POST /api/listings/{id}/preview in tests/contract/test_listings_preview_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T021 [P] Contract test POST /api/listings/{id}/publish in tests/contract/test_listings_publish_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T022 [P] Contract test POST /api/bot/webhook in tests/contract/test_bot_webhook_post.ts (⚠️ TEST EXISTS, basic endpoint works)
 
 ### Admin Contract Tests
 
-- [x] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts
-- [x] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts
-- [x] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts
-- [x] T026 [P] Contract test POST /api/admin/users/{id}/unban in tests/contract/test_admin_users_unban_post.ts
-- [x] T027 [P] Contract test GET /api/admin/blocked-words in tests/contract/test_admin_blocked_words_get.ts
-- [x] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts
+- [!] T023 [P] Contract test GET /api/admin/listings in tests/contract/test_admin_listings_get.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T024 [P] Contract test POST /api/admin/listings/{id}/stick in tests/contract/test_admin_listings_stick_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T025 [P] Contract test POST /api/admin/users/{id}/ban in tests/contract/test_admin_users_ban_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T026 [P] Contract test POST /api/admin/users/{id}/unban in tests/contract/test_admin_users_unban_post.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T027 [P] Contract test GET /api/admin/blocked-words in tests/contract/test_admin_blocked_words_get.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T028 [P] Contract test POST /api/admin/blocked-words in tests/contract/test_admin_blocked_words_post.ts (⚠️ TEST EXISTS but endpoint missing)
 
 ### Development Contract Tests
 
-- [x] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts
-- [x] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts
+- [!] T029 [P] Contract test GET /api/dev/mock-users in tests/contract/test_dev_mock_users_get.ts (⚠️ TEST EXISTS but endpoint missing)
+- [!] T030 [P] Contract test POST /api/dev/auth in tests/contract/test_dev_auth_post.ts (⚠️ TEST EXISTS but endpoint missing)
 
 ### Integration Tests (User Journeys)
 
-- [x] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts
-- [x] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts
-- [x] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts
-- [x] T034 [P] Integration test moderation and flagging system in backend/tests/integration/test_moderation_system.ts
-- [x] T035 [P] Integration test admin panel functionality in backend/tests/integration/test_admin_panel.ts
-- [x] T036 [P] Integration test premium features with payment in backend/tests/integration/test_premium_features.ts
-- [x] T037 [P] Integration test search and discovery features in backend/tests/integration/test_search_discovery.ts
-- [x] T038 [P] Integration test KV caching performance in backend/tests/integration/test_kv_caching.ts
-- [x] T039 [P] Integration test mock user system for local dev in backend/tests/integration/test_mock_users.ts
+- [!] T031 [P] Integration test bot command functionality in backend/tests/integration/test_bot_commands.ts (⚠️ TEST EXISTS but many components missing)
+- [!] T032 [P] Integration test listing creation flow with preview in backend/tests/integration/test_listing_creation.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T033 [P] Integration test buyer-seller communication flow in backend/tests/integration/test_communication_flow.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T034 [P] Integration test moderation and flagging system in backend/tests/integration/test_moderation_system.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T035 [P] Integration test admin panel functionality in backend/tests/integration/test_admin_panel.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T036 [P] Integration test premium features with payment in backend/tests/integration/test_premium_features.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T037 [P] Integration test search and discovery features in backend/tests/integration/test_search_discovery.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T038 [P] Integration test KV caching performance in backend/tests/integration/test_kv_caching.ts (⚠️ TEST EXISTS but backend missing)
+- [!] T039 [P] Integration test mock user system for local dev in backend/tests/integration/test_mock_users.ts (⚠️ TEST EXISTS but backend missing)
 
 ## Phase 3.3: Database Models (ONLY after tests are failing)
 
 ### Database Models (Drizzle ORM)
 
-- [x] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts
-- [x] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts
-- [x] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts
-- [x] T043 [P] Flag model for content moderation in backend/src/db/models/flag.ts
-- [x] T044 [P] ModerationAction model for admin actions in backend/src/db/models/moderation-action.ts
-- [x] T045 [P] Appeal model for user appeals in backend/src/db/models/appeal.ts
-- [x] T046 [P] PremiumFeature model for paid features in backend/src/db/models/premium-feature.ts
-- [x] T047 [P] UserSession model for auth tokens in backend/src/db/models/user-session.ts
-- [x] T048 [P] BlockedWord model for content filtering in backend/src/db/models/blocked-word.ts
-- [x] T049 [P] MockUser model for local testing in backend/src/db/models/mock-user.ts
-- [x] T050 [P] CacheEntry model for KV cache in backend/src/db/models/cache-entry.ts
+- [ ] T040 [P] User model with Telegram integration in backend/src/db/models/user.ts (❌ NOT DONE - no models/ folder)
+- [ ] T041 [P] Category model with 2-level hierarchy in backend/src/db/models/category.ts (❌ NOT DONE - no models/ folder)
+- [ ] T042 [P] Listing model with premium features in backend/src/db/models/listing.ts (❌ NOT DONE - no models/ folder)
+- [ ] T043 [P] Flag model for content moderation in backend/src/db/models/flag.ts (❌ NOT DONE - no models/ folder)
+- [ ] T044 [P] ModerationAction model for admin actions in backend/src/db/models/moderation-action.ts (❌ NOT DONE - no models/ folder)
+- [ ] T045 [P] Appeal model for user appeals in backend/src/db/models/appeal.ts (❌ NOT DONE - no models/ folder)
+- [ ] T046 [P] PremiumFeature model for paid features in backend/src/db/models/premium-feature.ts (❌ NOT DONE - no models/ folder)
+- [ ] T047 [P] UserSession model for auth tokens in backend/src/db/models/user-session.ts (❌ NOT DONE - no models/ folder)
+- [ ] T048 [P] BlockedWord model for content filtering in backend/src/db/models/blocked-word.ts (❌ NOT DONE - no models/ folder)
+- [ ] T049 [P] MockUser model for local testing in backend/src/db/models/mock-user.ts (❌ NOT DONE - no models/ folder)
+- [ ] T050 [P] CacheEntry model for KV cache in backend/src/db/models/cache-entry.ts (❌ NOT DONE - no models/ folder)
 
 ## Phase 3.4: Service Layer & Bot Commands
 
 ### Service Layer
 
-- [x] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts
-- [x] T052 [P] UserService with profile management in backend/src/services/user-service.ts
-- [x] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts
-- [x] T054 [P] ListingService with CRUD and search in backend/src/services/listing-service.ts
-- [x] T055 [P] ImageService with R2 storage in backend/src/services/image-service.ts
-- [x] T056 [P] KVCacheService for CQRS-style caching in backend/src/services/kv-cache-service.ts
-- [x] T057 [P] ModerationService for flagging system in backend/src/services/moderation-service.ts
-- [x] T058 [P] AdminService for admin functionality in backend/src/services/admin-service.ts
-- [x] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts
+- [ ] T051 [P] AuthService with Telegram validation in backend/src/services/auth-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T052 [P] UserService with profile management in backend/src/services/user-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T053 [P] CategoryService with hierarchy queries in backend/src/services/category-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T054 [P] ListingService with CRUD and search in backend/src/services/listing-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T055 [P] ImageService with R2 storage in backend/src/services/image-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T056 [P] KVCacheService for CQRS-style caching in backend/src/services/kv-cache-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T057 [P] ModerationService for flagging system in backend/src/services/moderation-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T058 [P] AdminService for admin functionality in backend/src/services/admin-service.ts (❌ NOT DONE - no services/ folder)
+- [ ] T059 [P] PremiumService for paid features in backend/src/services/premium-service.ts (❌ NOT DONE - no services/ folder)
 
 ### Bot Commands (Grammy)
 
-- [x] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts
-- [x] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts
-- [x] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts
-- [x] T063 Bot webhook handler with message routing in backend/src/bot/webhook.ts
+- [x] T060 [P] Bot /start command with welcome message in backend/src/bot/commands/start.ts (✅ DONE - basic command exists)
+- [x] T061 [P] Bot /help command with navigation in backend/src/bot/commands/help.ts (✅ DONE - basic command exists)
+- [x] T062 [P] Bot /question command for admin contact in backend/src/bot/commands/question.ts (✅ DONE - basic command exists)
+- [~] T063 Bot webhook handler with message routing in backend/src/bot/webhook.ts (⚠️ PARTIAL - basic webhook exists but not in separate file)
 
 ## Phase 3.5: API Endpoints Implementation
 
 ### Core API Endpoints (Hono)
 
-- [x] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts
-- [x] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts
-- [x] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts
-- [x] T067 GET /api/listings endpoint with search/filter in backend/src/api/listings.ts
-- [x] T068 POST /api/listings endpoint with validation in backend/src/api/listings.ts
-- [x] T069 GET /api/listings/{id} endpoint with views in backend/src/api/listings.ts
-- [x] T070 PUT /api/listings/{id} endpoint with ownership check in backend/src/api/listings.ts
-- [x] T071 DELETE /api/listings/{id} endpoint with archival in backend/src/api/listings.ts
-- [x] T072 POST /api/listings/{id}/bump endpoint in backend/src/api/listings.ts
-- [x] T073 POST /api/listings/{id}/flag endpoint in backend/src/api/listings.ts
-- [x] T074 GET /api/me/listings endpoint with stats in backend/src/api/me.ts
-- [x] T075 POST /api/upload endpoint with R2 integration in backend/src/api/upload.ts
-- [x] T076 POST /api/listings/{id}/preview endpoint in backend/src/api/listings.ts
-- [x] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts
+- [ ] T064 POST /api/auth endpoint with Telegram validation in backend/src/api/auth.ts (❌ NOT DONE - no api/ folder)
+- [~] T065 GET /api/me endpoint for user profile in backend/src/api/me.ts (⚠️ PARTIAL - basic endpoint exists but limited)
+- [~] T066 GET /api/categories endpoint with caching in backend/src/api/categories.ts (⚠️ PARTIAL - basic endpoint exists but no caching)
+- [~] T067 GET /api/listings endpoint with search/filter in backend/src/api/listings.ts (⚠️ PARTIAL - basic endpoint exists but no search/filter)
+- [ ] T068 POST /api/listings endpoint with validation in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T069 GET /api/listings/{id} endpoint with views in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T070 PUT /api/listings/{id} endpoint with ownership check in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T071 DELETE /api/listings/{id} endpoint with archival in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T072 POST /api/listings/{id}/bump endpoint in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T073 POST /api/listings/{id}/flag endpoint in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T074 GET /api/me/listings endpoint with stats in backend/src/api/me.ts (❌ NOT DONE - endpoint missing)
+- [ ] T075 POST /api/upload endpoint with R2 integration in backend/src/api/upload.ts (❌ NOT DONE - endpoint missing)
+- [ ] T076 POST /api/listings/{id}/preview endpoint in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
+- [ ] T077 POST /api/listings/{id}/publish endpoint in backend/src/api/listings.ts (❌ NOT DONE - endpoint missing)
 
 ### Admin Endpoints
 
@@ -166,23 +195,23 @@
 
 ### Frontend Components (React)
 
-- [x] T086 [P] App router with Telegram WebApp integration in frontend/src/App.tsx
-- [x] T087 [P] Auth component with Telegram initData in frontend/src/components/Auth.tsx
-- [x] T088 [P] Listing browse component with categories in frontend/src/components/ListingBrowse.tsx
-- [x] T089 [P] Listing detail component with gallery in frontend/src/components/ListingDetail.tsx
-- [x] T090 [P] Create listing form with preview in frontend/src/components/CreateListing.tsx
-- [x] T091 [P] User profile component with listings in frontend/src/components/Profile.tsx
-- [x] T092 [P] Admin panel component for moderation in frontend/src/components/AdminPanel.tsx
-- [x] T093 [P] Search component with full-text search in frontend/src/components/Search.tsx
-- [x] T094 [P] Image gallery with swipe navigation in frontend/src/components/ImageGallery.tsx
+- [x] T086 [P] App router with Telegram WebApp integration in frontend/src/App.tsx (✅ DONE - components exist)
+- [x] T087 [P] Auth component with Telegram initData in frontend/src/components/Auth.tsx (✅ DONE - component exists)
+- [x] T088 [P] Listing browse component with categories in frontend/src/components/ListingBrowse.tsx (✅ DONE - component exists)
+- [x] T089 [P] Listing detail component with gallery in frontend/src/components/ListingDetail.tsx (✅ DONE - component exists)
+- [x] T090 [P] Create listing form with preview in frontend/src/components/CreateListing.tsx (✅ DONE - component exists)
+- [x] T091 [P] User profile component with listings in frontend/src/components/Profile.tsx (✅ DONE - component exists)
+- [x] T092 [P] Admin panel component for moderation in frontend/src/components/AdminPanel.tsx (✅ DONE - component exists)
+- [x] T093 [P] Search component with full-text search in frontend/src/components/Search.tsx (✅ DONE - component exists)
+- [x] T094 [P] Image gallery with swipe navigation in frontend/src/components/ImageGallery.tsx (✅ DONE - component exists)
 
 ## Phase 3.7: Integration & Middleware
 
-- [x] T095 Connect ListingService to KV caching for performance in backend/src/services/listing-service.ts
-- [x] T096 Connect ImageService to CloudFlare R2 storage in backend/src/services/image-service.ts
-- [x] T097 Setup auth middleware with session validation in backend/src/middleware/auth.ts
-- [x] T098 Setup admin middleware with ADMIN_ID check in backend/src/middleware/admin.ts
-- [x] T099 Setup request/response logging middleware in backend/src/middleware/logging.ts
+- [ ] T095 Connect ListingService to KV caching for performance in backend/src/services/listing-service.ts (❌ NOT DONE - no services exist)
+- [ ] T096 Connect ImageService to CloudFlare R2 storage in backend/src/services/image-service.ts (❌ NOT DONE - no services exist)
+- [ ] T097 Setup auth middleware with session validation in backend/src/middleware/auth.ts (❌ NOT DONE - no middleware/ folder)
+- [ ] T098 Setup admin middleware with ADMIN_ID check in backend/src/middleware/admin.ts (❌ NOT DONE - no middleware/ folder)
+- [ ] T099 Setup request/response logging middleware in backend/src/middleware/logging.ts (❌ NOT DONE - no middleware/ folder)
 - [x] T100 Setup CORS and security headers for production in backend/src/middleware/security.ts
 - [x] T101 Setup profanity filtering with leo-profanity + custom blocklist in backend/src/middleware/content-filter.ts
 - [x] T102 Connect bot webhook to Telegram API with error handling in backend/src/bot/webhook.ts
@@ -205,9 +234,9 @@
 ### Documentation & Final Setup
 
 - [x] T111 [P] Update project README with setup instructions
-- [x] T112 [P] Create database migration scripts for schema changes
-- [x] T113 [P] Setup production environment variables and secrets
-- [x] T114 Run quickstart.md validation scenarios with mock users
+- [ ] T112 [P] Create database migration scripts for schema changes
+- [ ] T113 [P] Setup production environment variables and secrets
+- [ ] T114 Run quickstart.md validation scenarios with mock users
 
 ## Dependencies
 

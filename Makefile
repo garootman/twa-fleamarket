@@ -28,10 +28,8 @@ check-deps:
 # Install project dependencies
 .PHONY: install
 install: check-deps
-	@echo "$(BLUE)Installing root dependencies...$(RESET)"
+	@echo "$(BLUE)Installing dependencies...$(RESET)"
 	@npm install
-	@echo "$(BLUE)Installing webapp dependencies...$(RESET)"
-	@cd webapp && npm install
 	@echo "$(GREEN)✓ Dependencies installed$(RESET)"
 
 # Build TypeScript backend
@@ -47,7 +45,7 @@ typecheck:
 	@echo "$(BLUE)Type checking backend...$(RESET)"
 	@npm run build
 	@echo "$(BLUE)Type checking webapp...$(RESET)"
-	@cd webapp && npm run type-check
+	@cd apps/webapp && npm run type-check
 	@echo "$(GREEN)✓ Type checking completed$(RESET)"
 
 # Run tests for backend
@@ -61,7 +59,7 @@ test-backend:
 .PHONY: test-webapp
 test-webapp:
 	@echo "$(BLUE)Running webapp tests...$(RESET)"
-	@cd webapp && npm run test:run
+	@cd apps/webapp && npm run test:run
 	@echo "$(GREEN)✓ Webapp tests completed$(RESET)"
 
 # Run all tests
@@ -74,7 +72,7 @@ test: test-backend test-webapp
 webapp-dev-bypass:
 	@echo "$(BLUE)Starting webapp with auth bypass enabled...$(RESET)"
 	@echo "$(YELLOW)⚠️  Auth bypass is enabled - this bypasses Telegram authentication$(RESET)"
-	@cd webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev
+	@cd apps/webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev
 
 # Start both worker and webapp with auth bypass for local testing
 .PHONY: dev-local
@@ -88,7 +86,7 @@ dev-local: build
 	@echo "$(BLUE)Waiting for worker to start...$(RESET)"
 	@sleep 3
 	@echo "$(BLUE)Starting webapp with auth bypass...$(RESET)"
-	@cd webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev > ../webapp.log 2>&1 & \
+	@cd apps/webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev > ../webapp.log 2>&1 & \
 	echo $$! > webapp.pid && \
 	echo "$(GREEN)✓ Webapp started with auth bypass (PID: $$(cat webapp.pid))$(RESET)"
 	@echo ""
@@ -113,7 +111,7 @@ test-local: build
 	echo "$(GREEN)✓ Worker is responding$(RESET)" || \
 	{ echo "$(RED)✗ Worker is not responding$(RESET)"; make dev-stop; exit 1; }
 	@echo "$(BLUE)Starting webapp with auth bypass...$(RESET)"
-	@cd webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev > ../webapp.log 2>&1 & \
+	@cd apps/webapp && VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev > ../webapp.log 2>&1 & \
 	echo $$! > webapp.pid
 	@sleep 5
 	@echo "$(BLUE)Testing webapp endpoint...$(RESET)"
@@ -189,16 +187,20 @@ db-push:
 .PHONY: db-migrate-local
 db-migrate-local:
 	@echo "$(BLUE)Applying migrations to local database...$(RESET)"
-	@wrangler d1 execute DB --file src/db/migrations/0000_yellow_roulette.sql --local
-	@wrangler d1 execute DB --file src/db/migrations/0001_mixed_red_wolf.sql --local
+	@for migration in $$(ls apps/worker/src/db/migrations/*.sql | grep -v rollback | sort); do \
+		echo "$(CYAN)Applying: $$migration$(RESET)"; \
+		wrangler d1 execute DB --file "$$migration" --local || echo "$(YELLOW)Migration may have already been applied$(RESET)"; \
+	done
 	@echo "$(GREEN)✓ Local database migrated$(RESET)"
 
 # Apply migrations to remote database
 .PHONY: db-migrate-remote
 db-migrate-remote:
 	@echo "$(BLUE)Applying migrations to remote database...$(RESET)"
-	@wrangler d1 execute DB --file src/db/migrations/0000_yellow_roulette.sql --remote
-	@wrangler d1 execute DB --file src/db/migrations/0001_mixed_red_wolf.sql --remote
+	@for migration in $$(ls apps/worker/src/db/migrations/*.sql | grep -v rollback | sort); do \
+		echo "$(CYAN)Applying: $$migration$(RESET)"; \
+		wrangler d1 execute DB --file "$$migration" --remote || echo "$(YELLOW)Migration may have already been applied$(RESET)"; \
+	done
 	@echo "$(GREEN)✓ Remote database migrated$(RESET)"
 
 # Initialize local database (legacy - now uses migrations)
@@ -333,7 +335,7 @@ worker-stop:
 .PHONY: webapp-start
 webapp-start:
 	@echo "$(BLUE)Starting webapp development server...$(RESET)"
-	@cd webapp && VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run dev > ../webapp.log 2>&1 & \
+	@VITE_DEV_BYPASS_AUTH=true VITE_BACKEND_URL=http://localhost:$(WORKER_PORT) npm run webapp:dev > webapp.log 2>&1 & \
 	echo $$! > webapp.pid && \
 	echo "$(GREEN)✓ Webapp started (PID: $$(cat webapp.pid))$(RESET)" && \
 	echo "$(CYAN)Webapp URL: http://localhost:$(WEBAPP_PORT)$(RESET)" && \
@@ -424,9 +426,9 @@ clean: dev-stop
 	@echo "$(YELLOW)Killing any remaining workerd processes...$(RESET)"
 	@pkill -f workerd 2>/dev/null || echo "$(YELLOW)No workerd processes found$(RESET)"
 	@rm -rf dist/
-	@rm -rf webapp/dist/
+	@rm -rf apps/webapp/dist/
 	@rm -rf node_modules/
-	@rm -rf webapp/node_modules/
+	@rm -rf apps/webapp/node_modules/
 	@rm -f *.pid *.log .tunnel_url
 	@echo "$(GREEN)✓ Cleanup completed$(RESET)"
 
