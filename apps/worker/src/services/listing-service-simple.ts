@@ -307,4 +307,60 @@ export class ListingServiceSimple {
       return false;
     }
   }
+
+  /**
+   * Publish a draft listing
+   */
+  async publish(id: number, userId: number): Promise<Listing | null> {
+    try {
+      // First check if listing exists and belongs to user
+      const existing = await this.findById(id);
+      if (!existing || existing.userId !== userId) {
+        return null;
+      }
+
+      const sql = `
+        UPDATE listings
+        SET status = 'active', is_active = 1, updated_at = ?
+        WHERE id = ? AND user_id = ?
+      `;
+
+      const result = await this.db.$client.prepare(sql).bind(
+        new Date().toISOString(),
+        id,
+        userId
+      ).run();
+
+      if (result.success && result.meta.changes > 0) {
+        return await this.findById(id);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error publishing listing:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all listings by user ID
+   */
+  async findByUserId(userId: number, includeInactive: boolean = false): Promise<Listing[]> {
+    try {
+      let sql = 'SELECT * FROM listings WHERE user_id = ?';
+      const params = [userId];
+
+      if (!includeInactive) {
+        sql += ' AND is_active = 1';
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      const result = await this.db.$client.prepare(sql).bind(...params).all();
+      return result.results as Listing[];
+    } catch (error) {
+      console.error('Error finding listings by user ID:', error);
+      return [];
+    }
+  }
 }

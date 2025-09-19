@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { drizzle } from 'drizzle-orm/d1';
+import { createDatabase } from './db/index';
 import { createWebhookHandler } from './bot/index';
 import { miniAppRouter } from './api/miniApp';
 import { listingsRouter } from './api/listings';
@@ -228,6 +229,54 @@ app.get('/api/me', async (c) => {
     });
   } catch (error) {
     return c.json({ error: 'Failed to fetch user profile' }, 500);
+  }
+});
+
+// User listings endpoint
+app.get('/api/me/listings', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+
+    const token = authHeader.substring(7);
+    const env = c.env;
+    const db = createDatabase(env.DB);
+
+    // Import auth service
+    const { AuthService } = await import('./services/auth-service-simple');
+    const authService = new AuthService(db, env.TELEGRAM_BOT_TOKEN, env.NODE_ENV !== 'production');
+
+    const sessionResult = await authService.validateSession(token);
+    if (!sessionResult.valid || !sessionResult.user) {
+      return c.json({ error: 'Invalid authentication' }, 401);
+    }
+
+    // Import listing service and get user's listings
+    const { ListingServiceSimple } = await import('./services/listing-service-simple');
+    const listingService = new ListingServiceSimple(db);
+
+    const includeInactive = c.req.query('include_inactive') === 'true';
+    const listings = await listingService.findByUserId(sessionResult.user.id, includeInactive);
+
+    // Calculate stats
+    const stats = {
+      total: listings.length,
+      active: listings.filter(l => l.status === 'active').length,
+      draft: listings.filter(l => l.status === 'draft').length,
+      sold: listings.filter(l => l.status === 'sold').length,
+      totalViews: listings.reduce((sum, l) => sum + (l.viewCount || 0), 0)
+    };
+
+    return c.json({
+      success: true,
+      listings,
+      stats
+    });
+  } catch (error) {
+    console.error('Error fetching user listings:', error);
+    return c.json({ error: 'Failed to fetch user listings' }, 500);
   }
 });
 

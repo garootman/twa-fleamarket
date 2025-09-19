@@ -318,4 +318,78 @@ listingsRouter.post('/:id/flag', async (c) => {
   }
 });
 
+// POST /api/listings/:id/publish - Publish a draft listing
+listingsRouter.post('/:id/publish', async (c) => {
+  try {
+    const env = c.env;
+    const user = await authenticateRequest(c, env);
+
+    if (!user) {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+
+    const db = createDatabase(env.DB);
+    const listingService = new ListingServiceSimple(db);
+
+    const id = parseInt(c.req.param('id'));
+    if (isNaN(id)) {
+      return c.json({ error: 'Invalid listing ID' }, 400);
+    }
+
+    const listing = await listingService.publish(id, user.id);
+
+    if (!listing) {
+      return c.json({ error: 'Listing not found or access denied' }, 404);
+    }
+
+    return c.json({
+      success: true,
+      listing,
+      message: 'Listing published successfully'
+    });
+  } catch (error) {
+    console.error('Error publishing listing:', error);
+    return c.json({ error: 'Failed to publish listing' }, 500);
+  }
+});
+
+// POST /api/listings/:id/preview - Preview a draft listing
+listingsRouter.post('/:id/preview', async (c) => {
+  try {
+    const env = c.env;
+    const user = await authenticateRequest(c, env);
+
+    if (!user) {
+      return c.json({ error: 'Authentication required' }, 401);
+    }
+
+    const db = createDatabase(env.DB);
+    const listingService = new ListingServiceSimple(db);
+
+    const id = parseInt(c.req.param('id'));
+    if (isNaN(id)) {
+      return c.json({ error: 'Invalid listing ID' }, 400);
+    }
+
+    const listing = await listingService.findById(id);
+
+    if (!listing || listing.userId !== user.id) {
+      return c.json({ error: 'Listing not found or access denied' }, 404);
+    }
+
+    // Return listing with preview flag
+    return c.json({
+      success: true,
+      listing: {
+        ...listing,
+        isPreview: true
+      },
+      message: 'Listing preview generated'
+    });
+  } catch (error) {
+    console.error('Error generating listing preview:', error);
+    return c.json({ error: 'Failed to generate preview' }, 500);
+  }
+});
+
 export { listingsRouter };
