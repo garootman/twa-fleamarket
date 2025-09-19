@@ -1,5 +1,6 @@
 import { Database } from '../db/index';
 import { type Listing } from '../db/models/listing';
+import { KVCacheService } from './kv-cache-service';
 
 export interface ListingCreateData {
   title: string;
@@ -41,9 +42,11 @@ export interface UpdateListing {
 
 export class ListingServiceSimple {
   private db: Database;
+  private cache: KVCacheService | undefined;
 
-  constructor(db: Database) {
+  constructor(db: Database, cache?: KVCacheService) {
     this.db = db;
+    this.cache = cache;
   }
 
   /**
@@ -93,6 +96,14 @@ export class ListingServiceSimple {
    */
   async search(filters: ListingSearchFilters = {}): Promise<Listing[]> {
     try {
+      // Try cache first if available
+      if (this.cache) {
+        const cached = await this.cache.getCachedListingsSearch(filters);
+        if (cached) {
+          return cached;
+        }
+      }
+
       const conditions: string[] = ['is_active = 1'];
       const params: any[] = [];
 
@@ -152,7 +163,14 @@ export class ListingServiceSimple {
       `;
 
       const result = await this.db.$client.prepare(sql).bind(...params).all();
-      return result.results as Listing[];
+      const listings = result.results as Listing[];
+
+      // Cache results if cache is available and not too specific
+      if (this.cache && (!filters.query || filters.query.length > 2)) {
+        await this.cache.cacheListingsSearch(filters, listings, 300); // 5 minutes
+      }
+
+      return listings;
     } catch (error) {
       console.error('Error searching listings:', error);
       return [];
@@ -164,9 +182,24 @@ export class ListingServiceSimple {
    */
   async findById(id: number): Promise<Listing | null> {
     try {
+      // Try cache first if available
+      if (this.cache) {
+        const cached = await this.cache.getCachedListingDetails(id);
+        if (cached) {
+          return cached;
+        }
+      }
+
       const sql = 'SELECT * FROM listings WHERE id = ? LIMIT 1';
       const result = await this.db.$client.prepare(sql).bind(id).first();
-      return result as Listing | null;
+      const listing = result as Listing | null;
+
+      // Cache the result if found
+      if (this.cache && listing) {
+        await this.cache.cacheListingDetails(id, listing, 900); // 15 minutes
+      }
+
+      return listing;
     } catch (error) {
       console.error('Error finding listing by ID:', error);
       return null;

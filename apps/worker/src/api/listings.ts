@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createDatabase } from '../db/index';
 import { AuthService } from '../services/auth-service-simple';
 import { ListingServiceSimple } from '../services/listing-service-simple';
+import { KVCacheService } from '../services/kv-cache-service';
 
 interface Env {
   DB: D1Database;
@@ -35,7 +36,8 @@ listingsRouter.get('/', async (c) => {
   try {
     const env = c.env;
     const db = createDatabase(env.DB);
-    const listingService = new ListingServiceSimple(db);
+    const cache = new KVCacheService(env.CACHE_KV);
+    const listingService = new ListingServiceSimple(db, cache);
 
     // Parse query parameters
     const query = c.req.query('q') || '';
@@ -139,7 +141,8 @@ listingsRouter.get('/:id', async (c) => {
   try {
     const env = c.env;
     const db = createDatabase(env.DB);
-    const listingService = new ListingServiceSimple(db);
+    const cache = new KVCacheService(env.CACHE_KV);
+    const listingService = new ListingServiceSimple(db, cache);
 
     const id = parseInt(c.req.param('id'));
     if (isNaN(id)) {

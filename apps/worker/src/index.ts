@@ -5,6 +5,7 @@ import { createDatabase } from './db/index';
 import { createWebhookHandler } from './bot/index';
 import { miniAppRouter } from './api/miniApp';
 import { listingsRouter } from './api/listings';
+import { adminRouter } from './api/admin';
 
 /**
  * Telegram Marketplace - CloudFlare Worker
@@ -44,6 +45,7 @@ interface Env {
   PREMIUM_FEATURES_ENABLED?: string;
   CONTENT_MODERATION_ENABLED?: string;
   CACHE_ENABLED?: string;
+  MAX_UPLOAD_SIZE?: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -124,68 +126,154 @@ app.route('/miniApp', miniAppRouter);
 // Mount listings API router
 app.route('/api/listings', listingsRouter);
 
-// Mock file upload endpoint for tests
+// Mount admin API router
+app.route('/api/admin', adminRouter);
+
+// File upload endpoint with R2 integration
 app.post('/api/upload', async (c) => {
   try {
+    const env = c.env;
     const authHeader = c.req.header('Authorization');
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return c.json({ error: 'Authentication required' }, 401);
     }
 
-    // Mock successful upload
+    // Authenticate user
+    const token = authHeader.substring(7);
+    const db = createDatabase(env.DB);
+    const { AuthService } = await import('./services/auth-service-simple');
+    const authService = new AuthService(db, env.TELEGRAM_BOT_TOKEN, env.NODE_ENV !== 'production');
+
+    const sessionResult = await authService.validateSession(token);
+    if (!sessionResult.valid || !sessionResult.user) {
+      return c.json({ error: 'Invalid authentication' }, 401);
+    }
+
+    // Parse form data
+    const formData = await c.req.formData();
+    const fileData = formData.get('file');
+
+    if (!fileData || typeof fileData === 'string') {
+      return c.json({ error: 'No file provided' }, 400);
+    }
+
+    const file = fileData as File;
+
+    // Import and use ImageService
+    const { ImageService } = await import('./services/image-service');
+    const imageService = new ImageService(env.R2_BUCKET);
+
+    // Validate file
+    const maxSize = parseInt(env.MAX_UPLOAD_SIZE || '5242880'); // 5MB default
+    const validationError = imageService.validateImage(file, maxSize);
+    if (validationError) {
+      return c.json({ error: validationError }, 400);
+    }
+
+    // Upload to R2
+    const uploadResult = await imageService.uploadImage(
+      file,
+      file.name,
+      file.type,
+      sessionResult.user.id
+    );
+
     return c.json({
       success: true,
       image: {
-        id: Math.floor(Math.random() * 10000),
-        url: 'https://mock-storage.com/image123.jpg',
-        alt_text: 'Mock uploaded image',
-        uploaded_at: new Date().toISOString()
+        id: uploadResult.id,
+        url: uploadResult.url,
+        filename: uploadResult.filename,
+        size: uploadResult.size,
+        contentType: uploadResult.contentType,
+        uploaded_at: uploadResult.uploadedAt
       }
     });
   } catch (error) {
-    return c.json({ error: 'Upload failed' }, 500);
+    console.error('Upload error:', error);
+    return c.json({
+      error: error instanceof Error ? error.message : 'Upload failed'
+    }, 500);
   }
 });
 
-// Mock admin endpoints that tests expect
-app.get('/api/admin/dashboard', async (c) => {
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return c.json({ error: 'Authentication required' }, 401);
-  }
 
-  return c.json({
-    success: true,
-    dashboard: {
-      users: { total: 1250, active: 890, new_today: 23 },
-      listings: { total: 3420, active: 2100, pending: 15 },
-      transactions: { today: 45, this_week: 290, revenue: 15680 }
-    }
-  });
-});
-
-app.get('/api/admin/users', async (c) => {
-  const authHeader = c.req.header('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return c.json({ error: 'Authentication required' }, 401);
-  }
-
-  return c.json({
-    success: true,
-    users: [
-      { id: 1, username: 'testuser1', status: 'active', created_at: new Date().toISOString() },
-      { id: 2, username: 'testuser2', status: 'active', created_at: new Date().toISOString() }
-    ]
-  });
-});
-
-// Mock cache endpoints for KV caching tests
+// Cache management endpoints
 app.get('/api/cache/:key', async (c) => {
-  return c.json({ cached: false, value: null });
+  try {
+    const env = c.env;
+    const key = c.req.param('key');
+
+    if (!key) {
+      return c.json({ error: 'Key parameter required' }, 400);
+    }
+
+    const { KVCacheService } = await import('./services/kv-cache-service');
+    const cache = new KVCacheService(env.CACHE_KV);
+
+    const value = await cache.get(key);
+
+    return c.json({
+      success: true,
+      cached: value !== null,
+      value,
+      key
+    });
+  } catch (error) {
+    return c.json({ error: 'Failed to get cache value' }, 500);
+  }
 });
 
 app.post('/api/cache/:key', async (c) => {
-  return c.json({ success: true, cached: true });
+  try {
+    const env = c.env;
+    const key = c.req.param('key');
+
+    if (!key) {
+      return c.json({ error: 'Key parameter required' }, 400);
+    }
+
+    const body = await c.req.json();
+    const { value, ttl } = body;
+
+    const { KVCacheService } = await import('./services/kv-cache-service');
+    const cache = new KVCacheService(env.CACHE_KV);
+
+    const success = await cache.set(key, value, { ttl });
+
+    return c.json({
+      success,
+      message: success ? 'Value cached successfully' : 'Failed to cache value',
+      key
+    });
+  } catch (error) {
+    return c.json({ error: 'Failed to set cache value' }, 500);
+  }
+});
+
+app.delete('/api/cache/:key', async (c) => {
+  try {
+    const env = c.env;
+    const key = c.req.param('key');
+
+    if (!key) {
+      return c.json({ error: 'Key parameter required' }, 400);
+    }
+
+    const { KVCacheService } = await import('./services/kv-cache-service');
+    const cache = new KVCacheService(env.CACHE_KV);
+
+    const success = await cache.delete(key);
+
+    return c.json({
+      success,
+      message: success ? 'Cache key deleted' : 'Failed to delete cache key',
+      key
+    });
+  } catch (error) {
+    return c.json({ error: 'Failed to delete cache key' }, 500);
+  }
 });
 
 // Mock moderation endpoints
