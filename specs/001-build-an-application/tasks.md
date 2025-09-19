@@ -23,13 +23,13 @@
 ## Phase 2: Contract Tests
 
 - [x] T009 Contract test POST /miniApp/init
-- [ ] T010 Contract test GET /api/me
-- [ ] T011 Contract test GET /api/categories
-- [ ] T012 Contract test GET /api/listings
-- [ ] T013 Contract test POST /api/listings
-- [ ] T014 Contract test GET /api/listings/{id}
-- [ ] T015 Contract test PUT /api/listings/{id}
-- [ ] T016 Contract test POST /api/listings/{id}/bump
+- [x] T010 Contract test GET /api/me
+- [x] T011 Contract test GET /api/categories
+- [x] T012 Contract test GET /api/listings
+- [x] T013 Contract test POST /api/listings
+- [x] T014 Contract test GET /api/listings/{id}
+- [x] T015 Contract test PUT /api/listings/{id}
+- [x] T016 Contract test POST /api/listings/{id}/bump
 - [ ] T017 Contract test POST /api/listings/{id}/flag
 - [ ] T018 Contract test GET /api/me/listings
 - [ ] T019 Contract test POST /api/upload
